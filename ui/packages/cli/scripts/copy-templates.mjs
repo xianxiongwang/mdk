@@ -1,4 +1,15 @@
 #!/usr/bin/env node
+/**
+ * Bundles the runnable examples into `dist/templates/` so `mdk-ui create` and
+ * `mdk-ui add page` can scaffold from them.
+ *
+ * ⚠️ This script's inputs live OUTSIDE the turbo root (`examples/` is a sibling
+ * of `ui/`), so no `inputs` glob in `ui/turbo.json` can reach them. Turbo would
+ * therefore serve a cached CLI build after a template edit, leaving the bundled
+ * copy stale — `add page` then scaffolds an old file that may not even compile.
+ * That is why `@tetherto/mdk-ui-cli#build` sets `"cache": false`; do not
+ * re-enable it without first giving turbo a way to see `examples/`.
+ */
 import { cpSync, existsSync, mkdirSync, renameSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'

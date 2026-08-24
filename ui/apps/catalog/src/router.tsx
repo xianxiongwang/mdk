@@ -52,6 +52,11 @@ const ThemingDemoPage = lazy(() =>
     default: module.ThemingDemoPage,
   })),
 )
+const BringYourOwnBackendPage = lazy(() =>
+  import('./pages/bring-your-own-backend/bring-your-own-backend-page').then((module) => ({
+    default: module.BringYourOwnBackendPage,
+  })),
+)
 const ActionButtonPage = lazy(() =>
   import('./pages/action-button-page').then((module) => ({ default: module.ActionButtonPage })),
 )
@@ -436,6 +441,7 @@ export const router = createBrowserRouter(
         { path: 'getting-started', element: withSuspense(GettingStartedPage) },
         { path: 'hooks', element: withSuspense(HooksDemoPage) },
         { path: 'theming', element: withSuspense(ThemingDemoPage) },
+        { path: 'bring-your-own-backend', element: withSuspense(BringYourOwnBackendPage) },
         { path: 'alerts', element: withSuspense(AlertExample) },
         { path: 'action-button', element: withSuspense(ActionButtonPage) },
         { path: 'buttons', element: withSuspense(ButtonsPage) },

@@ -328,3 +328,89 @@ test('buildFastifyRoutes - cache uses route id + extracted field values as key',
   t.ok(cache.has(expectedKey), 'should cache with route id + extracted fields as key')
   t.pass()
 })
+
+function makeRawRes () {
+  return {
+    headersSent: false,
+    writableEnded: false,
+    chunks: [],
+    head: null,
+    writeHead (status, headers) { this.headersSent = true; this.head = { status, headers } },
+    write (chunk) { this.headersSent = true; this.chunks.push(chunk); return true },
+    end (chunk) { if (chunk) this.chunks.push(chunk); this.writableEnded = true },
+    on () {},
+    once () {},
+    removeListener () {}
+  }
+}
+
+test('buildFastifyRoutes - stream route hijacks and hands the handler the raw reply', async (t) => {
+  const dir = path.join(FIXTURES_DIR, 'stream')
+  writeFixture(dir, {
+    'mdk-plugin.json': {
+      name: '@test/p',
+      version: '1.0.0',
+      routes: [{ id: 'test.stream', method: 'POST', path: '/stream', handler: './controllers/stream.js', auth: false, stream: true }]
+    },
+    'controllers/stream.js': '\'use strict\'\nmodule.exports = async function (req, res) { res.writeHead(200, { \'content-type\': \'text/event-stream\' }); res.write(\'event: token\\ndata: {"q":"\' + req.query.x + \'"}\\n\\n\'); res.end() }'
+  })
+
+  const plugin = loadPlugin(dir)
+  const routes = buildFastifyRoutes(plugin, { conf: {}, queuedRequests: new Map() })
+
+  const raw = makeRawRes()
+  let hijacked = false
+  const mockRep = { raw, hijack () { hijacked = true } }
+  await routes[0].handler({ params: {}, query: { x: '42' }, body: {}, headers: {}, _info: {} }, mockRep)
+
+  t.ok(hijacked, 'reply was hijacked')
+  t.is(raw.head.headers['content-type'], 'text/event-stream', 'handler set SSE headers on the raw reply')
+  t.ok(raw.chunks[0].includes('"q":"42"'), 'handler wrote to the raw reply')
+  t.ok(raw.writableEnded, 'stream ended')
+  t.pass()
+})
+
+test('buildFastifyRoutes - stream route maps a pre-headers throw to a JSON error', async (t) => {
+  const dir = path.join(FIXTURES_DIR, 'stream-throw')
+  writeFixture(dir, {
+    'mdk-plugin.json': {
+      name: '@test/p',
+      version: '1.0.0',
+      routes: [{ id: 'test.stream', method: 'POST', path: '/stream', handler: './controllers/stream.js', auth: false, stream: true }]
+    },
+    'controllers/stream.js': '\'use strict\'\nmodule.exports = async function () { throw Object.assign(new Error(\'ERR_AGENT_SESSION_NOT_FOUND\'), { statusCode: 404 }) }'
+  })
+
+  const plugin = loadPlugin(dir)
+  const routes = buildFastifyRoutes(plugin, { conf: {}, queuedRequests: new Map() })
+
+  const raw = makeRawRes()
+  await routes[0].handler({ params: {}, query: {}, body: {}, headers: {}, _info: {} }, { raw, hijack () {} })
+
+  t.is(raw.head.status, 404, 'statusCode carried through')
+  t.ok(raw.chunks[0].includes('ERR_AGENT_SESSION_NOT_FOUND'), 'safe error message forwarded')
+  t.ok(raw.writableEnded, 'reply ended')
+  t.pass()
+})
+
+test('buildFastifyRoutes - stream route ends the socket on a mid-stream throw', async (t) => {
+  const dir = path.join(FIXTURES_DIR, 'stream-mid-throw')
+  writeFixture(dir, {
+    'mdk-plugin.json': {
+      name: '@test/p',
+      version: '1.0.0',
+      routes: [{ id: 'test.stream', method: 'POST', path: '/stream', handler: './controllers/stream.js', auth: false, stream: true }]
+    },
+    'controllers/stream.js': '\'use strict\'\nmodule.exports = async function (req, res) { res.write(\'event: token\\n\\n\'); throw new Error(\'boom\') }'
+  })
+
+  const plugin = loadPlugin(dir)
+  const routes = buildFastifyRoutes(plugin, { conf: {}, queuedRequests: new Map() })
+
+  const raw = makeRawRes()
+  await routes[0].handler({ params: {}, query: {}, body: {}, headers: {}, _info: {} }, { raw, hijack () {} })
+
+  t.is(raw.chunks.length, 1, 'no error body after headers were sent')
+  t.ok(raw.writableEnded, 'socket was ended, not left hanging')
+  t.pass()
+})

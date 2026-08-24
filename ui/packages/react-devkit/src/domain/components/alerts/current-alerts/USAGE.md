@@ -1,17 +1,17 @@
 # CurrentAlerts
 
 Sortable, searchable data table of currently active alerts derived from a raw
-`Device[][]` payload. Plays an audible beep when a critical alert is present
+`Device[]` payload. Plays an audible beep when a critical alert is present
 (gated by user confirmation).
 
 > Sibling component: [`HistoricalAlerts`](../historical-alerts/USAGE.md).
-> Both render the same `DataTable` columns from `alerts-table-columns.tsx`.
+> Both render the same `DataTable` columns from [`alerts-table-columns.tsx`](../alerts-table-columns.tsx).
 
 ## Props
 
 | Prop                   | Type                                       | Required | Default | Description                                                     |
 | ---------------------- | ------------------------------------------ | -------- | ------- | --------------------------------------------------------------- |
-| `devices`              | `Device[][]`                               | no       | —       | Raw devices payload (alerts derived from `device.last.alerts`). |
+| `devices`              | `Device[]`                                 | no       | —       | Raw devices payload (alerts derived from `device.last.alerts`). |
 | `isLoading`            | `boolean`                                  | no       | `false` | Show DataTable loading overlay.                                 |
 | `localFilters`         | `AlertLocalFilters`                        | yes      | —       | Filters controlled outside (e.g. URL severity).                 |
 | `onLocalFiltersChange` | `(filters: AlertLocalFilters) => void`     | yes      | —       | Setter for the filters above.                                   |
@@ -39,9 +39,9 @@ Sortable, searchable data table of currently active alerts derived from a raw
 
 ## Data contracts
 
-- `Alert` — `@tetherto/mdk-react-devkit` / `foundation/types/alerts`
-- `AlertLocalFilters` — same package, `foundation/components/alerts/alerts-types`
-- `Device` — `foundation/types/device`
+- `Alert` — `@tetherto/mdk-react-devkit` / [`foundation/types/alerts`](../../../types/alerts.ts)
+- `AlertLocalFilters` — same package, [`foundation/components/alerts/alerts-types`](../alerts-types.ts)
+- `Device` — [`foundation/types/device`](../../../types/device.ts)
 
 ## Notes
 

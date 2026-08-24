@@ -78,7 +78,7 @@ Check:
 - The machine has outbound network access.
 - Local security tooling, containers, or sandboxes are not blocking UDP/network-interface access.
 - You are running the command from the repository root.
-- Dependencies have been installed for `backend/core` and `backend/workers`.
+- Dependencies have been installed for [`backend/core`](../../../backend/core/README.md) and [`backend/workers`](../../../backend/workers/README.md).
 
 ## File lock or key file errors
 

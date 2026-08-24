@@ -13,7 +13,7 @@ table or just the historical log, drop down to `CurrentAlerts` /
 
 | Prop                        | Type                                       | Required | Default        | Description                                                              |
 | --------------------------- | ------------------------------------------ | -------- | -------------- | ------------------------------------------------------------------------ |
-| `devices`                   | `Device[][]`                               | no       | —              | Raw devices payload — the current-alerts table derives rows from `device.last.alerts`. |
+| `devices`                   | `Device[]`                                 | no       | —              | Raw devices payload — the current-alerts table derives rows from `device.last.alerts`. |
 | `isCurrentAlertsLoading`    | `boolean`                                  | no       | `false`        | Loading flag for the current-alerts table.                               |
 | `historicalAlerts`          | `Alert[]`                                  | no       | —              | Pre-fetched historical log entries.                                      |
 | `isHistoricalAlertsLoading` | `boolean`                                  | no       | `false`        | Loading flag for the historical log.                                     |
@@ -48,8 +48,8 @@ table or just the historical log, drop down to `CurrentAlerts` /
 
 ## Data contracts
 
-- `Device` — `foundation/types/device`. Same shape consumed by `CurrentAlerts`.
-- `Alert` — `foundation/types/alerts`. Same shape consumed by `HistoricalAlerts`.
+- `Device` — [`foundation/types/device`](../../../types/device.ts). Same shape consumed by `CurrentAlerts`.
+- `Alert` — [`foundation/types/alerts`](../../../types/alerts.ts). Same shape consumed by `HistoricalAlerts`.
 - `HistoricalAlertsRange` — `{ start: number; end: number }` (ms epoch).
 
 ## Notes

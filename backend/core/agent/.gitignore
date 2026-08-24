@@ -1,0 +1,6 @@
+node_modules/
+qvac-runtime/node_modules/
+*.log
+
+# Local-only working docs (plans, HLD, design notes) — never committed.
+tmp/

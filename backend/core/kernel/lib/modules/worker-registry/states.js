@@ -3,13 +3,16 @@
 /**
  * Worker Registry State Machine
  *
- * Unregistered → Discovered → IdentitySaved → Ready → Terminated
+ * UNREGISTERED → DISCOVERED → IDENTITY_SAVED → READY → TERMINATED
  *
- * - Unregistered: Worker not yet seen on DHT
- * - Discovered: DHT peer detected, identity.request sent
- * - IdentitySaved: identity.response received, devices mapped
- * - Ready: capability.response received, fully operational
- * - Terminated: Worker evicted or disconnected permanently
+ * - UNREGISTERED: declared in the transition table only; never assigned at runtime
+ * - DISCOVERED: assigned by recover() to a persisted Worker awaiting reconnect
+ * - IDENTITY_SAVED: assigned by register(); identity.response received, devices mapped
+ * - READY: assigned by setReady(); capability.response received, fully operational
+ * - TERMINATED: declared in the transition table only; terminate() deletes the
+ *   registry entry outright rather than assigning this state
+ *
+ * The live DHT path is register() → setReady(), i.e. IDENTITY_SAVED → READY.
  */
 
 const REGISTRY_STATES = {

@@ -1,11 +1,7 @@
 'use strict'
 
 const RPC_TIMEOUT = 15000
-const RPC_CONCURRENCY_LIMIT = 2
-const RPC_PAGE_LIMIT = 100
 
 module.exports = {
-  RPC_TIMEOUT,
-  RPC_CONCURRENCY_LIMIT,
-  RPC_PAGE_LIMIT
+  RPC_TIMEOUT
 }

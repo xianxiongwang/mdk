@@ -3,6 +3,7 @@ import { lazy, Suspense } from 'react'
 import { createBrowserRouter, Navigate } from 'react-router'
 
 import { App } from './App'
+import { AUTH_BYPASS } from './constants/env'
 import { ROUTE_PATHS } from './constants/routes'
 import Home from './pages/Home'
 import NotFound from './pages/NotFound'
@@ -16,11 +17,14 @@ export const router = createBrowserRouter([
   },
   {
     path: '/',
-    element: (
-      <RequireAuth fallback={<Navigate to={ROUTE_PATHS.SIGN_IN} replace />}>
-        <App />
-      </RequireAuth>
-    ),
+    // AUTH_BYPASS (dev): render the app directly, skipping the sign-in gate.
+    element: AUTH_BYPASS
+      ? <App />
+      : (
+          <RequireAuth fallback={<Navigate to={ROUTE_PATHS.SIGN_IN} replace />}>
+            <App />
+          </RequireAuth>
+        ),
     children: [
       { index: true, element: <Navigate to={ROUTE_PATHS.HOME} replace /> },
       {

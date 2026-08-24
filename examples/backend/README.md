@@ -24,19 +24,19 @@ The [run a mining site tutorial][run-a-site] walks `full-site` end to end.
 
 [run-a-site]: ../../docs/tutorials/run-a-site.md
 
-## Plugin-authoring end-to-end (`mdk-plugin-e2e/`)
+## Plugin-authoring end-to-end ([`mdk-plugin-e2e/`](./mdk-plugin-e2e/))
 
-### `run.js` — WorkerRuntime + worker plugin + gateway plugin
+### [`run.js`](./mdk-plugin-e2e/run.js) — WorkerRuntime + worker plugin + gateway plugin
 
-Single-process, automated example showing how to author a Worker as a plugin (`mdk-plugin-e2e/worker-plugin/`) hosted on `WorkerRuntime`, backed by mock devices (`mdk-plugin-e2e/mock-device/`), with a Kernel gateway plugin (`mdk-plugin-e2e/gateway-plugin/`) that serves a fleet-summary endpoint over DHT/HRPC. Exercises telemetry and command flows end-to-end, then exits cleanly.
+Single-process, automated example showing how to author a Worker as a plugin ([`mdk-plugin-e2e/worker-plugin/`](./mdk-plugin-e2e/worker-plugin/index.js)) hosted on `WorkerRuntime`, backed by mock devices ([`mdk-plugin-e2e/mock-device/`](./mdk-plugin-e2e/mock-device/)), with a Kernel gateway plugin ([`mdk-plugin-e2e/gateway-plugin/`](./mdk-plugin-e2e/gateway-plugin/)) that serves a fleet-summary endpoint over DHT/HRPC. Exercises telemetry and command flows end-to-end, then exits cleanly.
 
 ```bash
 node examples/backend/mdk-plugin-e2e/run.js
 ```
 
-## Demo worker (`demo-worker-caller/`)
+## Demo worker ([`demo-worker-caller/`](./demo-worker-caller/index.js))
 
-### `index.js` — hosting a bare Worker Plugin on `WorkerRuntime`
+### [`index.js`](./demo-worker-caller/index.js) — hosting a bare Worker Plugin on `WorkerRuntime`
 
 Shows the "caller" side of authoring a Worker: the `demo-worker` package ships only a Worker Plugin (`{ contract, dir, connect }`) and its own SQLite helper, never touching `WorkerRuntime` directly. This example constructs `WorkerRuntime`, owns its lifecycle, seeds two mock devices, and runs a telemetry sampler loop against the live runtime, printing live metrics on an interval.
 
@@ -44,13 +44,13 @@ Shows the "caller" side of authoring a Worker: the `demo-worker` package ships o
 node examples/backend/demo-worker-caller/index.js     # Ctrl+C to stop
 ```
 
-## Antminer site (`miners/antminer/`)
+## Antminer site ([`miners/antminer/`](./miners/antminer/README.md))
 
-### `index.js` — Kernel + gateway + 4 Antminer Workers
+### [`index.js`](./miners/antminer/index.js) — Kernel + gateway + 4 Antminer Workers
 
 A config-driven, single-process **Antminer** site: one Kernel, one HTTP gateway, and four Antminer
 Workers (S19XP, S19XP Hydro, S21, S21 Pro), each backed by a mock device and registered as a thing.
-Runs clone-and-run (falls back to the bundled config). `verify.js` exercises the live devices over
+Runs clone-and-run (falls back to the bundled config). [`verify.js`](./miners/antminer/verify.js) exercises the live devices over
 the MDK Protocol; the [Antminer example README][antminer-readme] carries the curl/HTTP status.
 
 ```bash
@@ -58,9 +58,9 @@ node examples/backend/miners/antminer/index.js     # Ctrl+C to stop
 node examples/backend/miners/antminer/verify.js    # in a second terminal
 ```
 
-## Bitdeer container (`containers/bitdeer/`)
+## Bitdeer container ([`containers/bitdeer/`](./containers/bitdeer/README.md))
 
-### `index.js` — Kernel + Bitdeer D40 container Worker (MQTT)
+### [`index.js`](./containers/bitdeer/index.js) — Kernel + Bitdeer D40 container Worker (MQTT)
 
 A clone-and-run **Bitdeer D40** container example: Kernel + one Bitdeer Worker, with a mock MQTT client
 publishing container telemetry to the Worker's embedded broker, registered as a thing. It prints a
@@ -71,9 +71,9 @@ the [Bitdeer example README][bitdeer-readme].
 node examples/backend/containers/bitdeer/index.js     # Ctrl+C to stop; prints an hp-rpc-cli command
 ```
 
-## Sensor (`sensors/seneca/`)
+## Sensor ([`sensors/seneca/`](./sensors/seneca/README.md))
 
-### `index.js` — Seneca temperature sensor example (project)
+### [`index.js`](./sensors/seneca/index.js) — Seneca temperature sensor example (project)
 
 A clone-and-run **Seneca** sensor example: Kernel + one Seneca Worker backed by a mock Modbus sensor,
 registered as a thing. It prints a ready-to-paste `hp-rpc-cli` command to pull live telemetry over
@@ -83,7 +83,7 @@ HRPC. Self-contained: the [Seneca example README][seneca-readme] has the detail.
 node examples/backend/sensors/seneca/index.js     # Ctrl+C to stop; prints an hp-rpc-cli command
 ```
 
-## Power meter examples (`powermeters/{abb,satec,schneider}/`)
+## Power meter examples
 
 Clone-and-run power-meter examples — each brings up a Kernel + one Worker backed by a mock Modbus
 meter, registered as a thing, and prints a ready-to-paste `hp-rpc-cli` command to pull live telemetry
@@ -91,9 +91,9 @@ over HRPC. Self-contained.
 
 | Example | Worker | Mock port | README |
 |---|---|---|---|
-| `powermeters/abb/` | ABB B23 | 5060 | [README][abb-readme] |
-| `powermeters/satec/` | Satec PM180 | 5061 | [README][satec-readme] |
-| `powermeters/schneider/` | Schneider PM5340 | 5062 | [README][schneider-readme] |
+| [`powermeters/abb/`](./powermeters/abb/README.md) | ABB B23 | 5060 | [README][abb-readme] |
+| [`powermeters/satec/`](./powermeters/satec/README.md) | Satec PM180 | 5061 | [README][satec-readme] |
+| [`powermeters/schneider/`](./powermeters/schneider/README.md) | Schneider PM5340 | 5062 | [README][schneider-readme] |
 
 ```bash
 node examples/backend/powermeters/abb/index.js         # Ctrl+C to stop; prints an hp-rpc-cli command
@@ -107,8 +107,8 @@ Each of these starts one mock hardware server, registers one device, waits for t
 
 | Example | Worker type | Mock port |
 |---|---|---|
-| `miners/whatsminer/index.js` | Whatsminer M56S | 14028 |
-| `containers/antspace/index.js` | Antspace HK3 | 8000 |
+| [`miners/whatsminer/index.js`](./miners/whatsminer/index.js) | Whatsminer M56S | 14028 |
+| [`containers/antspace/index.js`](./containers/antspace/index.js) | Antspace HK3 | 8000 |
 
 ```bash
 node examples/backend/miners/whatsminer/index.js
@@ -117,13 +117,13 @@ node examples/backend/containers/antspace/index.js
 
 Run at most one at a time — they each bind a fixed port. If a previous run left a process alive, the next run will fail with `EADDRINUSE`.
 
-## Miner pool (`minerpools/`)
+## Miner pool ([`minerpools/`](./minerpools/))
 
-### `ocean/` — Ocean minerpool example (project)
+### [`ocean/`](./minerpools/ocean/README.md) — Ocean minerpool example (project)
 
 A clone-and-run **Ocean** minerpool example backed by a mock Ocean.xyz API: it drives the
 `OCEAN_POOL` Worker directly (stats, per-worker hashrate, transactions, blocks) and stays running so
-`verify.js` can re-query it. Minerpools aren't wired into the Kernel/MDK thing model yet, so this runs
+[`verify.js`](./minerpools/ocean/verify.js) can re-query it. Minerpools aren't wired into the Kernel/MDK thing model yet, so this runs
 **standalone** (no Kernel/gateway) — the [Ocean example README][ocean-readme] has the detail.
 
 ```bash
@@ -131,19 +131,19 @@ node examples/backend/minerpools/ocean/index.js     # Ctrl+C to stop
 node examples/backend/minerpools/ocean/verify.js    # in a second terminal
 ```
 
-### `f2pool/` — F2Pool minerpool example (project)
+### [`f2pool/`](./minerpools/f2pool/index.js) — F2Pool minerpool example (project)
 
 A clone-and-run **F2Pool** example backed by a mock F2Pool API: it drives the `F2_POOL` Worker
 directly (stats, Workers, transactions), prints a snapshot, and exits. Standalone like Ocean —
-the [F2Pool Worker package][f2pool-readme] holds its managers, mock server, and `mdk-contract.json`.
+the [F2Pool Worker package][f2pool-readme] holds its managers, mock server, and [`mdk-contract.json`](../../backend/workers/minerpools/f2pool/plugin/mdk-contract.json).
 
 ```bash
 node examples/backend/minerpools/f2pool/index.js
 ```
 
-## Kernel standalone (`kernel/`)
+## Kernel standalone ([`kernel/`](./kernel/))
 
-### `kernel-shell.js` — bare Kernel
+### [`kernel-shell.js`](./kernel/kernel-shell.js) — bare Kernel
 
 Starts the Kernel using the low-level `createKernel()` directly, without `getKernel()`. Useful for seeing the raw configuration shape before any bootstrap helpers are applied.
 
@@ -151,7 +151,7 @@ Starts the Kernel using the low-level `createKernel()` directly, without `getKer
 node examples/backend/kernel/kernel-shell.js
 ```
 
-### `demo.js` — full feature parity demo
+### [`demo.js`](./kernel/demo.js) — full feature parity demo
 
 Starts a Whatsminer M56S Worker and a Kernel in the same process, then exercises every MDK Protocol
 operation (telemetry.pull query types, command.request write operations, state.pull, health.ping,
@@ -161,7 +161,7 @@ identity/capability discovery) before exiting cleanly.
 node examples/backend/kernel/demo.js
 ```
 
-### `command-flow.js` — command cheatsheet
+### [`command-flow.js`](./kernel/command-flow.js) — command cheatsheet
 
 Starts a real Whatsminer M56S Worker backed by the hardware simulator, waits for Kernel discovery,
 then prints ready-to-run `hp-rpc-cli` commands for every operation in the whatsminer contract.
@@ -170,16 +170,16 @@ then prints ready-to-run `hp-rpc-cli` commands for every operation in the whatsm
 node examples/backend/kernel/command-flow.js     # Ctrl+C to stop
 ```
 
-### `telemetry-flow.js` — live telemetry cheatsheet
+### [`telemetry-flow.js`](./kernel/telemetry-flow.js) — live telemetry cheatsheet
 
-Same setup as `command-flow.js`, but subscribes to the scheduler-driven telemetry pull loop (every 3 s)
+Same setup as [`command-flow.js`](./kernel/command-flow.js), but subscribes to the scheduler-driven telemetry pull loop (every 3 s)
 and prints live metrics on each tick alongside the `hp-rpc-cli` cheatsheet.
 
 ```bash
 node examples/backend/kernel/telemetry-flow.js     # Ctrl+C to stop
 ```
 
-### `auth-whitelist.js` — HRPC auth allowlist
+### [`auth-whitelist.js`](./kernel/auth-whitelist.js) — HRPC auth allowlist
 
 Shows how to restrict Kernel access to specific clients via the HRPC firewall allowlist. Only clients
 whose DHT public key is in the allowlist can connect; everyone else is refused at the network layer.

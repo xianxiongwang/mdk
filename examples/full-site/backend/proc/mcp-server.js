@@ -10,7 +10,7 @@ const http = require('http')
 const { McpServer } = require('@modelcontextprotocol/sdk/server/mcp.js')
 const { z } = require('zod')
 const { StreamableHTTPServerTransport } = require('@modelcontextprotocol/sdk/server/streamableHttp.js')
-const { createMdkClient } = require('../../../../backend/core/client')
+const { createRawMdkClient } = require('../../../../backend/core/client')
 const { ROOT, MCP_PORT } = require('../site')
 const { arg } = require('../argv')
 
@@ -40,6 +40,12 @@ function classifyDevice (id, family) {
   return 'other'
 }
 
+// Still keyed on the demo's id prefixes because nothing the platform reports carries the
+// allowed values: getCapabilities returns each command's params as {name, type}, so
+// setPowerMode declares only `mode: string`. The per-family mode set lives in the driver
+// (backend/workers/miners/*/lib) and reaches the contract, if at all, as English inside the
+// command description. Move this to the reported capability once a command param can declare
+// its allowed values.
 const POWER_MODES_BY_PREFIX = [
   { prefix: 'whatsminer-', modes: ['low', 'normal', 'high', 'sleep'] },
   { prefix: 'antminer-', modes: ['sleep', 'normal'] },
@@ -61,6 +67,7 @@ const AXIS = {
   order: ['desc', 'asc']
 }
 const AGENT_META_KEY = 'x-mdk-agent'
+const TOOL_CONTRACT_VERSION = 'v2'
 const DEVICE_ATTRS = ['telemetry', 'state', 'capabilities', 'power_modes']
 const METRIC_FIELDS = {
   hashrate: ['hashrate_avg', 'hashrate_rt', 'hashrate'],
@@ -88,6 +95,8 @@ const matches = (row, family, state) =>
   (family === 'all' || row.family === family) && (state === 'all' || row.state === state)
 
 const plural = (family, n) => `${family === 'all' ? 'device' : family}${n === 1 ? '' : 's'}`
+
+const isEmpty = (v) => v == null || (typeof v === 'object' && !Object.keys(v).length)
 
 function readMetric (telemetry, metric) {
   const metrics = telemetry?.metrics ?? telemetry ?? {}
@@ -262,7 +271,7 @@ function registerTools (server, client) {
 // above stay registered for other MCP consumers but declare no agent metadata, so admission
 // withholds them from the model.
 function registerAgentTools (server, client) {
-  const meta = (block) => ({ [AGENT_META_KEY]: { enabled: true, minCapability: 'small', ...block } })
+  const meta = (block) => ({ [AGENT_META_KEY]: { enabled: true, minCapability: 'small', contract: TOOL_CONTRACT_VERSION, ...block } })
   const family = z.enum(AXIS.family).default('all').describe('Device family to include.')
   const state = z.enum(AXIS.state).default('all').describe('Readiness to include.')
   const ref = z.string().meta({ 'x-mdk-ref': 'device' }).describe('A device id taken from a previous result.')
@@ -297,10 +306,15 @@ function registerAgentTools (server, client) {
         if (r.state === 'online') byFamily[r.family].online++
       }
       return json({
+        // Naming the offline devices here makes the rollup a defensible answer to "which
+        // devices are down?" and costs list_devices some routing. Removing them was measured
+        // and was worse on both counts: list_devices 89% -> 87%, polarity 100% -> 78%.
         summary: `${rows.length} devices across ${workers.length} workers — ${rows.length - offline.length} online, ${offline.length} offline` +
           (offline.length ? ` (${offline.map((r) => r.deviceId).join(', ')})` : '') + '.',
-        workers: { total: workers.length, online: readyWorkers, offline: workers.length - readyWorkers },
-        devices: { total: rows.length, online: rows.length - offline.length, offline: offline.length, byFamily }
+        totals: {
+          workers: { total: workers.length, online: readyWorkers, offline: workers.length - readyWorkers },
+          devices: { total: rows.length, online: rows.length - offline.length, offline: offline.length, byFamily }
+        }
       })
     }
   )
@@ -329,23 +343,41 @@ function registerAgentTools (server, client) {
     'list_devices',
     {
       description: 'Which devices match a family and a readiness state, named individually.',
-      inputSchema: { family, state },
+      inputSchema: {
+        family,
+        state,
+        // Defaulted to the ceiling so a site up to fleet-sized answers whole, while a site of
+        // thousands is cut off here rather than in the model's context.
+        // Coerced, not merely typed. The agent's tool calls are JSON the model writes by hand,
+        // and a small model quotes numbers about as often as it does not — `"limit": "5"`.
+        // Rejecting that is technically correct and practically useless: the intent is
+        // unambiguous, and the operator ends up told their live data is unavailable because a
+        // digit arrived in quotes.
+        limit: z.coerce.number().int().min(1).max(50).default(50).describe('How many to name.')
+      },
       annotations: { readOnlyHint: true },
       _meta: meta({
         answers: 'Which devices match a family and state.',
         useWhen: ['list the miners', 'which devices are offline', 'show me the containers'],
         notFor: ['counting only (use count_devices)'],
-        returns: 'the matching devices, one per line, with a one-line summary'
+        returns: 'the matching devices, one per line, with a one-line summary. Long lists are cut to `limit`, and the summary then says so and gives the full total'
       })
     },
-    async ({ family, state }) => {
+    async ({ family, state, limit }) => {
       const rows = collectDevices(await client.getStatus()).filter((r) => matches(r, family, state))
+      // `count` is what is shown, not what matched: the contract ties it to items.length, and a
+      // model reading a count it cannot see rows for would name devices it was never given.
+      const items = rows.slice(0, limit)
+      const named = `${items.map((r) => r.deviceId).join(', ')}.`
       return json({
-        summary: rows.length
-          ? `${rows.length} ${plural(family, rows.length)}: ${rows.map((r) => r.deviceId).join(', ')}.`
+        summary: items.length
+          ? (rows.length > items.length
+              ? `${items.length} of ${rows.length} ${plural(family, rows.length)}, showing the first ${items.length}: ${named}`
+              : `${items.length} ${plural(family, items.length)}: ${named}`)
           : `No ${plural(family, 0)} match.`,
-        count: rows.length,
-        devices: rows
+        count: items.length,
+        total: rows.length,
+        items
       })
     }
   )
@@ -368,23 +400,44 @@ function registerAgentTools (server, client) {
       })
     },
     async ({ ref, attr }) => {
-      if (attr === 'capabilities') {
-        return json({ summary: `Capabilities of ${ref}.`, deviceId: ref, capabilities: await client.getCapabilities(ref) })
-      }
-      if (attr === 'state') {
-        return json({ summary: `State of ${ref}.`, deviceId: ref, state: await client.pullState(ref) })
-      }
-      if (attr === 'power_modes') {
-        const modes = powerModesFor(ref)
+      // Costs a status round-trip per read, which is what separates "not in status" from "no
+      // readings" — an operator acting on the wrong one is being misled.
+      const known = collectDevices(await client.getStatus()).find((row) => row.deviceId === ref)
+      if (!known) {
         return json({
-          summary: modes.supportedPowerModes
-            ? `${ref} supports ${modes.supportedPowerModes.join(', ')}.`
-            : `${ref} does not report power modes.`,
-          ...modes
+          summary: `${ref} is not in the site's current status. It may be restarting, unreachable, or not part of this site.`,
+          ref,
+          attr,
+          value: null
         })
       }
+      if (attr === 'capabilities') {
+        const caps = await client.getCapabilities(ref)
+        return json({ summary: isEmpty(caps) ? `${ref} reports no capabilities.` : `Capabilities of ${ref}.`, ref, attr, value: caps })
+      }
+      if (attr === 'state') {
+        const state = await client.pullState(ref)
+        return json({ summary: isEmpty(state) ? `${ref} reports no state.` : `State of ${ref}.`, ref, attr, value: state })
+      }
+      if (attr === 'power_modes') {
+        const modes = powerModesFor(ref).supportedPowerModes ?? null
+        return json({
+          summary: modes ? `${ref} supports ${modes.join(', ')}.` : `${ref} does not report power modes.`,
+          ref,
+          attr,
+          value: modes
+        })
+      }
+      // A device that reports nothing still returns a well-formed result, so the summary is the
+      // only place the absence can be stated. Saying "live readings for X" over an empty value
+      // makes the model relay the emptiness verbatim.
       const telemetry = await client.pullTelemetry(ref, 'metrics')
-      return json({ summary: `Live readings for ${ref}.`, deviceId: ref, telemetry })
+      return json({
+        summary: isEmpty(telemetry) ? `${ref} reports no readings.` : `Live readings for ${ref}.`,
+        ref,
+        attr,
+        value: telemetry
+      })
     }
   )
 
@@ -396,7 +449,7 @@ function registerAgentTools (server, client) {
         family,
         metric: z.enum(AXIS.metric).default('power').describe('The metric to order by.'),
         order: z.enum(AXIS.order).default('desc').describe('desc for the highest first, asc for the lowest.'),
-        limit: z.number().int().min(1).max(50).default(5).describe('How many to return.')
+        limit: z.coerce.number().int().min(1).max(50).default(5).describe('How many to return.')
       },
       annotations: { readOnlyHint: true },
       _meta: meta({
@@ -426,7 +479,7 @@ function registerAgentTools (server, client) {
           : `No ${plural(family, 0)} reported ${metric}${unavailable ? ` (${unavailable} did not report)` : ''}.`,
         metric,
         order,
-        devices: top,
+        items: top,
         unavailable
       })
     }
@@ -456,12 +509,15 @@ function registerAgentTools (server, client) {
       // that fails at the hardware.
       if (action === 'set_power_mode') {
         const supported = powerModesFor(ref).supportedPowerModes
-        if (!supported) return json({ summary: `${ref} does not report power modes, so it cannot be set.`, deviceId: ref, action })
+        if (!supported) {
+          return json({ summary: `${ref} does not report power modes, so it cannot be set.`, ref, action, outcome: 'rejected' })
+        }
         if (!supported.includes(mode)) {
           return json({
             summary: `${ref} does not support "${mode}" — it accepts ${supported.join(', ')}.`,
-            deviceId: ref,
+            ref,
             action,
+            outcome: 'rejected',
             supportedPowerModes: supported
           })
         }
@@ -470,8 +526,9 @@ function registerAgentTools (server, client) {
       const result = await client.sendCommand(ref, action, params)
       return json({
         summary: `${action === 'reboot' ? 'Reboot' : `Set power mode to ${mode}`} on ${ref}: ${result?.status ?? 'sent'}.`,
-        deviceId: ref,
+        ref,
         action,
+        outcome: String(result?.status ?? 'sent'),
         result
       })
     }
@@ -516,7 +573,7 @@ async function main () {
   if (!fs.existsSync(kernelKeyFile)) throw new Error('ERR_KERNEL_KEY_MISSING: start kernel first')
   const kernelKey = fs.readFileSync(kernelKeyFile, 'utf8').trim()
 
-  const client = createMdkClient({ hrpc: { key: kernelKey } })
+  const client = createRawMdkClient({ hrpc: { key: kernelKey } })
   await client.connect({ warmup: true })
 
   const httpServer = http.createServer(async (req, res) => {
@@ -548,7 +605,7 @@ async function main () {
   console.log('MDK_READY mcp-server port=%d kernel=%s', boundPort, kernelKey.slice(0, 16))
 }
 
-module.exports = { registerTools, classifyDevice, AXIS, AGENT_META_KEY, listenOnFirstAvailablePort }
+module.exports = { registerTools, classifyDevice, AXIS, AGENT_META_KEY, TOOL_CONTRACT_VERSION }
 
 if (require.main === module) {
   main().catch((err) => {

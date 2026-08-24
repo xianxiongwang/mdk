@@ -1,0 +1,3 @@
+# Keep shell scripts LF so they run correctly across Windows / WSL / macOS.
+# (Prevents CRLF from breaking run.sh under core.autocrlf.)
+*.sh text eol=lf

@@ -127,7 +127,7 @@ export type AuthTokenResponse = {
 
 /**
  * Query parameters for `GET /auth/tail-log`. Mirrors the Fastify schema in
- * `miningos-gateway`. `aggrFields` is a JSON-stringified object describing
+ * the gateway for live sites. `aggrFields` is a JSON-stringified object describing
  * which aggregate columns to include in each row.
  *
  * @category api
@@ -285,7 +285,7 @@ export type MinerpoolStatsHistoryEntry = {
 /**
  * Query parameters for `GET /auth/tail-log/multi` — the batched variant of
  * tail-log. `keys` is required (comma-separated `stat-*` keys); the rest
- * mirrors the Fastify schema in `miningos-gateway`. {todo: update miningos-gateway}
+ * mirrors the Fastify schema in the gateway for live sites.
  *
  * @category api
  */

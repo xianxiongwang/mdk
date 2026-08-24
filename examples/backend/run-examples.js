@@ -276,26 +276,23 @@ function formatDuration (ms) {
 // ── Prerequisites check ───────────────────────────────────────────────────────
 
 function checkPrereqs () {
-  // backend/core/kernel and backend/workers/miners/whatsminer are npm
-  // workspace members, so their deps are hoisted into the repo-root
-  // node_modules instead of a per-package node_modules dir — check
-  // resolvability, not directory existence.
   const checks = [
     {
-      module: 'hyperdht',
-      fromDir: path.join(REPO_ROOT, 'backend/core/kernel'),
+      pkg: '@tetherto/mdk-kernel',
       hint: 'npm --prefix backend/core run install:packages'
     },
     {
-      module: 'crypto-js',
-      fromDir: path.join(REPO_ROOT, 'backend/workers/miners/whatsminer'),
+      pkg: '@tetherto/mdk-worker-whatsminer',
       hint: 'npm --prefix backend/workers run install:packages'
     }
   ]
 
+  // Resolve via node's module algorithm rather than checking a hardcoded
+  // node_modules path: npm workspaces may hoist these to the repo root's
+  // node_modules instead of nesting them under each package.
   const missing = checks.filter(c => {
     try {
-      require.resolve(c.module, { paths: [c.fromDir] })
+      require.resolve(c.pkg, { paths: [REPO_ROOT] })
       return false
     } catch {
       return true

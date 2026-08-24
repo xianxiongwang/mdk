@@ -14,9 +14,9 @@ internal layout keeps the two layers clearly separated:
 > `docs`, `example`, `add page`, `check`. Run `npx mdk-ui init` once to seed
 > agent context in your project.
 
-- `src/primitives/` — framework-agnostic-ish UI primitives built on Radix UI,
+- [`src/primitives/`](./src/primitives/index.ts) — framework-agnostic-ish UI primitives built on Radix UI,
   design tokens, formatting utilities and types.
-- `src/domain/` — mining-domain components, features, presentation
+- [`src/domain/`](./src/domain/index.ts) — mining-domain components, features, presentation
   hooks (under `utils/`), constants, and types. Zustand stores live in
   `@tetherto/mdk-ui-foundation`; store hooks and `MdkProvider` live in
   `@tetherto/mdk-react-adapter`.
@@ -46,7 +46,7 @@ import { useActions, useDevices, useTimezone } from "@tetherto/mdk-react-adapter
 ```
 
 Presentation hooks ship on `./domain` (or the top-level barrel), not
-`@tetherto/mdk-react-devkit/hooks` — that subpath is not in `package.json`
+`@tetherto/mdk-react-devkit/hooks` — that subpath is not in [`package.json`](./package.json)
 `exports`.
 
 ### Top-level barrel
@@ -82,13 +82,13 @@ overrides.
 | `.` | `dist/index.{js,d.ts}` | Top-level barrel (`primitives` + `domain`) |
 | `./primitives` | `dist/primitives/index.{js,d.ts}` | Generic UI primitives |
 | `./domain` | `dist/domain/index.{js,d.ts}` | Mining-domain layer: components, features, presentation hooks, constants, types |
-| `./registry.json` | `dist/registry.json` | Machine-readable component + hook registry |
-| `./blueprints.json` | `dist/blueprints.json` | Intent → recipe index |
-| `./styles.css` | `dist/styles.css` | Design tokens + core primitives (~18 KB gz) |
-| `./styles-domain.css` | `dist/styles-domain.css` | Mining-domain component styles (~70 KB gz); import after `styles.css` |
-| `./styles` | `src/primitives/styles/_mixins.scss` | SCSS mixins (`@use`) |
-| `./tokens.scss` | `src/primitives/styles/_colors.scss` | Design-token CSS variables (`@use`) |
-| `./src/styles/index.scss` | `src/domain/styles/index.scss` | Domain SCSS entry (advanced) |
+| `./registry.json` | [`dist/registry.json`](./dist/registry.json) | Machine-readable component + hook registry |
+| `./blueprints.json` | [`dist/blueprints.json`](./dist/blueprints.json) | Intent → recipe index |
+| `./styles.css` | [`dist/styles.css`](./dist/styles.css) | Design tokens + core primitives (~18 KB gz) |
+| `./styles-domain.css` | [`dist/styles-domain.css`](./dist/styles-domain.css) | Mining-domain component styles (~70 KB gz); import after `styles.css` |
+| `./styles` | [`src/primitives/styles/_mixins.scss`](./src/primitives/styles/_mixins.scss) | SCSS mixins (`@use`) |
+| [`./tokens.scss`](./src/primitives/components/dropdown-menu/tokens.scss) | [`src/primitives/styles/_colors.scss`](./src/primitives/styles/_colors.scss) | Design-token CSS variables (`@use`) |
+| `./src/styles/index.scss` | [`src/domain/styles/index.scss`](./src/domain/styles/index.scss) | Domain SCSS entry (advanced) |
 
 For `mdk-ui registry`, `docs`, and `example`, see [`AGENTS.md`](../../AGENTS.md) and
 [`../cli/README.md`](../cli/README.md). Adapter hook and store manifests:
@@ -109,15 +109,15 @@ through `./domain`, the adapter, or the foundation package.
 ## Build strategy
 
 - **TypeScript** — `tsc -p tsconfig.build.json` emits ESM JS + `.d.ts`
-  into `dist/`. A small post-process (`scripts/strip-style-imports.mjs`)
+  into `dist/`. A small post-process ([`scripts/strip-style-imports.mjs`](./scripts/strip-style-imports.mjs))
   removes the side-effect `.scss` / `.css` imports from emitted JS
-  because styles are in the Vite-built `dist/styles.css` and
-  `dist/styles-domain.css`, not in the TS output.
-- **CSS** — Vite compiles two SCSS entry points into `dist/styles.css` (design tokens + core primitives) and `dist/styles-domain.css` (mining-domain components). PostCSS (`postcss-mdk-layer.mjs`) wraps top-level rules in `@layer mdk` and prepends `@layer base, mdk, app;`.
-- **Registry** — `npm run build:registry` emits `dist/registry.json` and
-  `dist/blueprints.json`. Run `npm run check:agent-ready` before changing
+  because styles are in the Vite-built [`dist/styles.css`](./dist/styles.css) and
+  [`dist/styles-domain.css`](./dist/styles-domain.css), not in the TS output.
+- **CSS** — Vite compiles two SCSS entry points into [`dist/styles.css`](./dist/styles.css) (design tokens + core primitives) and [`dist/styles-domain.css`](./dist/styles-domain.css) (mining-domain components). PostCSS ([`postcss-mdk-layer.mjs`](./postcss-mdk-layer.mjs)) wraps top-level rules in `@layer mdk` and prepends `@layer base, mdk, app;`.
+- **Registry** — `npm run build:registry` emits [`dist/registry.json`](./dist/registry.json) and
+  [`dist/blueprints.json`](./dist/blueprints.json). Run `npm run check:agent-ready` before changing
   public exports (also runs in root `npm run fullcheck`).
-- **SCSS source** — `_mixins.scss` and `_colors.scss` stay exposed as
+- **SCSS source** — [`_mixins.scss`](./src/primitives/styles/_mixins.scss) and [`_colors.scss`](./src/primitives/styles/_colors.scss) stay exposed as
   subpath exports so downstream apps can `@use` them from their own SCSS.
 
 ## Development

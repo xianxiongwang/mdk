@@ -1,6 +1,6 @@
 {
   "name": "@tetherto/mdk-mvp-site",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "MDK MVP Site",
   "private": true,
   "engines": {
@@ -19,13 +19,10 @@
     "test": "npm run test:unit"
   },
   "dependencies": {
-    "@tetherto/mdk-client": "^0.6.0",
-    "@tetherto/mdk-core": "^0.6.0",
-    "@tetherto/mdk-mcp": "^0.6.0",
-    "@tetherto/mdk-worker-ocean": "^0.6.0",
-    "@tetherto/mdk-worker-satec": "^0.6.0",
-    "@tetherto/mdk-worker-whatsminer": "^0.6.0",
-    "zod": "^4.0.0"
+    "@tetherto/mdk-core": "^0.7.0",
+    "@tetherto/mdk-worker-ocean": "^0.7.0",
+    "@tetherto/mdk-worker-satec": "^0.7.0",
+    "@tetherto/mdk-worker-whatsminer": "^0.7.0"
   },
   "devDependencies": {
     "brittle": "3.18.0",

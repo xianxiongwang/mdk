@@ -1,29 +1,135 @@
 ---
 name: mdk-deployment
 description: >
-  Deploy and run a working MDK stack. Use when the task mentions "deploy",
-  "run the stack", "single/multi process", "start the Kernel/ORK + workers +
-  gateway", or MDK environment configuration.
+  Deploy and run a working MDK stack from mdk.yaml. Use when the task mentions
+  "deploy", "run the stack", "start the Kernel/ORK + workers + gateway",
+  "register a plugin", "mdk.yaml", or MDK environment configuration.
 metadata:
   suite: mdk-developer-skill
-  mdk_version: "{{MDK_VERSION}}"
+  mdk_version: "0.5.0"
 license: Apache-2.0
 ---
 
-# mdk-deployment — stub
+# Deploy and run an MDK stack
 
-The full workflow for this job (runnable launcher examples, start-order
-enforcement, env reference) is **not written yet**. Until it ships, ground
-any deployment work in the real runnable examples:
+In CLI-managed projects (this folder), the stack is declared in `mdk.yaml` and
+started with `mdk run`. Boot order matters: **Kernel → workers → gateway/UI**.
 
-- **Whole stack in one boot:** `examples/full-site/start.js` — mock devices +
-  Kernel + 11 real workers + gateway + UI, driven from `WORKER_SPECS` in
-  `examples/full-site/backend/site.js`. Start here; it encodes the real boot
-  order (mocks → Kernel → workers → gateway/UI).
-- **Single worker, no Kernel:** `examples/backend/demo-worker-caller/index.js`
-  hosts one Worker Plugin on `WorkerRuntime` in-process.
-- **Architecture context:** `../mdk/references/architecture.md` (layers,
-  request flow, and where each process fits).
+## Project shape
 
-Key invariant to respect meanwhile: boot order matters — the Kernel comes up
-before workers announce, and the gateway/UI last.
+```
+<project>/
+├── mdk.yaml                 # Stack spec (source of truth)
+├── package.json             # private root manifest; workers/* + plugins/* are npm workspaces
+├── plugins/<name>/          # Gateway plugins (mdk create plugin)
+├── workers/<name>/          # Worker Plugin packages (mdk create worker)
+├── apps/dashboard/          # UI shell (mdk create dashboard) — apps/<name> if named explicitly
+└── .mdk/                    # runtime state written by `mdk run` — gitignored, disposable
+```
+
+`workers/*` and `plugins/*` are npm workspaces: one root `npm install` links
+every component into the project's `node_modules`, which is how the Gateway
+and `mdk run` resolve them. `apps/*` (the dashboard) is deliberately **not** a
+workspace — it links the MDK UI packages by `file:` path and installs on its
+own, so its React is never hoisted alongside those links.
+
+## `mdk.yaml` essentials
+
+```yaml
+apiVersion: mdk/v1
+kind: Stack
+metadata:
+  name: <stack-name>
+spec:
+  kernel:
+    port: 3848
+  gateway:
+    port: 3847
+    plugins:
+      - package: <plugin-package-name>   # e.g. fleet-summary, or @org/name
+        config: {}
+  workers:
+    - name: <worker-name>
+      package: ./workers/<worker-name>   # local path, or an installed npm name
+      config:
+        mock: true
+        devices:
+          - id: dev-0
+            opts: { host: 127.0.0.1, port: 18080, serial: DEV-0 }
+```
+
+Both `mdk create worker <name>` and `mdk create plugin <name>` scaffold the
+package **and** register it here automatically (workers under
+`spec.workers`, plugins under `spec.gateway.plugins`) — no manual
+`package.json` linking step. They also seed a stack-unique mock port/device id
+per worker, so scaffolding several in one project never collides. If you add a
+package by hand instead, mirror that: `npm install` at the project root (which
+links the new workspace member), then append the entry yourself.
+
+## Run commands
+
+```bash
+mdk run                     # whole stack from mdk.yaml: kernel + workers + gateway together
+mdk run kernel
+mdk run gateway
+mdk run worker <name>       # e.g. mdk run worker demo-miner
+mdk run dashboard           # the scaffolded UI shell's dev server
+```
+
+`mdk run` with no target boots everything together; that's not a spec setting,
+just which command you type. Use the per-component targets and separate
+terminals when debugging one tier. Gateway port is `spec.gateway.port`
+(example: `3847`); curl plugins at `http://127.0.0.1:<gateway-port>/api/...`.
+
+Ctrl+C / SIGTERM stops components in reverse boot order (gateway → workers →
+kernel) and always exits, even if a component's own shutdown hangs.
+
+### Verify
+
+```bash
+mdk status                              # environment + Kernel/Gateway/worker health, exit code encodes it
+mdk status -o json | jq .health
+curl -s http://127.0.0.1:3847/api/<route> | jq .
+```
+
+`mdk status` never starts, stops or repairs anything — it probes the Kernel
+over HRPC and the Gateway over HTTP and reports declared-vs-registered workers.
+Exit codes: `0` healthy, `4` precondition not met (bad Node, invalid
+`mdk.yaml`, packages not installed), `5` stack not fully up.
+
+UI: `mdk run dashboard` (or `cd apps/dashboard && npm run dev` directly) and
+open the page route added by `mdk-ui-component`.
+
+## Scaffolding helpers
+
+| Need | Command |
+| --- | --- |
+| Guided `mdk.yaml` | `mdk onboard` |
+| New worker package | `mdk create worker <name>` → then `mdk-worker-plugin` |
+| New gateway plugin | `mdk create plugin <name>` → then `mdk-gateway-plugin` |
+| New dashboard app | `mdk create dashboard` |
+
+All three run `npm install` by default (`--no-install` to skip) and, for
+workers/plugins, install at the project root so the new package links as a
+workspace member rather than getting its own nested `node_modules`.
+
+## Boot-order invariant
+
+1. Kernel listening
+2. Workers announce on the DHT topic, or attach directly when run in the same process
+3. Gateway loads plugins (needs Kernel + client)
+4. UI last — it only talks to the Gateway
+
+Starting the UI or a plugin before the worker is online yields empty arrays,
+not necessarily HTTP errors — treat an empty `devices: []` in a plugin
+response as a deployment signal, not a bug.
+
+
+
+## Hand-off
+
+| Next need | Skill |
+| --- | --- |
+| New device worker | `mdk-worker-plugin` |
+| New aggregation API | `mdk-gateway-plugin` |
+| New dashboard page | `mdk-ui-component` |

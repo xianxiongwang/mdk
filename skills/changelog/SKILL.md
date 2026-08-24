@@ -33,13 +33,18 @@ Step 1). **Never** guess the version silently.
   omit. Read the real `git diff` for each area and describe what the code/docs
   actually do now. Commit history is only a map of *where* to look and *what to drop*.
 - **The archived content is never rewritten, only re-nested.** When you rotate the
-  current `CHANGELOG.md` into the archive, the *prose is untouched* — same wording,
+  current [`CHANGELOG.md`](../../CHANGELOG.md) into the archive, the *prose is untouched* — same wording,
   bullets, tables, links, and `#PR` refs. The only permitted changes are the
   mechanical re-nesting described in Step 3 (drop the title, reposition the
   release-notes blockquote, add an `### Overview` header, demote every heading one
   level). Never re-summarize or "improve" archived content.
 - **Match the house depth.** Existing entries use file paths, module/responsibility
   tables, and dependency lists. Aim for that specificity, not one-liners.
+- **The changelog and release notes are prose — apply the docs style guide.**
+  [`CHANGELOG.md`](../../CHANGELOG.md) and `docs/reference/release-notes/*.md` are not exempt from
+  [`docs/reference/maintainers/style.md`](../../docs/reference/maintainers/style.md). In particular wrap prose lines to
+  **150–180 chars** (tables and fenced code are exempt), and follow its link and
+  wording conventions. Read `style.md` before writing these files.
 - **The changelog is a published artifact — no internal references.** Never cite
   PR/issue numbers, branch names, internal ticket ids, or contributor handles: to an
   outside reader they are dead links that mislink to unrelated items and expose internal
@@ -58,9 +63,10 @@ Step 1). **Never** guess the version silently.
 
 | File | Role |
 |---|---|
-| `CHANGELOG.md` (repo root) | Detailed changelog for the **current** release. Header `# Changelog: mdk-X.Y.Z` → `## vX.Y.Z` → sections. |
+| [`CHANGELOG.md`](../../CHANGELOG.md) (repo root) | Detailed changelog for the **current** release. Header `# Changelog: mdk-X.Y.Z` → `## vX.Y.Z` → sections. |
 | `docs/reference/changelog-archive/<year>-archive.md` | Past releases, appended in **ascending** order (newest at the bottom). Each entry is nested one level below the live changelog — top header `## vX.Y.Z`, sections `### …`, subsections `#### …` (see Step 3). |
-| `docs/reference/release-notes/X.Y.Z-release.md` | High-level per-version summary, cross-linked from the changelog. |
+| `docs/reference/release-notes/<X.Y.Z>-release.md` | High-level per-version summary, cross-linked from the changelog. |
+| `linkinator.config.json` (repo root) | Link-check config. One `skip` entry per release-tag URL — see Step 5. |
 
 ## Step 1 — Establish the range and versions
 
@@ -74,7 +80,7 @@ echo "Previous tag: $PREV_TAG"
   diff *to* — HEAD, or an explicit ref (e.g. a remote release branch) if the release is
   being cut there rather than on your checkout.
 - **Range to investigate:** `BASE..TARGET`. If the user named two tags, use them.
-- **`CUR_VERSION`** = version parsed from the existing `CHANGELOG.md` first line
+- **`CUR_VERSION`** = version parsed from the existing [`CHANGELOG.md`](../../CHANGELOG.md) first line
   (`# Changelog: mdk-X.Y.Z`) **on TARGET** — `git show TARGET:CHANGELOG.md | head -1`,
   not necessarily your working copy. This is the release about to be archived.
 - **`NEW_VERSION`** = `$ARGUMENTS` if given; else propose a bump from `$PREV_TAG`
@@ -145,7 +151,7 @@ re-nesting — the prose never changes. Reproduce the shape of the most recent e
 archive entry exactly (read it first: `grep -nE '^#{1,2} v[0-9]' <archive>` then look at
 the newest block).
 
-The live `CHANGELOG.md` looks like:
+The live [`CHANGELOG.md`](../../CHANGELOG.md) looks like:
 
 ```markdown
 # Changelog: mdk-X.Y.Z
@@ -191,9 +197,9 @@ by one blank line. **Do not touch any other archived entry** — the verify step
 the diff is append-only. A small transform script (drop/reorder/demote over the lines,
 respecting fences) is more reliable than hand-editing a long changelog.
 
-## Step 4 — Write the new `CHANGELOG.md`
+## Step 4 — Write the new [`CHANGELOG.md`](../../CHANGELOG.md)
 
-Overwrite `CHANGELOG.md` for `NEW_VERSION`, following the existing shape exactly:
+Overwrite [`CHANGELOG.md`](../../CHANGELOG.md) for `NEW_VERSION`, following the existing shape exactly:
 
 ```markdown
 # Changelog: mdk-<NEW_VERSION>
@@ -240,6 +246,29 @@ audience-facing summary — distill the changelog, don't copy it. End with:
 Format the release/tag link exactly as the previous `docs/reference/release-notes/*.md`
 file does — copy its convention rather than hardcoding a URL here.
 
+### Allow the not-yet-published tag URL through the link check
+
+**Do this in the same changeset, or CI fails.** That Downloads link points at a release
+tag that does not exist until the release is actually cut, so the repo's link checker
+404s on it — on the very PR that adds the notes. It is one broken link out of ~50, and it
+is the *only* thing that fails, so the job's red is easy to misread as a real problem
+with the changelog.
+
+Add the new tag's URL to the `skip` array in `linkinator.config.json`, directly after the
+previous release's entry:
+
+```jsonc
+"https://github.com/tetherto/mdk/releases/tag/v<PREV_VERSION>",
+"https://github.com/tetherto/mdk/releases/tag/v<NEW_VERSION>",   // ← add this
+```
+
+This is the standing convention, not a workaround: every tag from `v0.2.0` onward already
+has an identical entry for the same reason. Match the existing style — a plain literal
+string, and no `_skip_notes` entry (the tag entries deliberately carry none).
+
+Read the file first and copy the real URL shape from the neighbouring entries; the host
+and path are the *public mirror's*, which is not the repo you are working in.
+
 ## Step 6 — Verify and hand off
 
 - Confirm the archive still parses (version headers in ascending order, newest at the
@@ -248,6 +277,15 @@ file does — copy its convention rather than hardcoding a URL here.
   should sit at the end of the file — never edits inside prior versions.
 - Confirm cross-links resolve (release-notes path in CHANGELOG.md points to the file
   you created; archive link year is correct).
+- Confirm the new release-tag URL is in `linkinator.config.json`'s `skip` array and that
+  the config still parses — a trailing-comma slip there fails the link job just as loudly
+  as the 404 it exists to prevent:
+
+  ```bash
+  node -e 'const c=require("./linkinator.config.json");
+    const u="https://github.com/tetherto/mdk/releases/tag/v<NEW_VERSION>";
+    console.log(c.skip.some(s=>new RegExp(s).test(u)) ? "OK: skipped" : "MISSING")'
+  ```
 - Run a quick content check for confidential material before handing off (real
   customer/site/device names, partner names, internal-only features or flag names),
   using whatever pre-publish leak check your project provides.

@@ -26,7 +26,7 @@ Nothing reads source code at doc time — the docs are built from these manifest
 | `@tetherto/mdk-react-devkit` | `build` | `dist/registry.json` | export/JSDoc extraction |
 | `@tetherto/mdk-react-adapter` | `build` | `dist/hooks.json` | export/JSDoc extraction |
 | `@tetherto/mdk-ui-foundation` | `build:stores` | `dist/stores.json` | [`generate-stores.mts`](../packages/ui-foundation/scripts/generate-stores.mts) (ts-morph) |
-| `@tetherto/mdk-fonts` | `build` | `package.json` + `dist/fonts/` | static assets |
+| `@tetherto/mdk-fonts` | `build` | [`package.json`](../packages/fonts/package.json) + `dist/fonts/` | static assets |
 
 The flow, all inside the MDK CLI (`@tetherto/mdk-ui-cli`):
 
@@ -130,7 +130,7 @@ Add a generator to each backend package, mirroring
 - Write `dist/backend.json` (or `dist/workers.json`).
 - Wire it into the package build, e.g. add `"build:manifest": "node scripts/generate-backend.mjs"`
   and call it from the package's `build`. The backend workspaces build via
-  `install-packages.sh`; make each documented package produce its manifest as
+  [`install-packages.sh`](../../backend/core/install-packages.sh); make each documented package produce its manifest as
   part of that.
 
 At this point the backend produces manifests but nothing consumes them yet.
@@ -138,18 +138,18 @@ At this point the backend produces manifests but nothing consumes them yet.
 ### Step C — Teach the CLI to ingest the manifest
 
 This is the wiring, and it mirrors the existing `stores` lane one-to-one. In
-`ui/packages/cli/src`:
+[`ui/packages/cli/src`](../packages/cli/src/index.ts):
 
 | File | Add (mirroring stores) |
 | --- | --- |
-| `registry-loader.ts` | `loadBackendManifest()` + `loadBackendManifestFromDir()` |
-| `docs-data.ts` | a `DocsBackendRecord` type; accept `backend` in `buildDataset()`; emit `backend.json` (+ usage/example aux) from `datasetToFiles()`; include it in `computeDrift()` |
-| `docs-scaffold.ts` | a scaffold category so backend records become MDX pages under a `content/docs/backend/…` tree, wired into the nav |
-| `templates-docs/BackendDoc.tsx` | a renderer component (like the component/hook/store renderers) that reads a record and renders it; auto-installed + registered in `mdx-components.tsx` |
-| `docs-report.ts` | count backend records in the doc-writer report |
-| `commands/docs-build.ts` | resolve a `--backend-dir` (and package-name fallback), load the manifest, pass it to `buildDataset` |
-| `commands/docs-generate.ts` | auto-resolve the backend package dirs (like `react-devkit` etc.) so the one command picks them up with no extra flags |
-| `bin.ts` | expose `--backend-dir` on `docs:build` / `docs:generate` |
+| [`registry-loader.ts`](../packages/cli/src/registry-loader.ts) | `loadBackendManifest()` + `loadBackendManifestFromDir()` |
+| [`docs-data.ts`](../packages/cli/src/docs-data.ts) | a `DocsBackendRecord` type; accept `backend` in `buildDataset()`; emit `backend.json` (+ usage/example aux) from `datasetToFiles()`; include it in `computeDrift()` |
+| [`docs-scaffold.ts`](../packages/cli/src/docs-scaffold.ts) | a scaffold category so backend records become MDX pages under a `content/docs/backend/…` tree, wired into the nav |
+| `templates-docs/BackendDoc.tsx` (proposed — add this file) | a renderer component (like the component/hook/store renderers) that reads a record and renders it; auto-installed + registered in `mdx-components.tsx` |
+| [`docs-report.ts`](../packages/cli/src/docs-report.ts) | count backend records in the doc-writer report |
+| [`commands/docs-build.ts`](../packages/cli/src/commands/docs-build.ts) | resolve a `--backend-dir` (and package-name fallback), load the manifest, pass it to `buildDataset` |
+| [`commands/docs-generate.ts`](../packages/cli/src/commands/docs-generate.ts) | auto-resolve the backend package dirs (like `react-devkit` etc.) so the one command picks them up with no extra flags |
+| [`bin.ts`](../packages/cli/src/bin.ts) | expose `--backend-dir` on `docs:build` / `docs:generate` |
 
 Because `docs:generate` already builds the whole monorepo and walks the package
 dirs, once these dirs are resolved the one command covers the backend with **no
@@ -157,7 +157,7 @@ change to `mdk-docs`** beyond the renderer install (which is automatic).
 
 ### Step D — Port the backend prose
 
-The backend already has `backend/core/docs/` and `backend/workers/docs/`. To get
+The backend already has [`backend/core/docs/`](../../backend/core/docs/README.md) and [`backend/workers/docs/`](../../backend/workers/docs/). To get
 those hand-written pages onto the site, tag each Markdown file's front-matter
 with a `docs@tether_slug` (the same key the UI prose uses). `sync:docs` sweeps
 the repo root (`pathInsideRepo: .`), so tagged backend Markdown is picked up

@@ -1,0 +1,18 @@
+{
+  "name": "@tetherto/mdk-packages",
+  "version": "0.7.0",
+  "private": true,
+  "description": "MDK standalone packages workspace (CLI + developer skill). Independent npm workspace so packages can depend on one another locally and be published to npm individually.",
+  "license": "Apache-2.0",
+  "author": "Tether",
+  "engines": {
+    "node": ">=24"
+  },
+  "workspaces": [
+    "cli",
+    "mdk-skill",
+    "../backend/core/client",
+    "../backend/core/mdk",
+    "../backend/core/mdk-worker"
+  ]
+}

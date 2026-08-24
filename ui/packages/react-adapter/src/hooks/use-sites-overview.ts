@@ -1,4 +1,5 @@
-import { type TailLogEntry, tailLogQuery } from '@tetherto/mdk-ui-foundation'
+import type { TailLogEntry } from '@tetherto/mdk-ui-foundation'
+import { tailLogQuery } from '@tetherto/mdk-ui-foundation/presets/mining'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { headHead } from './list-things-utils'
@@ -76,6 +77,13 @@ export type UseSitesOverviewResult = {
  *
  * Miner counts come from the tail-log aggregates, not from listing individual
  * miners. Returns both the projected `units` and `rawUnits` for Site Detail.
+ *
+ * @remarks
+ * The `/auth/tail-log` and `/auth/list-things` endpoints (source 2 and,
+ * via {@link useContainerUnits}, source 1) are illustrative. MDK does not
+ * ship built-in endpoints — create your own via a
+ * [Gateway plugin](https://docs.tether.io/mdk/guides/gateway/plugins) matching
+ * your Worker/business logic.
  *
  * @category dashboard
  */

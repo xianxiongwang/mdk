@@ -42,7 +42,7 @@ export type SignInGoogleButtonProps = Omit<ButtonProps, 'onClick' | 'children'> 
 
 /**
  * One-click Google OAuth sign-in trigger. Defaults to a full-page redirect
- * to `${oauthBaseUrl}/oauth/google`, mirroring the production MOS flow.
+ * to `${oauthBaseUrl}/oauth/google`, mirroring the reference app's production flow.
  *
  * @category auth
  * @kernelCapability authentication

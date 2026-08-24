@@ -1,10 +1,9 @@
-import {
-  type MinerpoolExtDataEntry,
-  minerpoolStatsQuery,
-  type PoolMinerStats,
-} from '@tetherto/mdk-ui-foundation'
+import type { MinerpoolExtDataEntry, PoolMinerStats } from '@tetherto/mdk-ui-foundation'
+import { minerpoolStatsQuery } from '@tetherto/mdk-ui-foundation/presets/mining'
 import { useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query'
 import { useMemo } from 'react'
+import { headOrEmpty } from './list-things-utils'
+import { useAuthToken } from './use-auth-token'
 
 /* Pool API reports hashrate in raw H/s (hashes per second). */
 const HS_PER_PHS = 1_000_000_000_000_000
@@ -17,7 +16,7 @@ export type PoolDetail = {
 export type PoolRow = {
   /** Stable React key — derived from poolType. */
   id: string
-  /** Display name in the Mining OS style — `minerpool-{poolType}-shelf-0`. */
+  /** Display name in the reference app style — `minerpool-{poolType}-shelf-0`. */
   name: string
   /** Raw poolType string (e.g. `f2pool`, `ocean`). */
   poolType: string
@@ -39,14 +38,10 @@ export type UsePoolRowsResult = {
 }
 
 export type UsePoolRowsOptions = {
+  /** Disable the query. Defaults to running whenever an auth token is present. */
+  enabled?: boolean
   /** Polling interval in ms. Defaults to 120s. Pass 0 to disable. */
   refetchInterval?: number
-}
-
-const headOrEmpty = <T>(value: T[][] | undefined | null): T[] => {
-  if (!Array.isArray(value)) return []
-  const first = value[0]
-  return Array.isArray(first) ? (first as T[]) : []
 }
 
 const optionalNumber = (value: unknown): number | string => (typeof value === 'number' ? value : '')
@@ -84,17 +79,23 @@ const buildPoolRow = (stats: PoolMinerStats, index: number): PoolRow | null => {
  * {@link usePoolStats} so subscribing here doesn't trigger an extra
  * fetch — both hooks share the cache entry.
  *
- * Names follow Mining OS's "minerpool-`{poolType}`-shelf-0" convention so
+ * Names follow the reference app's "minerpool-`{poolType}`-shelf-0" convention so
  * the rows match what operators see in the production dashboard.
+ *
+ * @remarks
+ * Shares {@link usePoolStats}'s `/auth/ext-data` query — see that hook's
+ * `@remarks` for the endpoint's default-wiring and backing-plugin status.
  *
  * @category dashboard
  */
 export const usePoolRows = (options: UsePoolRowsOptions = {}): UsePoolRowsResult => {
   const queryClient = useQueryClient()
+  const token = useAuthToken()
   const factory = minerpoolStatsQuery(queryClient)
 
   const result: UseQueryResult<MinerpoolExtDataEntry[][], Error> = useQuery({
     ...factory,
+    enabled: options.enabled ?? !!token,
     refetchInterval: options.refetchInterval ?? 120_000,
   })
 

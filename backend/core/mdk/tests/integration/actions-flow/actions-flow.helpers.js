@@ -7,7 +7,7 @@ const test = require('brittle')
 const createTestnet = require('hyperdht/testnet')
 
 const sdk = require('../../..')
-const { createMdkClient } = require('../../../../client')
+const { createRawMdkClient } = require('../../../../client')
 
 const ACTION_TYPES = {
   // Container actions
@@ -85,7 +85,7 @@ const createClient = async ({
   bootstrap,
   key
 }) => {
-  const mdkClient = createMdkClient({
+  const mdkClient = createRawMdkClient({
     hrpc: {
       bootstrap,
       key

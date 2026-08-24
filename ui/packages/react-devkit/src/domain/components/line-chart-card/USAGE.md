@@ -39,7 +39,7 @@ upstream domain components can keep their data wrangling local.
 ## Data contracts
 
 `LineChartCardData` exposes `datasets`, `minMaxAvg`, `highlightedValue`,
-`footerStats`, `yTicksFormatter`, and `priceFormatter`. See `types.ts` in
+`footerStats`, `yTicksFormatter`, and `priceFormatter`. See [`types.ts`](./types.ts) in
 the same directory for the full shape.
 
 ## Notes

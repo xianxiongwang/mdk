@@ -1,9 +1,5 @@
-import {
-  buildContainerDetailParams,
-  flattenKernelEnvelope,
-  type ListThingsDevice,
-  listThingsQuery,
-} from '@tetherto/mdk-ui-foundation'
+import type { ListThingsDevice } from '@tetherto/mdk-ui-foundation'
+import { buildContainerDetailParams, flattenKernelEnvelope, listThingsQuery  } from '@tetherto/mdk-ui-foundation/presets/mining'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { OP_CENTRE_REALTIME_POLL_INTERVAL_MS } from './poll-intervals'
@@ -41,6 +37,12 @@ export type UseContainerSnapshotsResult = {
  *
  * Feeds the socket transform (`deriveSelectedSockets`) and the container
  * detail panel; skips the request entirely when nothing is selected.
+ *
+ * @remarks
+ * The `/auth/list-things` endpoint is illustrative. MDK does not ship a built-in
+ * endpoint for it — create your own via a
+ * [Gateway plugin](https://docs.tether.io/mdk/guides/gateway/plugins) matching
+ * your Worker/business logic. No reference implementation ships in this repo.
  *
  * @category op-centre
  */

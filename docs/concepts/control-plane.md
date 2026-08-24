@@ -1,7 +1,6 @@
 ---
 title: Control plane
 description: How Gateway, Kernel, and Workers communicate, and which layer owns each control-plane responsibility
-docs@tether_slug: concepts/control-plane
 todo: "Gap — Gateway does not yet pass a persistent caller seed to the HRPC client; do not promise that its allowlist identity survives restarts"
 ---
 
@@ -19,7 +18,8 @@ Use this page to understand which layer receives a request, which layer validate
 
 **Gateway** owns the consumer-facing surface, including HTTP and plugins. It is also where authentication belongs, though it implements none:
 that logic lives in the plugin controllers you write. Browser UIs and agents should enter MDK through the Gateway (they do not talk to Kernel
-directly). Agents can also reach MDK over MCP through the standalone [`@tetherto/mdk-mcp`][mcp-readme] package.
+directly). Agents can also reach MDK over MCP — a standalone [`@tetherto/mdk-mcp`][mcp-readme] process, or one the Gateway
+auto-generates in-process from a plugin's routes.
 
 **Kernel** owns coordination: Worker registry, telemetry routing, health checks, command dispatch, command state, and the
 write-action approval modules. Kernel trusts established callers; it does not validate user identity.
@@ -55,9 +55,10 @@ person or agent behind a request. Establishing that is the job of the plugin con
 
 ### Read requests
 
-Reads usually start in a Gateway route or plugin controller, pass through `services.mdkClient`, and reach Kernel as registry,
+Reads usually start in a Gateway route or plugin controller, pass through the plugin's own `mdkClient`, and reach Kernel as registry,
 capability, telemetry, or state queries. Kernel routes Worker-owned reads down to the relevant Worker and returns the result to the
-Gateway. Gateway controllers can combine live Kernel data with persisted local data from `services.dataProxy`.
+Gateway. There is no separate Gateway-side store: a controller that wants a historical or aggregated series fans that same
+`mdkClient` out across every registered Worker and reads it from the Worker's own persisted tail-log.
 
 > [!NOTE]
 > For plugin controller mechanics, use the [Gateway plugins guide][plugins-how-to].
@@ -99,8 +100,95 @@ writes. Workers answer
 `write.calls.request` while Kernel resolves candidate writes, then execute the final `command.request` after the configured vote
 thresholds are met.
 
+The two stages fail differently, which matters when you are handling errors in a controller. A vote whose `authPerms` lack a
+required family write perm throws `ERR_ACTION_DENIED`. A push does not: `ActionCaller` skips every Worker the caller has no
+write perm for, so an unpermitted push resolves no callable targets and comes back as `ERR_KERNEL_ACTION_CALLS_EMPTY` —
+indistinguishable, from the error alone, from a query that simply matched no Workers.
+
+Direct command dispatch carries no permission check at all. Kernel validates the envelope, resolves the owning Worker, and
+checks the command against that Worker's declared capabilities; nothing on that path reads `authPerms`.
+
 > [!NOTE]
 > For implementation steps, use the [write-actions how-to][write-actions-how-to]. For React hook names and exports, use the [React adapter README][react-adapter-readme].
+
+## End-to-end scenarios
+
+Two walkthroughs of the paths above, from the consumer down to the device and back: an AI agent driving the fleet over MCP,
+and a human clicking a button in a dashboard.
+
+### AI agent scenario
+
+A user instructs the AI agent: *"Keep the fleet healthy."* The agent monitors continuously, catches `wm002` overheating, reboots it,
+and notifies the user.
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant AI as AI Agent
+    participant Node as MCP server
+    participant Kernel as Kernel
+    participant Worker as Generic Worker
+
+    User->>AI: "Keep the fleet healthy."
+
+    Note over AI,Kernel: Step 1: Fleet discovery (read)
+    AI->>Node: Call MCP tool get_fleet_alerts
+    Node->>Node: Your validation, if the tool handler implements any
+    Node->>Kernel: HRPC query (via @tetherto/mdk-client)
+    Kernel-->>Node: Metrics
+    Node-->>AI: Tool result (wm002 is overheating)
+
+    Note over AI,Kernel: Step 2: Execution (write)
+    AI->>Node: Call MCP tool reboot_device (deviceId wm002)
+    Node->>Node: Your validation, if the tool handler implements any
+    Node->>Kernel: dispatch generic protocol message
+    Kernel->>Kernel: Resolve deviceId
+    Kernel->>Worker: command.request (HRPC)
+    Worker-->>Kernel: command.result
+    Kernel-->>Node: result OK
+    Node-->>AI: Tool result (Success)
+
+    AI-->>User: "wm002 was overheating and has been rebooted."
+```
+
+The MCP server here is either a standalone [`@tetherto/mdk-mcp`][mcp-readme] process or the one the Gateway auto-generates
+in-process from a plugin's routes; the path below it is the same either way.
+
+### Human UI scenario
+
+A user clicks "Reboot" on device `wm001` in the UI.
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant UI as React UI
+    participant Node as Gateway
+    participant Kernel as Kernel
+    participant Worker as Generic Worker
+
+    User->>UI: Click "Reboot" on wm001
+    UI->>Node: POST { `deviceId`, action, payload }
+
+    Note over Node,Kernel: Delegation
+    Node->>Kernel: dispatch generic protocol message
+    Kernel->>Kernel: Resolve Worker for `deviceId`
+    Kernel->>Kernel: Verify against capabilities
+
+    Note over Kernel,Worker: Execution
+    Kernel->>Worker: command.request (HRPC)
+    Worker-->>Kernel: Ack start
+    Worker->>Worker: Hardware-specific translation
+    Worker-->>Kernel: command.result
+
+    Kernel-->>Node: result OK
+    Node-->>UI: HTTP 200
+
+    Note over Worker,Kernel: State reflection
+    Kernel->>Worker: telemetry.pull (tick)
+    Worker-->>Kernel: Updated status (rebooting)
+```
+
+Both scenarios take the [direct command](#direct-commands) path: neither reboot is staged for approval, so no vote is involved.
 
 ## Developer surfaces
 
@@ -108,7 +196,7 @@ The write-action flow is reachable from two different layers depending on where 
 
 | Layer | Package | How you call it |
 |---|---|---|
-| React / UI | [`@tetherto/mdk-react-adapter`][react-adapter-readme] | Six hooks: `useSubmitSingleAction`, `useSubmitPendingActions`, `useVoteOnAction`, `useCancelAction`, `usePendingActions`, `useLiveActions` — call Gateway HTTP routes (plugin-provided) |
+| React / UI | [`@tetherto/mdk-react-adapter`][react-adapter-readme] | `useSubmitSingleAction`, `useSubmitPendingActions`, `useVoteOnAction`, `useCancelAction`, `usePendingActions`, `useLiveActions`, `useDeviceAction`: call Gateway HTTP routes (plugin-provided) |
 | Backend / Node.js | [`@tetherto/mdk-client`][client-readme] | Methods: `pushAction`, `pushActionsBatch`, `voteAction`, `cancelActionsBatch`, `getAction`, `getActionsBatch`, `queryActions` — send MDK Protocol envelopes directly to Kernel |
 
 > [!IMPORTANT]
@@ -141,8 +229,8 @@ The write-action flow is reachable from two different layers depending on where 
 [deployment-topologies]: deployment-topologies.md
 <!-- docs@tether.io: deployment-topologies → concepts/deployment-topologies -->
 
-[workers-discovery]: stack/workers.md#discovery-model
-<!-- docs@tether.io: workers-discovery → concepts/stack/workers#discovery-model -->
+[workers-discovery]: ../../backend/workers/docs/architecture.md#discovery-model
+<!-- docs@tether.io: workers-discovery → https://github.com/tetherto/mdk/blob/main/backend/workers/docs/architecture.md#discovery-model -->
 
 [plugins-how-to]: ../guides/gateway/plugins.md
 <!-- docs@tether.io: plugins-how-to → guides/gateway/plugins -->

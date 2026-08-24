@@ -42,7 +42,7 @@ miners or cabinets. Designed to be controlled by URL state in the host app.
 ## Data contracts
 
 - `DeviceExplorerDeviceType = "miner" | "cabinet"`
-- `Device` — `foundation/types/device`
+- `Device` — [`foundation/types/device`](../../types/device.ts)
 - `LocalFilters`, `DataTableRowSelectionState` — re-exported from `core`.
 
 ## Notes

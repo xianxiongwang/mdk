@@ -247,3 +247,30 @@ test('stop() disconnects every online device via the plugin', async (t) => {
 
   t.alike(simPlugin._disconnected, ['SIM-001', 'SIM-002'])
 })
+
+test('storeDir persists DHT/RPC seeds across runtime instances', async (t) => {
+  const fs = require('fs')
+  const os = require('os')
+  const path = require('path')
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mdk-worker-seed-'))
+  t.teardown(() => { try { fs.rmSync(dir, { recursive: true, force: true }) } catch {} })
+
+  const first = new WorkerRuntime(simPlugin, { workerId: 'w', devices: DEVICES, storeDir: dir })
+  const seedDht = await first._getOrCreateSeed('seedDht')
+  const seedRpc = await first._getOrCreateSeed('seedRpc')
+  t.is(seedDht.length, 32)
+  t.is(seedRpc.length, 32)
+  t.ok(fs.existsSync(path.join(dir, 'seedDht')))
+  t.ok(fs.existsSync(path.join(dir, 'seedRpc')))
+
+  const second = new WorkerRuntime(simPlugin, { workerId: 'w', devices: DEVICES, storeDir: dir })
+  t.alike(await second._getOrCreateSeed('seedDht'), seedDht)
+  t.alike(await second._getOrCreateSeed('seedRpc'), seedRpc)
+})
+
+test('without store or storeDir, seeds are random per call', async (t) => {
+  const runtime = new WorkerRuntime(simPlugin, { workerId: 'w', devices: DEVICES })
+  const a = await runtime._getOrCreateSeed('seedRpc')
+  const b = await runtime._getOrCreateSeed('seedRpc')
+  t.is(a.equals(b), false)
+})

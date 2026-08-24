@@ -1,5 +1,5 @@
 import { useDevices } from '@tetherto/mdk-react-adapter'
-import { getDefaultHistoricalAlertsRange } from '@tetherto/mdk-ui-foundation'
+import { getDefaultHistoricalAlertsRange } from '@tetherto/mdk-ui-foundation/presets/mining'
 import { useCallback, useEffect, useState } from 'react'
 import type { JSX } from 'react'
 
@@ -18,10 +18,11 @@ import './alerts.scss'
 
 export type AlertsProps = {
   /**
-   * Devices payload powering the "Current Alerts" table.
-   * Mirrors the API response shape of `useGetListThingsQuery({ ... alerts query })`.
+   * Devices powering the "Current Alerts" table — a flat list of rows that carry
+   * `last.alerts`. Any backend that can produce that shape works; there is no
+   * response envelope to reproduce.
    */
-  devices?: Device[][]
+  devices?: Device[]
   /**
    * Loading flag for the "Current Alerts" table.
    */

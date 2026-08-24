@@ -13,7 +13,7 @@ Use this page to route to the docs you need.
 
 The monorepo is organized into three development domains:
 
-- [core](../backend/core/docs/README.md) — Kernel, Gateway, MCP server, MDK SDK, MDK client
+- [Core](../backend/core/docs/README.md) — Kernel, Gateway, MCP server, MDK SDK, MDK client
 - [Workers](../backend/workers/README.md) — protocol translators for data sources, e.g., miners, pools, power meters, sensors, containers
 - [UI toolkit](../ui/README.md) — headless state and API contracts, React bindings, mining-domain components, and application scaffolding
 
@@ -35,6 +35,7 @@ Start with the product, then the stack, then run something.
 | --- | --- |
 | What MDK is and why it exists | [`concepts/about.md`](concepts/about.md) |
 | How the pieces fit together | [`concepts/architecture.md`](concepts/architecture.md) |
+| What the stack is made of, and where each piece is documented | [`concepts/architecture.md`](concepts/architecture.md#the-stack) |
 | The vocabulary you need (Kernel, Worker, manager, thing, mock) | [`reference/glossary.md`](reference/glossary.md) |
 | Run a complete site end to end | [`tutorials/run-a-site.md`](tutorials/run-a-site.md) |
 | How Gateway, Kernel, and Workers communicate | [`concepts/control-plane.md`](concepts/control-plane.md) |
@@ -74,13 +75,14 @@ scripts, and Gateway extensions. Your starting point depends on which you're bui
 | Worker runtime contracts (telemetry, commands, health, errors) | `backend/workers/<family>/<provider>/mdk-contract.json` + `USAGE.md` + `examples/` |
 | Build a Worker and author its contract | [`guides/workers/build-a-worker.md`](guides/workers/build-a-worker.md) |
 | Workers (lifecycle, install pattern) | [`../backend/workers/docs/install-pattern.md`](../backend/workers/docs/install-pattern.md) |
-| Runnable site examples | [`examples/full-site/`](../examples/full-site/README.md) |
+| Runnable site examples | [`examples/mvp-site/`](../examples/mvp-site/README.md) (the Starter site: minimal, PM2-supervised), [`examples/full-site/`](../examples/full-site/README.md) (full 11-worker fleet) |
 
 **React / UI developer** — building browser-based operator UIs on top of MDK
 
 | Topic | Where |
 | --- | --- |
 | Build a dashboard end to end | [`tutorials/build-a-dashboard.md`](tutorials/build-a-dashboard.md) |
+| Scaffold a dashboard against a running stack | `mdk create dashboard` — [`../packages/cli/README.md`](../packages/cli/README.md) |
 | UI toolkit overview | [`../ui/README.md`](../ui/README.md) |
 | React adapter: stores, hooks, and the `<MdkProvider>` | [`../ui/packages/react-adapter/README.md`](../ui/packages/react-adapter/README.md) |
 | Pre-built UI components and blueprints | [`../ui/packages/react-devkit/README.md`](../ui/packages/react-devkit/README.md) |

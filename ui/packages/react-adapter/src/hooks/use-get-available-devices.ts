@@ -1,4 +1,4 @@
-import { isContainer, isMiner } from '@tetherto/mdk-ui-foundation'
+import { isContainer, isMiner } from '@tetherto/mdk-ui-foundation/presets/mining'
 
 /**
  * Minimal device shape consumed by `useGetAvailableDevices` — only `type`
@@ -30,12 +30,11 @@ export type UseGetAvailableDevicesOptions = {
  * receive its output via prop) instead of inlining `isMiner` / `isContainer`.
  *
  * @remarks
- * The `/auth/list-things` endpoint is illustrative. MDK does not ship built-in
- * endpoints — create your own via a
+ * The `/auth/list-things` endpoint is illustrative. MDK does not ship a built-in
+ * endpoint for it — create your own via a
  * [Gateway plugin](https://docs.tether.io/mdk/guides/gateway/plugins) matching
- * your Worker/business logic. See the
- * [full-site example](https://github.com/tetherto/mdk/tree/main/examples/full-site/plugins/site)
- * for a working reference.
+ * your Worker/business logic. No reference implementation of `/auth/list-things`
+ * ships in this repo.
  *
  * @category dashboard
  */

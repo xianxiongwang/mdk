@@ -44,7 +44,7 @@ npm run --workspace @tetherto/mdk-catalog-ui build
 ## Build info
 
 The production bundle is aggressively minified with Terser, which strips
-all `console.*` calls (`drop_console: true` in `vite.config.ts`). To keep
+all `console.*` calls (`drop_console: true` in [`vite.config.ts`](./vite.config.ts)). To keep
 build metadata available in deployed environments without weakening that
 setting, build info is attached to the global `window` object and
 appended to the document title at bootstrap.
@@ -68,5 +68,5 @@ without opening devtools.
 ### Shape
 
 `window.__MDK_BUILD__` matches the `__BUILD_INFO__` define injected by
-Vite — see `vite.config.ts` for how each field is populated, and
-`src/vite-env.d.ts` for the TypeScript declaration.
+Vite — see [`vite.config.ts`](./vite.config.ts) for how each field is populated, and
+[`src/vite-env.d.ts`](./src/vite-env.d.ts) for the TypeScript declaration.

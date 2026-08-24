@@ -1,4 +1,4 @@
-import { authStore } from '@tetherto/mdk-ui-foundation'
+import { authStore, WEBAPP_SHORT_NAME } from '@tetherto/mdk-ui-foundation'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderHook, waitFor } from '@testing-library/react'
 import type { ReactNode } from 'react'
@@ -44,7 +44,7 @@ describe('useHashrateChartData', () => {
     vi.unstubAllGlobals()
   })
 
-  it('emits Mining OS + Aggr Pool + per-pool datasets from the two upstream feeds', async () => {
+  it('emits app-side + Aggr Pool + per-pool datasets from the two upstream feeds', async () => {
     const fetchImpl = stubMinerAndPool({
       miner: [
         { ts: 1_700_000_000_000, hashrate_mhs_1m_sum_aggr: 60_000_000_000 },
@@ -77,8 +77,8 @@ describe('useHashrateChartData', () => {
     const data = result.current.data
     expect(data).toBeDefined()
 
-    /* Mining OS first (driving highlighted + min/max/avg). */
-    expect(data!.datasets[0]!.label).toBe('Mining OS Hash Rate')
+    /* App-side series first (driving highlighted + min/max/avg). */
+    expect(data!.datasets[0]!.label).toBe(`${WEBAPP_SHORT_NAME} Hash Rate`)
     expect(data!.datasets[0]!.borderColor).toBe('#f7931a')
     expect(data!.datasets[0]!.data).toEqual([
       { x: 1_700_000_000_000, y: 60 },
@@ -99,7 +99,7 @@ describe('useHashrateChartData', () => {
     expect(data!.datasets[3]!.borderColor).toBe('#ff3b30')
     expect(data!.datasets[3]!.data[0]!.y).toBeCloseTo(53.63, 2)
 
-    /* Highlighted + footer track Mining OS. */
+    /* Highlighted + footer track the app-side series. */
     expect(data!.highlightedValue).toEqual({ value: '62.500', unit: 'PH/s' })
     expect(data!.minMaxAvg).toEqual({
       min: '60.00 PH/s',
@@ -116,7 +116,7 @@ describe('useHashrateChartData', () => {
     expect(decodeURIComponent(extUrl)).toContain('stats-history')
   })
 
-  it('falls back to a single Mining OS dataset when pool history is empty', async () => {
+  it('falls back to a single app-side dataset when pool history is empty', async () => {
     stubMinerAndPool({
       miner: [{ ts: 1_700_000_000_000, hashrate_mhs_1m_sum_aggr: 60_000_000_000 }],
       pool: [],
@@ -129,7 +129,7 @@ describe('useHashrateChartData', () => {
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
     expect(result.current.data?.datasets).toHaveLength(1)
-    expect(result.current.data?.datasets[0]!.label).toBe('Mining OS Hash Rate')
+    expect(result.current.data?.datasets[0]!.label).toBe(`${WEBAPP_SHORT_NAME} Hash Rate`)
   })
 
   it('emits one dataset slot when both feeds are empty (with no points)', async () => {

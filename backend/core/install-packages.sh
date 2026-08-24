@@ -15,7 +15,7 @@ cd "$ROOT"
 REPO_ROOT="$(cd "$ROOT/../.." && pwd)"
 
 MODE="${1:-install}"
-PACKAGES=(client gateway kernel mcp mdk mdk-worker plugins)
+PACKAGES=(agent client gateway kernel mcp mdk mdk-worker plugins)
 
 # Packages that are members of the repo-root npm `workspaces` resolve their
 # sibling @tetherto/mdk-* deps (e.g. mdk-client) via semver ranges, not

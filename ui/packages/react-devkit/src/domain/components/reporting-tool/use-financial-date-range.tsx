@@ -41,7 +41,7 @@ export type UseFinancialDateRangeResult = {
 
 /**
  * Converts a calendar range (wall date fields from the two Date instances) into
- * UTC epoch ms boundaries in `timezone`, mirroring Mining OS `getRangeTimestamps`
+ * UTC epoch ms boundaries in `timezone`, mirroring the reference app `getRangeTimestamps`
  * (full month vs day span, end clamped to "yesterday" when still in the future).
  */
 export const rangeDatesToFinancialMs = (

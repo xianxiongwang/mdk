@@ -34,6 +34,6 @@ const form = useForm({ resolver: zodResolver(schema), defaultValues: { email: ""
 ## Notes
 
 - Pre-built field helpers (`FormInput`, `FormSelect`, `FormCheckbox`,
-  `FormDatePicker`, `FormCascader`, etc.) live in `form-fields.tsx`.
-- See the directory's `README.md` and `QUICK_REFERENCE.md` for the full
+  `FormDatePicker`, `FormCascader`, etc.) live in [`form-fields.tsx`](./form-fields.tsx).
+- See the directory's [`README.md`](./README.md) and [`QUICK_REFERENCE.md`](./QUICK_REFERENCE.md) for the full
   pattern catalog.

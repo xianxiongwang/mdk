@@ -5,7 +5,9 @@
  *
  * Kept here so existing imports under `foundation/utils/query-utils`
  * continue to resolve. New code should import directly from
- * `@tetherto/mdk-ui-foundation`.
+ * `@tetherto/mdk-ui-foundation/presets/mining` — these builders emit the
+ * mining Gateway's Mongo selector vocabulary, so they are preset-scoped and
+ * not part of the backend-agnostic root barrel.
  */
 
 export {
@@ -24,4 +26,4 @@ export {
   getLvCabinetDevicesByRoot,
   getMinersByContainerTagsQuery,
   getSitePowerMeterQuery,
-} from '@tetherto/mdk-ui-foundation'
+} from '@tetherto/mdk-ui-foundation/presets/mining'

@@ -70,7 +70,6 @@ export const DEMO_ALERTS: Alert[] = Array.from({ length: 18 }, (_, i) => buildAl
 export const DEMO_DEVICES: Device[] = Array.from({ length: 12 }, (_, i) =>
   buildDevice(i, DEMO_ALERTS),
 )
-export const DEMO_DEVICES_PAYLOAD: Device[][] = [DEMO_DEVICES]
 export const DEMO_HISTORICAL_ALERTS: Alert[] = Array.from({ length: 24 }, (_, i) =>
   buildHistoricalAlert(i, DEMO_DEVICES),
 )

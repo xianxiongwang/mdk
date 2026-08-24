@@ -2,27 +2,22 @@
 
 ## Overview
 
-The Gateway is where your business logic is defined and you can extend the logic with [plugins](#extend-the-gateway). It's your Node.js server 
-that connects to the Kernel over HRPC, sends typed queries and receives aggregated responses. You decide what happens to your telemetry data.
+The Gateway is a container that hosts [plugins](#extend-the-gateway): each plugin defines its own routes and business logic, and
+opens its own connection to Kernel.
 
-[Gateway](../../../docs/concepts/stack/gateway.md), `@tetherto/mdk-gateway`, wraps [`@tetherto/mdk-client`](../client/README.md)
-and delivers an HTTP interface for consumers that need those capabilities. It handles plugin-declared routing and fleet aggregation
-on top of the [Kernel](../kernel/README.md). Agents can reach MDK over MCP through the standalone [`@tetherto/mdk-mcp`](../mcp/README.md) package.
+The Gateway, `@tetherto/mdk-gateway`, delivers an HTTP interface on top of the
+[Kernel](../kernel/README.md): each plugin builds its own [`@tetherto/mdk-client`](../client/README.md) from its context to reach
+the Kernel, which routes a query to whichever [Worker](../../workers/README.md) owns the target device.
 
 Authentication is not among its responsibilities, as the [security model](#security-model) sets out.
-For use cases that do not need the Gateway's HTTP surface or plugin system, see
-[Connect without the Gateway](../../../docs/concepts/stack/gateway.md#connect-without-the-gateway).
-
-> [!TIP] 
-> New to the Gateway? Read the [Gateway concept page](../../../docs/concepts/stack/gateway.md). 
-> Ready to run it? Follow the [run guide](../../../docs/guides/gateway/run.md).
 
 > [!NOTE]
-> `startGateway()`, used throughout this page, is exported by [`@tetherto/mdk`](../mdk/README.md), not by this
-> `@tetherto/mdk-gateway` package — it's the bootstrap function that boots this Gateway worker. The Gateway connects
-> to Kernel via [`@tetherto/mdk-client`](../client/README.md). While `startGateway()` currently accepts one Kernel
-> endpoint: `kernel`, `kernelKey`, or a key file, multi-site aggregation (a single Gateway fronting several per-site
-> Kernel kernels via `mdk-client`) is on the roadmap.
+> The Gateway's responsibilities stop at sending the request to the right controller and returning whatever that controller produces; 
+> it never combines results from more than one controller itself. The route (the URL your app calls) is handled entirely by the plugin 
+> that declared it. That plugin's "controller" must build the whole answer 
+> and hand it back as the HTTP response. If a route needs to combine telemetry from many
+> devices, such as total hashrate across every miner on site, that happens inside that one controller, which must
+> query every relevant Worker and aggregate the results.
 
 ## HTTP API overview
 
@@ -41,9 +36,14 @@ Which paths that adds up to is a property of the manifests, not of the Gateway. 
 
 ## Live data
 
-The Gateway has no push channel — clients poll its HTTP routes for updates. The
-[React adapter](../../../ui/packages/react-adapter/README.md) does this on fixed cadences for its hooks (for example, `useThingDetail`
-polls every 20 seconds, `useExplorerList` every 60).
+The Gateway has no push channel — clients poll its HTTP routes for updates. 
+
+> To see an example of this, consider the [React adapter](../../../ui/packages/react-adapter/README.md) which does this on fixed cadences for its 
+> hooks (for example, `useThingDetail` polls every 20 seconds, `useExplorerList` every 60). 
+> Note, while the poll cadence is a real Gateway fact, the route those two hooks poll,
+> `/auth/list-things`, is illustrative — it is not served by any [built-in plugin](../plugins/README.md#default-plugins). Get live data out of these hooks by 
+> writing a [Gateway plugin](../../../docs/guides/gateway/plugins.md) that serves the shape the hook expects; 
+> see each hook's own JSDoc for its exact endpoint and disclosure.
 
 ## Configuration
 
@@ -63,13 +63,18 @@ Edit the generated files to persist your changes across restarts.
 
 ## Kernel connection
 
+> [!NOTE]
+> `startGateway()`, used throughout this section, is exported by [`@tetherto/mdk`](../mdk/README.md), not by this
+> `@tetherto/mdk-gateway` package. A Gateway connects to exactly one Kernel; fronting several per-site
+> Kernels from a single Gateway is not supported.
+
 The Gateway dials Kernel over HRPC (`@hyperswarm/rpc`) using the Kernel's listener public key. `startGateway()` resolves that key
 **before any boot side effects**, in this order:
 
-1. `kernelKey` — hex string or Buffer. Pass `kernelKey: false` to run without a Kernel connection (useful when testing without a live Kernel; 
-`services.mdkClient` stays `null`).
-2. `kernel` — an in-process `KernelManager` handle; the key comes from `kernel.getPublicKey()`.
-3. Key file — `keyFile` (default: `DEFAULT_KEY_FILE`, i.e. `os.tmpdir()/mdk/.kernel-key`), which `getKernel()` publishes on start.
+1. `kernelKey`: hex string or Buffer. Pass `kernelKey: false` to run without a Kernel connection (useful when testing without a live Kernel; 
+a plugin's own `mdkClient` still builds, but its calls fail per request with [`ERR_MDK_CLIENT_UNAVAILABLE`](../client/README.md#createmdkclientconfig-opts--auto-connecting-client)).
+2. `kernel`: an in-process `KernelManager` handle; the key comes from `kernel.getPublicKey()`.
+3. Key file: `keyFile` (default: `DEFAULT_KEY_FILE`, i.e. `os.tmpdir()/mdk/.kernel-key`), which `getKernel()` publishes on start.
 4. If none resolves, `startGateway()` throws `ERR_KERNEL_KEY_FILE_NOT_FOUND`.
 
 **Zero-config (same host, default)**: Start the Kernel with `getKernel()`, then `startGateway()` with no endpoint options: the
@@ -82,15 +87,15 @@ it on the Gateway host:
 await startGateway({ kernelKey: '<kernel-listener-pubkey-hex>' })
 ```
 
-For testnets, pass `bootstrap` to thread custom DHT bootstrap nodes to the Gateway's Client.
+For testnets, pass `bootstrap` to thread custom DHT bootstrap nodes to each plugin's own client.
 
-Note the resolution happens in `startGateway()`, not in the worker: the Gateway worker (`http.node.wrk.js`) consumes `ctx.kernelKey`
-(plus optional `ctx.kernelBootstrap`) and deliberately does not read the key file itself — raw `worker.js` boots must pass
-`ctx.kernelKey` explicitly. If the HRPC connect fails, the worker degrades gracefully (`mdkClient = null`) instead of crashing the
-HTTP server.
+Note the resolution happens in `startGateway()`, not in the worker: the Gateway worker ([`http.node.wrk.js`](workers/http.node.wrk.js)) consumes `ctx.kernelKey`
+(plus optional `ctx.kernelBootstrap`) and deliberately does not read the key file itself — raw [`worker.js`](./worker.js) boots must pass
+`ctx.kernelKey` explicitly. The worker itself never dials Kernel; it only hands the resolved key to each plugin's context. If the
+HRPC connect fails, that plugin's own client fails its calls with `ERR_MDK_CLIENT_UNAVAILABLE` instead of crashing the HTTP server.
 
-Pre v1.0, Kernel's `auth.whitelist` defaults to empty (any HRPC caller is admitted). When an allowlist is configured, the Gateway's DHT
-public key must be added before the connection is accepted — see [Kernel transport](../kernel/README.md#transports).
+Pre v1.0, Kernel's allowlist, `auth.whitelist` defaults to empty (any HRPC caller is admitted). When an allowlist is configured, the [Gateway's DHT
+public key must be added before the connection is accepted](../kernel/README.md#transports).
 
 ## Security model
 
@@ -121,11 +126,12 @@ await startGateway({
 })
 ```
 
-Plugins receive `(req, services)` in every controller, where `services.mdkClient` and `services.dataProxy` give access to Kernel
-and historical data without any protocol knowledge. The default plugins (`telemetry`, `site-hashrate`, `site-monitor`) are loaded the same way.
+Plugins receive `(req)` in every controller, and each builds its own `@tetherto/mdk-client` from the
+context config it reads via `require('@tetherto/mdk-gateway/plugin')`. The default plugins (`telemetry`, `site-hashrate`, `site-monitor`)
+are loaded the same way.
 
 The [plugin authoring guide](../../../docs/guides/gateway/plugins.md) and the [plugin reference](../plugins/README.md) cover the full 
-manifest schema, controller contract, services bag, and loader errors.
+manifest schema, controller contract, plugin context, and loader errors.
 
 ### Raw Fastify routes
 
@@ -144,7 +150,7 @@ await startGateway({
 })
 ```
 
-These are registered as plain Fastify routes: no `services` injection and no manifest validation. Unlike a plugin controller, the handler
+These are registered as plain Fastify routes: no plugin context and no manifest validation. Unlike a plugin controller, the handler
 receives the Fastify `reply`, so this is the way to control status codes.
 
 ## Directory layout
@@ -156,7 +162,7 @@ gateway/
 │   └── lib/
 │       ├── plugin-loader.js      # Loads mdk-plugin.json manifests, validates structure
 │       ├── plugin-adapter.js     # Converts plugin routes to Fastify handlers, applies caching
-│       ├── data.proxy.js         # Historical data aggregation via worker tail-logs
+│       ├── plugin-gateway.js     # Builds each plugin's per-plugin context ({ config })
 │       ├── constants.js
 │       ├── utils.js
 │       └── server/lib/           # cachedRoute.js and send200.js, used by the adapter
@@ -171,9 +177,12 @@ gateway/
 
 ## Next steps
 
-- Understand the [Gateway as a development surface](../../../docs/concepts/stack/gateway.md)
 - [Run the Gateway](../../../docs/guides/gateway/run.md)
 - [Add routes with the plugin system](../../../docs/guides/gateway/plugins.md)
 - Browse the [default plugin route reference](../plugins/README.md)
 - See a complete [worked example](../../../examples/full-site/README.md)
 - Browse the [`startGateway()` options](../mdk/README.md)
+- Reach MDK over MCP — a standalone [`@tetherto/mdk-mcp`](../mcp/README.md) process, or one this Gateway auto-generates
+  in-process from a mounted plugin's routes (`autoGenerateMcp: true`)
+- Skip the HTTP surface and plugin system entirely by [connecting to Kernel directly](../client/README.md) with
+  `@tetherto/mdk-client` — viable for a background service that only dispatches commands, though most applications build on the Gateway

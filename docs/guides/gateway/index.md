@@ -6,7 +6,11 @@ docs@tether_slug: guides/gateway
 
 ## Overview
 
-The Gateway wraps [`@tetherto/mdk-client`][mdk-client-readme] to deliver an HTTP interface for your frontend. These guides cover how to run it and extend it with the plugin system. Agents can reach MDK over MCP through the standalone [`@tetherto/mdk-mcp`][mcp-readme] package.
+The Gateway is a container that hosts plugins and delivers an HTTP interface for your frontend: each plugin builds its own [`@tetherto/mdk-client`][mdk-client-readme] from its context. These guides cover how to run it and extend it with the plugin system.
+
+> [!NOTE]
+> An AI agent reaches MDK over MCP, not the Gateway's HTTP surface directly — served either by a standalone
+> [`@tetherto/mdk-mcp`][mcp-readme] process, or by the Gateway itself when it auto-generates tools from a mounted plugin's routes.
 
 > [!NOTE]
 > If Gateway, Kernel, or plugin are unfamiliar, read [terminology][terminology] first. For the full developer model — extension, data access,
@@ -26,6 +30,7 @@ The Gateway wraps [`@tetherto/mdk-client`][mdk-client-readme] to deliver an HTTP
 - [Understand the Gateway as a development surface][gateway-concept]
 - Read the [Gateway API reference][gateway-readme]
 - Choose a [deployment shape][deployment-topologies]
+- [Give an operator a chat interface to the fleet][agent-guides] by deploying the operator agent behind the Gateway
 
 ## Links
 
@@ -35,11 +40,11 @@ The Gateway wraps [`@tetherto/mdk-client`][mdk-client-readme] to deliver an HTTP
 [terminology]: ../../reference/glossary.md
 <!-- docs@tether.io: terminology → reference/glossary -->
 
-[gateway-concept]: ../../concepts/stack/gateway.md
-<!-- docs@tether.io: gateway-concept → concepts/stack/gateway -->
+[gateway-concept]: ../../../backend/core/gateway/README.md
+<!-- docs@tether.io: gateway-concept → https://github.com/tetherto/mdk/blob/main/backend/core/gateway/README.md -->
 
-[deployment-topologies]: ../../concepts/deployment-topologies.md
-<!-- docs@tether.io: deployment-topologies → concepts/deployment-topologies -->
+[deployment-topologies]: ../deployment/index.md
+<!-- docs@tether.io: deployment-topologies → guides/deployment -->
 
 [run]: run.md
 <!-- docs@tether.io: run → guides/gateway/run -->
@@ -58,3 +63,6 @@ The Gateway wraps [`@tetherto/mdk-client`][mdk-client-readme] to deliver an HTTP
 
 [mcp-readme]: ../../../backend/core/mcp/README.md
 <!-- docs@tether.io: mcp-readme → https://github.com/tetherto/mdk/blob/main/backend/core/mcp/README.md -->
+
+[agent-guides]: ../agent/index.md
+<!-- docs@tether.io: agent-guides → guides/agent -->

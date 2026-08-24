@@ -28,7 +28,7 @@ The server exposes two sets of tools over the same endpoint.
 
 ### Agent-facing tools
 
-These satisfy the agent tool authoring contract: each is named
+These satisfy the [agent tool authoring contract][tool-contract]: each is named
 `<verb>_<entity>`, takes only closed enums and device references, and returns a `summary` line
 alongside its data. They declare routing metadata in `_meta["x-mdk-agent"]`, so an MDK agent
 admits them and shows them to its model.
@@ -65,11 +65,22 @@ an MDK agent withholds them from its model rather than letting it read an unaggr
 
 ### Tool parameters
 
-**`count_devices`, `list_devices`**
+**`count_devices`**
 ```
 family  enum  optional — miner | container | powermeter | sensor | pool | all, default "all"
 state   enum  optional — all | online | offline, default "all"
 ```
+
+**`list_devices`**
+```
+family  enum     optional — as above, default "all"
+state   enum     optional — as above, default "all"
+limit   integer  optional — 1..50, default 50 — how many to name
+```
+
+`count` is how many were **named**, `total` is how many **matched**. They differ once a fleet
+runs past `limit`, and a caller reading `count` for the fleet size under-reports it — so read
+`total` for "how many are there", and raise `limit` to see more of them.
 
 **`get_device`**
 ```
@@ -399,12 +410,14 @@ exercise the tools:
 
 - Run the [full-site example][full-site]: the complete stack this MCP server is part of
 - [Build a minimal dashboard][minimal-dashboard]: single-Worker + Gateway pattern the MCP server extends
-- [AI agents and the MCP server][ai-agents-concept]: Gateway MCP for production deployments with auth/RBAC
+- [AI agents and the MCP server][ai-agents-concept]: how an agent reaches the fleet, and the security envelope you supply
 - [Gateway plugins][gateway-plugins]: add custom HTTP routes alongside the MCP endpoint
 
 ## Links
 
 [full-site]: ../README.md
 [minimal-dashboard]: ../../../docs/tutorials/build-a-dashboard.md
-[ai-agents-concept]: ../../../docs/concepts/architecture.md#ai-agents-and-the-mcp-server
+[ai-agents-concept]: ../../../backend/core/mcp/README.md#ai-agents-and-the-mcp-server
 [gateway-plugins]: ../../../docs/guides/gateway/plugins.md
+
+[tool-contract]: ../../../backend/core/agent/docs/TOOLS.md

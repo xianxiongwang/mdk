@@ -1,20 +1,11 @@
-import {
-  buildHashrateTailLogParams,
-  type DashboardQueryRange,
-  getLatestSample,
-  type HashRateLogEntry,
-  readHashrateMhs,
-  tailLogQuery,
-} from '@tetherto/mdk-ui-foundation'
+import { getLatestSample, type HashRateLogEntry } from '@tetherto/mdk-ui-foundation'
+import { tailLogQuery } from '@tetherto/mdk-ui-foundation/presets/mining'
+import { buildHashrateTailLogParams, type DashboardQueryRange, readHashrateMhs } from '@tetherto/mdk-ui-foundation/presets/mining'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { headOrEmpty } from './list-things-utils'
+import { useAuthToken } from './use-auth-token'
 
 const MHS_PER_PHS = 1_000_000_000
-
-const headOrEmpty = <T>(value: T[][] | undefined | null): T[] => {
-  if (!Array.isArray(value)) return []
-  const first = value[0]
-  return Array.isArray(first) ? (first as T[]) : []
-}
 
 export type SiteHashrate = {
   /** Latest aggregate value in PH/s. `undefined` while loading or with no data. */
@@ -25,6 +16,8 @@ export type SiteHashrate = {
 }
 
 export type UseSiteHashrateParams = DashboardQueryRange & {
+  /** Disable the query. Defaults to running whenever an auth token is present. */
+  enabled?: boolean
   /** Polling interval in ms. Defaults to 60s. Pass 0 to disable. */
   refetchInterval?: number
 }
@@ -37,15 +30,24 @@ export type UseSiteHashrateParams = DashboardQueryRange & {
  *
  * Use this for the header stats strip (`<HeaderHashrateBox />`).
  *
+ * @remarks
+ * The `/auth/tail-log` endpoint is illustrative. MDK does not ship a built-in
+ * endpoint for it — create your own via a
+ * [Gateway plugin](https://docs.tether.io/mdk/guides/gateway/plugins) matching
+ * your Worker/business logic.
+ *
  * @category dashboard
  */
 export const useSiteHashrate = (params: UseSiteHashrateParams): SiteHashrate => {
   const queryClient = useQueryClient()
+  const token = useAuthToken()
   const factory = tailLogQuery(queryClient, buildHashrateTailLogParams(params))
 
   const { data, isLoading } = useQuery({
     ...factory,
+    enabled: params.enabled ?? !!token,
     refetchInterval: params.refetchInterval ?? 60_000,
+    /* single-Kernel assumption: one node's series. See list-things-utils.ts. */
     select: (raw: HashRateLogEntry[][]) => headOrEmpty<HashRateLogEntry>(raw),
   })
 

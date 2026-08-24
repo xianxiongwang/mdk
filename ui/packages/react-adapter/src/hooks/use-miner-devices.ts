@@ -1,7 +1,7 @@
-import { getListQuery, type ListThingsDevice, listThingsQuery } from '@tetherto/mdk-ui-foundation'
+import type { ListThingsDevice } from '@tetherto/mdk-ui-foundation'
+import { flattenKernelEnvelope, getListQuery, listThingsQuery   } from '@tetherto/mdk-ui-foundation/presets/mining'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { headOrEmpty } from './list-things-utils'
 import { POOL_MANAGER_POLL_INTERVAL_MS } from './poll-intervals'
 import { useAuthToken } from './use-auth-token'
 
@@ -63,12 +63,11 @@ export type UseMinerDevicesResult = {
  * `getListQuery(searchTags, filters, ['t-miner'])`.
  *
  * @remarks
- * The `/auth/list-things` endpoint is illustrative. MDK does not ship built-in
- * endpoints — create your own via a
+ * The `/auth/list-things` endpoint is illustrative. MDK does not ship a built-in
+ * endpoint for it — create your own via a
  * [Gateway plugin](https://docs.tether.io/mdk/guides/gateway/plugins) matching
- * your Worker/business logic. See the
- * [full-site example](https://github.com/tetherto/mdk/tree/main/examples/full-site/plugins/site)
- * for a working reference.
+ * your Worker/business logic. No reference implementation of `/auth/list-things`
+ * ships in this repo.
  *
  * @category dashboard
  */
@@ -92,7 +91,7 @@ export const useMinerDevices = (options: UseMinerDevicesOptions = {}): UseMinerD
     ...factory,
     refetchInterval: options.refetchInterval ?? POOL_MANAGER_POLL_INTERVAL_MS,
     enabled: options.enabled ?? !!token,
-    select: (raw: ListThingsDevice[][]) => headOrEmpty(raw),
+    select: (raw: ListThingsDevice[][]) => flattenKernelEnvelope(raw),
   })
 
   return {

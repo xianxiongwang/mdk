@@ -1,7 +1,7 @@
-import { type ListThingsDevice, listThingsQuery } from '@tetherto/mdk-ui-foundation'
+import type { ListThingsDevice } from '@tetherto/mdk-ui-foundation'
+import { flattenKernelEnvelope, listThingsQuery  } from '@tetherto/mdk-ui-foundation/presets/mining'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { headOrEmpty } from './list-things-utils'
 import { POOL_MANAGER_POLL_INTERVAL_MS } from './poll-intervals'
 import { useAuthToken } from './use-auth-token'
 import { useCurrentAlertDevices } from './use-current-alert-devices'
@@ -98,6 +98,15 @@ const flattenDeviceAlerts = (devices: AlertBearingDevice[]): PoolManagerAlert[] 
  * (via {@link useSiteStatusLive}) rather than aggregating several tail-log
  * queries client-side.
  *
+ * @remarks
+ * The "Configured Miners" count queries `/auth/list-things` directly; the
+ * other two sources delegate to {@link useSiteStatusLive} and
+ * {@link useCurrentAlertDevices}, each of which documents its own endpoint.
+ * `/auth/list-things` is illustrative — MDK does not ship a built-in
+ * endpoint for it — create your own via a
+ * [Gateway plugin](https://docs.tether.io/mdk/guides/gateway/plugins) matching
+ * your Worker/business logic.
+ *
  * @category dashboard
  */
 export const usePoolManagerDashboard = (
@@ -127,7 +136,7 @@ export const usePoolManagerDashboard = (
     ...configuredFactory,
     refetchInterval: refetchInterval ?? POOL_MANAGER_POLL_INTERVAL_MS,
     enabled: effectiveEnabled,
-    select: (raw: ListThingsDevice[][]) => headOrEmpty(raw).length,
+    select: (raw: ListThingsDevice[][]) => flattenKernelEnvelope(raw).length,
   })
 
   const miners = siteStatus.data?.miners
@@ -152,7 +161,9 @@ export const usePoolManagerDashboard = (
     ],
   }
 
-  const alerts = flattenDeviceAlerts(headOrEmpty(alertDevices.data) as AlertBearingDevice[])
+  /* `useCurrentAlertDevices` already returns a flat row list — it used to hand
+   * back the raw per-Kernel envelope for the alerts table to unwrap itself. */
+  const alerts = flattenDeviceAlerts((alertDevices.data ?? []) as AlertBearingDevice[])
 
   return {
     stats,

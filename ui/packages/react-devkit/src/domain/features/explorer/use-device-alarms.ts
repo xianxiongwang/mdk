@@ -21,7 +21,7 @@ export type UseDeviceAlarmsResult = {
 
 /**
  * Shapes the active alarms of the selected devices into timeline items for the
- * Explorer detail panel, mirroring MOS's `getContainerFormatedAlerts` →
+ * Explorer detail panel, mirroring the reference app's `getContainerFormatedAlerts` →
  * `getAlertTimelineItems` chain: `getAlarms` reads each device's
  * `last.alerts`, `getLogFormattedAlertData` formats each with the device's
  * `id`/`info`/`type` and the timezone-aware date formatter, and

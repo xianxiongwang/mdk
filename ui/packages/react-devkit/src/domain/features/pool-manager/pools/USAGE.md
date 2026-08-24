@@ -33,7 +33,7 @@ down to `PoolCollapseItemHeader` / `PoolCollapseItemBody`.
 
 - `PoolConfigData` — exported from
   `@tetherto/mdk-react-devkit` (originates in
-  `foundation/components/pool-manager/hooks/use-pool-configs`). Mirrors the API
+  [`foundation/components/pool-manager/hooks/use-pool-configs`](../../../components/pool-manager/hooks/use-pool-configs.ts)). Mirrors the API
   pool-config object.
 
 ## Notes
@@ -41,7 +41,7 @@ down to `PoolCollapseItemHeader` / `PoolCollapseItemBody`.
 - Pool data is normalised via `usePoolConfigs` — the component handles
   loading and error states internally (`Loader` + `CoreAlert`).
 - The "Add Pool" button is gated by `ADD_POOL_ENABLED`. Set it in the
-  `foundation/components/pool-manager/pool-manager-constants` module if you
+  [`foundation/components/pool-manager/pool-manager-constants`](../../../components/pool-manager/pool-manager-constants.ts) module if you
   fork the library; the default is `false` in `@tetherto/mdk-react-devkit`.
 - Multiple rows can be expanded simultaneously — the accordion uses
   `type="multiple"`.

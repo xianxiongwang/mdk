@@ -4,22 +4,20 @@ description: "[⏱️ ~15 min] From an empty directory to a running Kernel, Work
 docs@tether_slug: tutorials/build-a-dashboard
 ---
 
-[`examples/full-site`][full-site] is the fullest demonstration of the MDK stack: multiple Worker processes spanning miners,
-containers, power meters, sensors, and miner pools, plus a multi-page React + Vite dashboard built on
-`@tetherto/mdk-react-devkit`. That breadth is the point of that example, but it also means it's a lot to read
-through if all you want is to understand (or prototype against) the actual wiring: Kernel, one Worker, a Gateway
-route, a page that polls it.
-
-This guide builds the smallest version of that same shape: **one Worker, one Gateway route, one React page**. It
-teaches the same end-to-end shape as `examples/full-site`, including its UI layer, `@tetherto/mdk-react-devkit`
-components driven by `@tetherto/mdk-react-adapter` hooks, without that example's family-specific adapters,
-persistence, history, commands, multi-page router, or chart aggregation.
-
 > [!NOTE]
 > If **Kernel**, **Worker**, or **Gateway** are unfamiliar terms, read [the architecture overview][architecture]
 > first. This tutorial also assumes you've skimmed [Build a third-party Worker][build-a-worker]: the one Worker used
 > here is [`backend/workers/samples/demo-worker`][demo-worker], the same zero-dependency reference Worker that tutorial
 > is built around.
+
+This guide builds the smallest version of [the Starter site example][mvp-site] (`examples/mvp-site`): **one Worker, one Gateway route, one React page**. It
+teaches the same end-to-end shape, including its UI layer, `@tetherto/mdk-react-devkit`
+components driven by `@tetherto/mdk-react-adapter` hooks. However, it does so without that example's family-specific adapters,
+persistence, history, commands, multi-page router, or chart aggregation. 
+
+> [!NOTE]
+> This tutorial hand-assembles every piece to teach the wiring. To scaffold a real dashboard app against a stack you
+> already have running, use [`mdk create dashboard` and `mdk run dashboard`](../../packages/cli/README.md) instead.
 
 ## Overview
 
@@ -48,7 +46,7 @@ examples/minimal-dashboard/
 
 No router, no charts, no hand-rolled CSS, just one page built from three
 `@tetherto/mdk-react-devkit` primitives (`LabeledCard`, `DataTable`, `Badge`) and one
-`@tetherto/mdk-react-adapter` hook (`useQuery`), the same building blocks `examples/full-site/ui` uses, minus the
+`@tetherto/mdk-react-adapter` hook (`useQuery`), the same building blocks [`examples/mvp-site/ui`](../../examples/mvp-site/ui/package.json) uses, minus the
 parts (router, sidebar, line charts, domain panels) this single-page, single-Worker dashboard doesn't need.
 
 ## Prerequisites
@@ -63,9 +61,9 @@ parts (router, sidebar, line charts, domain panels) this single-page, single-Wor
   npm run build:ui
   ```
 
-  Running `npm run setup` from `examples/full-site` is also supported, but it is broader: it installs these backend
-  and UI dependencies plus the full-site example and UI dependencies and builds the UI packages.
-- Commands below assume a new `examples/minimal-dashboard/` directory alongside `examples/full-site/`
+  Running `npm run setup` from the [Starter site example](../../examples/mvp-site/README.md) (`examples/mvp-site`) is also supported, but it is
+  broader: it installs these backend and UI dependencies plus the Starter site example and UI dependencies and builds the UI packages.
+- Commands below assume you create a new `examples/minimal-dashboard/` directory alongside [`examples/mvp-site/`](../../examples/mvp-site/README.md)
 
 <Steps>
 
@@ -128,9 +126,9 @@ module.exports = { main, ROOT, HTTP_PORT }
 if (require.main === module) main().catch((err) => { console.error(err); process.exit(1) })
 ```
 
-The demo Worker package exports a plugin and SQLite helper, not a boot function. The separate
-[`demo-worker-caller`][demo-worker-caller] used here owns `WorkerRuntime`, device configuration, persistence,
-sampling, and shutdown.
+The demo Worker package exports no module of its own: it is an `mdk-contract.json` plus `src/` handler files, loaded from its own
+directory and instantiated per device by the Worker Runtime. The separate [`demo-worker-caller`][demo-worker-caller] used here owns that
+runtime, device configuration, persistence, sampling, and shutdown.
 
 `getKernel({ root: ROOT })` with no `topic`/`discovery` option defaults to DHT discovery with a fresh random topic.
 This example then registers the Worker's public key directly because both objects are in the same process. See the
@@ -169,17 +167,30 @@ per-device-family branching, because there's only one family here.
 
 #### 3.2 Write the controller
 
+`examples/minimal-dashboard/plugins/dashboard/lib/client.js` builds the plugin's client once:
+
+```js
+'use strict'
+
+const { config } = require('@tetherto/mdk-gateway/plugin')
+const { createMdkClient } = require('@tetherto/mdk-client')
+
+module.exports = createMdkClient(config)
+```
+
 `examples/minimal-dashboard/plugins/dashboard/controllers/overview.js`:
 
 ```js
 'use strict'
 
-module.exports = async function overview (req, services) {
-  const { workers } = await services.mdkClient.listWorkers()
+const mdkClient = require('../lib/client')
+
+module.exports = async function overview (req) {
+  const { workers } = await mdkClient.listWorkers()
 
   const devices = await Promise.all(
     workers.flatMap((w) => (w.deviceIds || []).map(async (deviceId) => {
-      const tel = await services.mdkClient.pullTelemetry(deviceId, 'metrics')
+      const tel = await mdkClient.pullTelemetry(deviceId, 'metrics')
       return { deviceId, workerId: w.workerId, workerState: w.state, ...tel.metrics }
     }))
   )
@@ -188,14 +199,14 @@ module.exports = async function overview (req, services) {
 }
 ```
 
-A controller is `async (req, services) => value`: return a plain object, the Gateway serializes it to JSON itself;
-you never touch `res`. `services.mdkClient` is the same client used everywhere else in MDK, with no knowledge of the
-underlying MDK Protocol envelope required.
+A controller is `async (req) => value`: return a plain object, the Gateway serializes it to JSON itself; you never touch
+`res`. `mdkClient` is the same client used everywhere else in MDK, with no knowledge of the underlying MDK Protocol
+envelope required.
 
 > [!NOTE]
 > With more than one Worker family mixed in (miners, powermeters, sensors, ...) you'd branch by
-> `deviceFamily` instead of spreading `tel.metrics` blindly. The [`examples/full-site/plugins/site/lib/site.js`][full-site-lib]
-> for that pattern once you outgrow this one.
+> `deviceFamily` instead of spreading `tel.metrics` blindly. [The Starter site's overview controller][mvp-site-overview]
+> shows that pattern once you outgrow this one.
 
 </Step>
 
@@ -266,10 +277,10 @@ if (require.main === module) main().catch((err) => { console.error(err); process
 
 > [!IMPORTANT]
 > Serve the built page from `common.staticRootPath`, not a separate server on its own port. Gateway plugin
-> controllers only receive `(req, services)`, never the underlying reply object, so a controller has no way to set
+> controllers only receive `(req)`, never the underlying reply object, so a controller has no way to set
 > `Access-Control-Allow-Origin`, and Gateway has no built-in CORS support. Building the UI (Step 5) and serving
 > `ui/dist` from `staticRootPath` keeps `fetch('/overview')` same-origin with zero CORS configuration. This is also
-> why `examples/full-site`'s Vite *dev* server proxies `/site/*` to the Gateway port instead of calling it
+> why [`examples/mvp-site`](../../examples/mvp-site/README.md)'s Vite *dev* server proxies `/site/*` to the Gateway port instead of calling it
 > cross-origin. Step 5's `vite.config.ts` proxies `/overview` the same way for hot-reload development.
 
 </Step>
@@ -279,7 +290,7 @@ if (require.main === module) main().catch((err) => { console.error(err); process
 ### Write the single-page UI with MDK devkit components
 
 Instead of hand-rolled HTML, the page is a small React + Vite app built from the same packages
-`examples/full-site/ui` uses, so `@tetherto/mdk-react-adapter` for the provider and data hook, `@tetherto/mdk-react-devkit`
+[`examples/mvp-site/ui`](../../examples/mvp-site/ui/package.json) uses, so `@tetherto/mdk-react-adapter` for the provider and data hook, `@tetherto/mdk-react-devkit`
 for the components, scaled down to what one route needs: no router (one page), no charts (no history endpoint
 here), no sidebar. Three primitives do the job: `LabeledCard` for the section container, `DataTable` for the sortable
 device grid, and `Badge` to color-code `workerState`.
@@ -333,7 +344,7 @@ device grid, and `Badge` to color-code `workerState`.
 ```
 
 `examples/minimal-dashboard/ui/vite.config.ts`: the dev-only proxy so `fetch('/overview')` stays same-origin
-against the Gateway port, the same pattern [`examples/full-site/ui/vite.config.ts`][full-site-vite-config] uses for `/site/*`:
+against the Gateway port, the same pattern [`examples/mvp-site/ui/vite.config.ts`][mvp-site-vite-config] uses for `/site/*`:
 
 ```ts
 import react from '@vitejs/plugin-react'
@@ -369,7 +380,7 @@ export default defineConfig({
 ```
 
 `examples/minimal-dashboard/ui/src/main.tsx`: `<MdkProvider>` wires the TanStack Query client `useQuery` needs and
-resolves the API base URL, exactly as it does in [`examples/full-site/ui/src/main.tsx`][full-site-main-tsx]:
+resolves the API base URL, exactly as it does in [`examples/mvp-site/ui/src/main.tsx`][mvp-site-main-tsx]:
 
 ```tsx
 import { MdkProvider } from '@tetherto/mdk-react-adapter'
@@ -393,8 +404,13 @@ ReactDOM.createRoot(rootElement).render(
 )
 ```
 
-`examples/minimal-dashboard/ui/src/OverviewPage.tsx`: `useQuery` polls the route from Step 3 the same way
-[`examples/full-site/ui/src/SitePage.tsx`][full-site-page] polls `/site/overview`; `DataTable` and `Badge` replace that page's
+With no `auth` prop, `MdkProvider` defaults to `gatewayRedirectAuth()` (the bundled mining Gateway's OAuth-redirect
+flow) minus a redirect target — fine for a read-only route with no `"auth": true` requirement, like this one. Pass
+`auth={noAuth()}` instead for a backend that needs no session at all, or `auth={gatewayRedirectAuth({ oauthBaseUrl })}`
+to enable sign-in.
+
+Create `ui/src/OverviewPage.tsx` under your new `examples/minimal-dashboard/`: `useQuery` polls the route from Step 3 the same way
+[`examples/mvp-site/ui/src/SitePage.tsx`][mvp-site-page] polls `/site/overview`; `DataTable` and `Badge` replace that page's
 hand-rolled markup:
 
 ```tsx
@@ -478,7 +494,7 @@ export function OverviewPage() {
 }
 ```
 
-A controller is `async (req, services) => value`; a page is `useQuery` + devkit components, and neither one touches the
+A controller is `async (req) => value`; a page is `useQuery` + devkit components, and neither one touches the
 other's plumbing. `OverviewPage` never imports `mdkClient`, and `overview.js` never imports React.
 
 </Step>
@@ -560,14 +576,14 @@ Open **`http://localhost:3041/`** (the Vite port), not `:3000`. Step 5's proxy f
   Register a second Worker the same way (Step 2's `startDemoWorker` + `startWhatsminerWorker`, etc., both followed by
   `kernel.registerWorker(...)`) and it appears in `/overview` for free.
 - **A write route**: Add a second manifest entry (`POST /devices/{deviceId}/command`) calling
-  `services.mdkClient.sendCommand(deviceId, 'setPowerMode', { mode })`, following the `command.js` example in
+  `mdkClient.sendCommand(deviceId, 'setPowerMode', { mode })`, following the `command.js` example in
   [Gateway plugins][gateway-plugins], and a `Button` in `OverviewPage.tsx` that `POST`s to it. Before deploying any
   physical write command, require narrowly scoped authorization, validate its payload and target state, apply rate
   limits, and record an audit trail.
 - **More pages, charts, history**: Add `react-router` and a second route/page, or graduate to the domain layer
   (`@tetherto/mdk-react-devkit/domain`'s `LineChartCard`, `MetricCard`, header stats bar) once the Gateway plugin
-  grows a history endpoint to feed them. Compare [`examples/full-site/ui/src/DashboardPage.tsx`][full-site-dashboard-page] and
-  [`examples/full-site/plugins/site/controllers/history.js`][full-site-history-controller] for that shape.
+  grows a history endpoint to feed them. Compare [`examples/mvp-site/ui/src/DashboardPage.tsx`][mvp-site-dashboard-page] and
+  [`examples/mvp-site/backend/gateway-plugins/site/controllers/history.js`][mvp-site-history-controller] for that shape.
 - **Separate processes or hosts**: Replace the direct registration in Step 2 with Local discovery for processes on
   one machine or DHT discovery for separate hosts, as described in the [discovery model][workers-discovery].
 
@@ -582,30 +598,33 @@ Open **`http://localhost:3041/`** (the Vite port), not `:3000`. Step 5's proxy f
 | Browser `fetch('/overview')` fails from Vite with CORS / wrong host when Gateway is up | See the CORS note in Step 4: the Vite proxy must target the Gateway (`VITE_API_PORT`); do not call a different origin from the page |
 | `ERR_PLUGIN_HANDLER_NOT_FOUND: routes.dashboard.overview: ./controllers/overview.js` on Gateway boot | `extraPluginDirs` must point at the directory *containing* `mdk-plugin.json`, not the controller file itself |
 | Gateway boots but the page 404s | `common.staticRootPath` must be an absolute path (`path.join(__dirname, 'ui', 'dist')`) pointing at a *built* UI (`npm run build` in Step 6), not a relative string or the unbuilt `ui/src` |
-| `Cannot find module '@tetherto/mdk-react-devkit'` when building `ui/` | Run the Prerequisites' `npm run setup:ui && npm run build:ui` from the repo root first: the UI packages ship pre-built `dist/` output that `ui/`'s `package.json` depends on via `file:` links |
+| `Cannot find module '@tetherto/mdk-react-devkit'` when building [`ui/`](../../ui/README.md) | Run the Prerequisites' `npm run setup:ui && npm run build:ui` from the repo root first: the UI packages ship pre-built `dist/` output that [`ui/`](../../ui/README.md)'s `package.json` depends on via `file:` links |
 
 ## Links
+
+[mvp-site]: ../../examples/mvp-site/README.md
+<!-- docs@tether.io: mvp-site → https://github.com/tetherto/mdk/tree/main/examples/mvp-site -->
 
 [full-site]: ../../examples/full-site/README.md
 <!-- docs@tether.io: full-site → https://github.com/tetherto/mdk/tree/main/examples/full-site -->
 
-[full-site-lib]: ../../examples/full-site/plugins/site/lib/site.js
-<!-- docs@tether.io: full-site-lib → https://github.com/tetherto/mdk/blob/main/examples/full-site/plugins/site/lib/site.js -->
+[mvp-site-overview]: ../../examples/mvp-site/backend/gateway-plugins/site/controllers/overview.js
+<!-- docs@tether.io: mvp-site-overview → https://github.com/tetherto/mdk/blob/main/examples/mvp-site/backend/gateway-plugins/site/controllers/overview.js -->
 
-[full-site-vite-config]: ../../examples/full-site/ui/vite.config.ts
-<!-- docs@tether.io: full-site-vite-config → https://github.com/tetherto/mdk/blob/main/examples/full-site/ui/vite.config.ts -->
+[mvp-site-vite-config]: ../../examples/mvp-site/ui/vite.config.ts
+<!-- docs@tether.io: mvp-site-vite-config → https://github.com/tetherto/mdk/blob/main/examples/mvp-site/ui/vite.config.ts -->
 
-[full-site-main-tsx]: ../../examples/full-site/ui/src/main.tsx
-<!-- docs@tether.io: full-site-main-tsx → https://github.com/tetherto/mdk/blob/main/examples/full-site/ui/src/main.tsx -->
+[mvp-site-main-tsx]: ../../examples/mvp-site/ui/src/main.tsx
+<!-- docs@tether.io: mvp-site-main-tsx → https://github.com/tetherto/mdk/blob/main/examples/mvp-site/ui/src/main.tsx -->
 
-[full-site-page]: ../../examples/full-site/ui/src/SitePage.tsx
-<!-- docs@tether.io: full-site-page → https://github.com/tetherto/mdk/blob/main/examples/full-site/ui/src/SitePage.tsx -->
+[mvp-site-page]: ../../examples/mvp-site/ui/src/SitePage.tsx
+<!-- docs@tether.io: mvp-site-page → https://github.com/tetherto/mdk/blob/main/examples/mvp-site/ui/src/SitePage.tsx -->
 
-[full-site-dashboard-page]: ../../examples/full-site/ui/src/DashboardPage.tsx
-<!-- docs@tether.io: full-site-dashboard-page → https://github.com/tetherto/mdk/blob/main/examples/full-site/ui/src/DashboardPage.tsx -->
+[mvp-site-dashboard-page]: ../../examples/mvp-site/ui/src/DashboardPage.tsx
+<!-- docs@tether.io: mvp-site-dashboard-page → https://github.com/tetherto/mdk/blob/main/examples/mvp-site/ui/src/DashboardPage.tsx -->
 
-[full-site-history-controller]: ../../examples/full-site/plugins/site/controllers/history.js
-<!-- docs@tether.io: full-site-history-controller → https://github.com/tetherto/mdk/blob/main/examples/full-site/plugins/site/controllers/history.js -->
+[mvp-site-history-controller]: ../../examples/mvp-site/backend/gateway-plugins/site/controllers/history.js
+<!-- docs@tether.io: mvp-site-history-controller → https://github.com/tetherto/mdk/blob/main/examples/mvp-site/backend/gateway-plugins/site/controllers/history.js -->
 
 [architecture]: ../concepts/architecture.md
 <!-- docs@tether.io: architecture → concepts/architecture -->
@@ -613,17 +632,17 @@ Open **`http://localhost:3041/`** (the Vite port), not `:3000`. Step 5's proxy f
 [build-a-worker]: ../guides/workers/build-a-worker.md
 <!-- docs@tether.io: build-a-worker → guides/workers/build-a-worker -->
 
-[demo-worker]: ../../backend/workers/samples/demo-worker/index.js
-<!-- docs@tether.io: demo-worker → https://github.com/tetherto/mdk/blob/main/backend/workers/samples/demo-worker/index.js -->
+[demo-worker]: ../../backend/workers/samples/demo-worker/package.json
+<!-- docs@tether.io: demo-worker → https://github.com/tetherto/mdk/blob/main/backend/workers/samples/demo-worker/package.json -->
 
 [demo-worker-caller]: ../../examples/backend/demo-worker-caller/index.js
 <!-- docs@tether.io: demo-worker-caller → https://github.com/tetherto/mdk/blob/main/examples/backend/demo-worker-caller/index.js -->
 
-[deployment-trade-offs]: ../concepts/deployment-topologies.md#the-trade-off
-<!-- docs@tether.io: deployment-trade-offs → concepts/deployment-topologies#the-trade-off -->
+[deployment-trade-offs]: ../guides/deployment/index.md
+<!-- docs@tether.io: deployment-trade-offs → guides/deployment -->
 
-[workers-discovery]: ../concepts/stack/workers.md#discovery-model
-<!-- docs@tether.io: workers-discovery → concepts/stack/workers#discovery-model -->
+[workers-discovery]: ../../backend/workers/README.md
+<!-- docs@tether.io: workers-discovery → reference/worker -->
 
 [gateway-plugins]: ../guides/gateway/plugins.md
 <!-- docs@tether.io: gateway-plugins → guides/gateway/plugins -->

@@ -29,7 +29,7 @@ internal device-driver class used by `plugin.connect()` — most integrations ne
 
 ## Run a mock device
 
-The mock binds a TCP server that answers Whatsminer's API v2 protocol (encrypted, token-authenticated) with canned data. The model `type` parameter controls which response set the mock serves (from `mock/initial_states/<type>/`). Examples below bind `14028` rather than the real v2 default (`4028`) so it doesn't collide with the Avalon mock, which binds its own real default (`4028`); `examples/full-site` runs both simultaneously. Pick any free port for standalone use.
+The mock binds a TCP server that answers Whatsminer's API v2 protocol (encrypted, token-authenticated) with canned data. The model `type` parameter controls which response set the mock serves (from `mock/initial_states/<type>/`). Examples below bind `14028` rather than the real v2 default (`4028`) so it doesn't collide with the Avalon mock, which binds its own real default (`4028`); [`examples/full-site`](../../../../examples/full-site/README.md) runs both simultaneously. Pick any free port for standalone use.
 
 Standalone:
 
@@ -65,7 +65,7 @@ wmMock.createServer({
 | `serial` | string | required | Serial number reported by the mock. |
 | `password` | string | `'admin'` | Password the mock derives its token-auth key from. |
 
-The mock control agent (`mock-control-agent.js`) lets tests mutate mock state at runtime; it's documented in code and used by the integration tests at [`tests/integration/whatsminer.test.js`](tests/integration/whatsminer.test.js).
+The mock control agent ([`mock-control-agent.js`](../../mock/mock-control-agent.js)) lets tests mutate mock state at runtime; it's documented in code and used by the integration tests at [`tests/integration/whatsminer.test.js`](tests/integration/whatsminer.test.js).
 
 ## Registering devices
 
@@ -110,7 +110,7 @@ To register a device with an already-running Worker instead of at boot, send the
 ```js
 const { createMdkClient } = require('@tetherto/mdk/backend/core/client')
 
-const client = createMdkClient({ hrpc: { key: kernel.getPublicKey() } })
+const client = createMdkClient({ kernelKey: kernel.getPublicKey() })
 await client.connect()
 await client.sendWorkerCommand('whatsminer-rack-1', null, 'registerThing', {
   id: 'WM-002',

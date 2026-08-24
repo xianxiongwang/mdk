@@ -34,8 +34,8 @@ For the exact model lists, Worker packages, and per-Worker docs, see the generat
 [terminology]: ../reference/glossary.md
 <!-- docs@tether.io: terminology → reference/glossary -->
 
-[deployment-topologies]: ../concepts/deployment-topologies.md
-<!-- docs@tether.io: deployment-topologies → concepts/deployment-topologies -->
+[deployment-topologies]: ../guides/deployment/index.md
+<!-- docs@tether.io: deployment-topologies → guides/deployment -->
 
 [run-miner-worker]: ../guides/miners/index.md
 <!-- docs@tether.io: run-miner-worker → guides/miners -->

@@ -3,7 +3,7 @@
 /**
  * MDK Kernel — Full Feature Parity Demo
  *
- * Demonstrates every feature from the current miningos worker architecture
+ * Demonstrates every feature from the reference app worker architecture
  * mapped to the MDK Protocol:
  *
  *  telemetry.pull (query.type) → read operations:

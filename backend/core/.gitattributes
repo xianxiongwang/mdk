@@ -1,0 +1,4 @@
+# Keep shell scripts LF so they run correctly across Windows / WSL / macOS.
+# (Prevents CRLF from breaking install-packages.sh / clean-workspaces.sh under
+# core.autocrlf — same rule the agent package already pins for run.sh.)
+*.sh text eol=lf

@@ -35,7 +35,7 @@ Authoring conventions for the comment-driven hints that travel with Markdown in 
 
 This file is the source-of-truth for that vocabulary. Two consumers read it:
 
-- The `check:port-signals` lint gate (see [`ia.md`](ia.md#qa-gates)) — runs in mdk pre-commit / CI and warns when a non-anchor link definition has no routing comment.
+- The `check:port-signals` lint gate (see [`ia.md`](ia.md#qa-gates)) — runs in mdk-prv pre-commit / CI and warns when a non-anchor link definition has no routing comment.
 - The port-sync transforms in the downstream fumadocs build — rewrite link targets and convert GFM alerts to `<Callout>` JSX on port.
 
 Authoring rule: add the appropriate comment beside each cross-reference or alert. Authors do not need to read this file to write user-facing prose; the only time you need it is when adding a new `[slug]: …` definition or callout block.
@@ -52,7 +52,7 @@ Reference-style link definitions in `## Links` blocks (or anywhere in Markdown) 
 | `<!-- mdk-monorepo: <note> -->` | Internal-only flag (e.g. temp link awaiting a code/README destination); pipeline ignores entirely |
 | _(no comment) on `[slug]: #anchor`_ | In-page anchor — preserve verbatim alongside the parent page-to-page mapping |
 
-A non-anchor link definition with **no signal at all** is a pipeline error: the slug has no routing rule. The `check:port-signals` lint gate catches this in mdk before it reaches the port-sync.
+A non-anchor link definition with **no signal at all** is a pipeline error: the slug has no routing rule. The `check:port-signals` lint gate catches this in mdk-prv before it reaches the port-sync.
 
 A definition may carry **multiple comment lines** (e.g. one `docs@tether.io:` and one `mdk-monorepo:`) — each is read independently.
 
@@ -102,9 +102,9 @@ In-page anchor (uncommented by design):
 
 ### GFM alert → fumadocs `<Callout>`
 
-GitHub renders `> [!TYPE]` blockquote alerts natively; fumadocs uses `<Callout type="…">` JSX. Source files in mdk use GFM so they read correctly on GitHub; the port-sync maps:
+GitHub renders `> [!TYPE]` blockquote alerts natively; fumadocs uses `<Callout type="…">` JSX. Source files in mdk-prv use GFM so they read correctly on GitHub; the port-sync maps:
 
-| GFM source (mdk) | Fumadocs output (tether.io) |
+| GFM source (mdk-prv) | Fumadocs output (tether.io) |
 |---|---|
 | `> [!NOTE]`      | `<Callout type="info">`    |
 | `> [!TIP]`       | `<Callout type="idea">`    |
@@ -144,12 +144,12 @@ See [`ui/AGENTS.md`](../../../ui/AGENTS.md#machine-readable-artifacts) for the f
 **Source of truth:**
 
 - `registry.json` / `blueprints.json` — read from JSDoc tags (`@tier`, `@category`, `@domain`, `@kernelCapability`) in component source files, plus co-located `USAGE.md` and `*.example.tsx` files. See the export contract at [`ui/packages/react-devkit/AGENT_READY.md`](../../../ui/packages/react-devkit/AGENT_READY.md).
-- `hooks.json` — read from JSDoc in `ui/packages/react-adapter/src/` hooks.
-- `stores.json` — read from JSDoc in `ui/packages/ui-foundation/src/` stores.
+- `hooks.json` — read from JSDoc in [`ui/packages/react-adapter/src/`](../../../ui/packages/react-adapter/src/index.ts) hooks.
+- `stores.json` — read from JSDoc in [`ui/packages/ui-foundation/src/`](../../../ui/packages/ui-foundation/src/index.ts) stores.
 
 ### When to regenerate
 
-Manifests regenerate automatically as part of `npm run build` in the `ui/` workspace. Turbo's task graph runs `build:registry` as the final step of each package's build, after TypeScript compilation and SCSS bundling complete.
+Manifests regenerate automatically as part of `npm run build` in the [`ui/`](../../../ui/README.md) workspace. Turbo's task graph runs `build:registry` as the final step of each package's build, after TypeScript compilation and SCSS bundling complete.
 
 As a maintainter, **you can manually regenerate** before syncing with the user docs.
 
@@ -165,13 +165,13 @@ cd ui
 npm run check:agent-ready --workspace @tetherto/mdk-react-devkit
 ```
 
-This is the same gate that runs in CI on every PR touching `ui/packages/react-devkit`. See [`ui/packages/react-devkit/AGENT_READY.md`](../../../ui/packages/react-devkit/AGENT_READY.md) for the rules it enforces.
+This is the same gate that runs in CI on every PR touching [`ui/packages/react-devkit`](../../../ui/packages/react-devkit/README.md). See [`ui/packages/react-devkit/AGENT_READY.md`](../../../ui/packages/react-devkit/AGENT_READY.md) for the rules it enforces.
 
 ### Socket Firewall note
 
 If your shell routes `npm` through Socket Firewall (`sfw`) and `npm run build:registry` hangs, you may need to source the repo's allowlist. The build process itself doesn't make outbound requests, but if you're running a broader `npm run build` (which includes dev tooling like linkinator during checks), socket.dev will block unrecognized hosts.
 
-Setup instructions: [`linters.md § Nightly and PR diff link verification — linkinator`](linters.md#nightly-and-pr-diff-link-verification--linkinator) (lines 16–28). The same `scripts/sfw-env.sh` allowlist applies.
+Setup instructions: [`linters.md § Nightly and PR diff link verification — linkinator`](linters.md#nightly-and-pr-diff-link-verification--linkinator) (lines 16–28). The same [`scripts/sfw-env.sh`](../../../scripts/sfw-env.sh) allowlist applies.
 
 ### PR workflow
 
@@ -191,11 +191,11 @@ The repo includes several scripts that regenerate documentation from engineering
 
 Generates the supported hardware tables from Worker contract files.
 
-**Source:** `backend/workers/**/mdk-contract.json` (validated against `backend/core/mdk-worker/mdk-contract.schema.json`)
+**Source:** `backend/workers/**/mdk-contract.json` (validated against [`backend/core/mdk-worker/mdk-contract.schema.json`](../../../backend/core/mdk-worker/mdk-contract.schema.json))
 
 **Output:** [`backend/workers/docs/supported-hardware.md`](../../../backend/workers/docs/supported-hardware.md)
 
-**Command:** Run from `backend/workers`:
+**Command:** Run from [`backend/workers`](../../../backend/workers/README.md):
 ```bash
 npm run generate:catalogue
 ```
@@ -210,7 +210,7 @@ Generates the route tables for default Gateway plugins from their manifest files
 
 **Output:** [`backend/core/plugins/README.md`](../../../backend/core/plugins/README.md) (within `BEGIN GENERATED` / `END GENERATED` markers)
 
-**Command:** Run from `backend/core/plugins`:
+**Command:** Run from [`backend/core/plugins`](../../../backend/core/plugins/README.md):
 ```bash
 npm run generate:plugin-reference
 ```

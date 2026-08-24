@@ -52,7 +52,7 @@ avMock.createServer({
 | `type` | string | required | Only `a1346` today. |
 | `serial` | string | required | Serial number reported by the mock. |
 
-The mock control agent (`mock-control-agent.js`) lets tests mutate mock state at runtime; it's documented in code and used by the integration tests at [`tests/integration/avalon.miner.test.js`](tests/integration/avalon.miner.test.js).
+The mock control agent ([`mock-control-agent.js`](../../mock/mock-control-agent.js)) lets tests mutate mock state at runtime; it's documented in code and used by the integration tests at [`tests/integration/avalon.miner.test.js`](tests/integration/avalon.miner.test.js).
 
 ## Registering devices
 
@@ -70,7 +70,7 @@ const worker = await startAvalonWorker({
   storeDir: './store/avalon-rack-1',
   seedDevices: [{
     info: { container: 'site-1', serialNum: 'AV-001' },
-    opts: { address: '127.0.0.1', port: 14030 }
+    opts: { address: '127.0.0.1', port: 14030, password: 'admin' }
   }]
 })
 await kernel.registerWorker(worker.runtime.getPublicKey())
@@ -85,8 +85,9 @@ await kernel.registerWorker(worker.runtime.getPublicKey())
 | `seedDevices` | array | Optional | `{ id?, info, opts }` entries applied once, only when the store is empty. |
 
 Each `seedDevices`/`registerThing` entry's `opts` shape: `address` (string, required, device IP or hostname), `port`
-(number, required, real devices use 4028; mocks use the bound port). The Avalon CGMiner API is unauthenticated, so no
-username or password is required in `opts`. `info` is free-form metadata stored alongside the device; common fields
+(number, required, real devices use 4028; mocks use the bound port), `password` (string, required by the plugin's
+own config validation, even though the CGMiner wire protocol itself does not authenticate). `info` is free-form
+metadata stored alongside the device; common fields
 read by the dashboard are `container`, `serialNum`, `macAddress`, `pos`, and `site`. Nothing in `info` affects Worker
 behavior.
 
@@ -95,7 +96,7 @@ To register a device with an already-running Worker instead of at boot, send the
 ```js
 const { createMdkClient } = require('@tetherto/mdk/backend/core/client')
 
-const client = createMdkClient({ hrpc: { key: kernel.getPublicKey() } })
+const client = createMdkClient({ kernelKey: kernel.getPublicKey() })
 await client.connect()
 await client.sendWorkerCommand('avalon-rack-1', null, 'registerThing', {
   id: 'AV-002',

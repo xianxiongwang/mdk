@@ -16,7 +16,7 @@ Each is detailed below.
 ## Kernel
 
 Lives in [`backend/core/kernel/`](../kernel/index.js). Discovers and registers Workers, dispatches commands through a crash-recoverable state machine,
- and pulls telemetry on a fixed schedule. The [Workers discovery model](../../../docs/concepts/stack/workers.md#discovery-model) covers local, same-process, 
+ and pulls telemetry on a fixed schedule. The [Workers discovery model](../../workers/docs/architecture.md#discovery-model) covers local, same-process, 
  and DHT modes.
 
 Kernel is **pull-only and passive** — it never pushes to your app. You query it over HRPC using its public key, published to a key file 
@@ -39,7 +39,7 @@ Kernel over HRPC, sends typed queries and receives aggregated responses. You dec
 
 ```js
 // connect using the key the Kernel publishes to its key file
-const client = createMdkClient({ hrpc: { key: fs.readFileSync(DEFAULT_KEY_FILE, 'utf8').trim() } })
+const client = createMdkClient({ kernelKey: fs.readFileSync(DEFAULT_KEY_FILE, 'utf8').trim() })
 
 // list devices + telemetry
 await client.pullTelemetry(deviceId, { type: 'metrics' })
@@ -66,13 +66,15 @@ HRPC (by the Kernel's public key). Gateways embed it to talk to Kernel.
 
 ## MCP server (`@tetherto/mdk-mcp`)
 
-Lives in [`backend/core/mcp/`](../mcp/README.md). A standalone MCP server — a separate process from the Gateway — that exposes MDK data and actions to 
-AI agents as declarative tools, using the same `@tetherto/mdk-client` connection to Kernel that the Gateway uses.
+Lives in [`backend/core/mcp/`](../mcp/README.md). Exposes MDK data and actions to AI agents as declarative tools, using the
+same `@tetherto/mdk-client` connection to Kernel that the Gateway uses. Runs either as its own standalone server — a
+separate process from the Gateway — or in-process inside the Gateway when a plugin is mounted with
+`autoGenerateMcp: true` (see [Expose Gateway data to an agent](../../../docs/guides/agent/expose-data.md)).
 
 ## Connection and deployment model
 
 Core uses Hyperswarm RPC (HRPC) for runtime MDK Protocol traffic. The [deployment topologies](../../../docs/concepts/deployment-topologies.md)
-explain the supported process layouts, while the [Worker discovery model](../../../docs/concepts/stack/workers.md#discovery-model)
+explain the supported process layouts, while the [Worker discovery model](../../workers/docs/architecture.md#discovery-model)
 explains how Kernel obtains Worker public keys in DHT, local, and same-process modes.
 
 Package-specific APIs and configuration live with each package:
@@ -85,7 +87,7 @@ Package-specific APIs and configuration live with each package:
 
 ## Next steps
 
-- Learn more about the [developer model](../../../docs/concepts/stack/kernel.md)
+- Learn [which layer owns which responsibility](../../../docs/concepts/control-plane.md#responsibility-boundaries)
 - Discover the [HTTP and React hook surface](../../../docs/guides/gateway/write-actions.md)
 - Learn about write actions that [require approval](../../../docs/concepts/control-plane.md#approval-gated-writes)
 

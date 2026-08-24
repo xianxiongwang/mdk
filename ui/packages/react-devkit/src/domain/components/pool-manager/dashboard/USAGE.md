@@ -26,8 +26,8 @@ blocks, and a compact recent-alerts list.
 
 ## Data contracts
 
-- `DashboardStats` — declared in `dashboard-types.ts` alongside the component.
-- `Alert` — `foundation/types/device` (same shape as `ActiveIncidentsCard` consumes).
+- `DashboardStats` — declared in [`dashboard-types.ts`](./dashboard-types.ts) alongside the component.
+- `Alert` — [`foundation/types/alerts`](../../../types/alerts.ts) (same shape as `ActiveIncidentsCard` consumes).
 
 ## Notes
 

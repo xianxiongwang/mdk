@@ -3,7 +3,7 @@
 ## Overview
 
 Bootstrap utilities for MDK. This package is the primary entry point for application developers. It provides 
-high-level convenience functions that wire together the [Kernel](../kernel/README.md), [device Workers](../../../docs/concepts/stack/workers.md), 
+high-level convenience functions that wire together the [Kernel](../kernel/README.md), [device Workers](../../workers/README.md), 
 and the [Gateway](../gateway/README.md) HTTP server without requiring direct knowledge of lower-level APIs.
 
 ## Prerequisites
@@ -135,9 +135,9 @@ const server = await startGateway({
 | `opts.port` | `number` | HTTP port (default: 3000) |
 | `opts.env` | `string` | Environment string (default: `'development'`) |
 | `opts.kernel` | `KernelManager` | Kernel instance; Gateway stop is registered on cleanup. Its `getPublicKey()` also resolves the Kernel key |
-| `opts.kernelKey` | `string\|Buffer\|false` | Kernel HRPC listener public key (hex or Buffer); `false` to run without a Kernel connection (`mdkClient` stays `null`) |
+| `opts.kernelKey` | `string\|Buffer\|false` | Kernel HRPC listener public key (hex or Buffer); `false` to run without a Kernel connection (each plugin's own `mdkClient` still builds, but fails per call with [`ERR_MDK_CLIENT_UNAVAILABLE`](../client/README.md#createmdkclientconfig-opts--auto-connecting-client)) |
 | `opts.keyFile` | `string` | Key file to resolve the Kernel key from (default: `DEFAULT_KEY_FILE`) |
-| `opts.bootstrap` | `array` | DHT bootstrap nodes threaded to the Gateway's Client (testnets) |
+| `opts.bootstrap` | `array` | DHT bootstrap nodes threaded to each plugin's own client (testnets) |
 | `opts.common` | `object` | Overrides for `common.json` |
 | `opts.httpd` | `object` | Overrides for `httpd.config.json` |
 | `opts.store` | `object` | Overrides for `store.config.json` |
@@ -146,13 +146,14 @@ const server = await startGateway({
 
 The Kernel HRPC key is resolved **before any boot side effects**, in this order:
 
-1. `opts.kernelKey` — hex or Buffer; `false` means run without a Kernel connection
-2. `opts.kernel.getPublicKey()` — in-process Kernel handle
-3. Key file — `opts.keyFile` or `DEFAULT_KEY_FILE`
-4. Otherwise throws `ERR_KERNEL_KEY_FILE_NOT_FOUND`
+1. `opts.kernelKey`: hex or Buffer; `false` means run without a Kernel connection.
+2. `opts.kernel.getPublicKey()`: in-process Kernel handle.
+3. Key file: `opts.keyFile` or `DEFAULT_KEY_FILE`.
+4. Otherwise throws: `ERR_KERNEL_KEY_FILE_NOT_FOUND`.
 
-The Gateway worker connects to the Kernel over HRPC with the resolved key; a failed connect degrades gracefully (`mdkClient = null`) rather 
-than crashing the HTTP server.
+The resolved key lands in each plugin's context; the Gateway worker itself opens no Kernel connection — each plugin builds its own
+[`@tetherto/mdk-client`](../client/README.md) from that key, and a failed connect fails that plugin's calls with
+[`ERR_MDK_CLIENT_UNAVAILABLE`](../client/README.md#createmdkclientconfig-opts--auto-connecting-client) so as not to crash the HTTP server.
 
 ### `startKernel(opts?)` → `Promise<KernelManager>`
 
@@ -179,6 +180,7 @@ Register a one-shot cleanup handler on `SIGINT` / `SIGTERM`. Returns the handler
 | `opts.signals` | `string[]` | Signals to listen for (default: `['SIGINT', 'SIGTERM']`) |
 | `opts.forceMs` | `number` | Force-exit timeout if cleanup hangs (default: 3000 ms) |
 
+> [!NOTE]
 > `getKernel()`, `startGateway()`, and every Worker boot function register their own `onShutdown`
 > handlers internally. Call this only when you need to add teardown logic outside
 > a boot handle — for example, closing a database or flushing a log buffer.
@@ -255,19 +257,32 @@ Config file precedence:
 
 ```
 mdk/
-├── index.js          # `getKernel`, `startGateway`, `waitForDiscovery`
-├── services.js       # `startServices` — facility bootstrap helpers
+├── index.js              # `getKernel`, `startGateway`, `waitForDiscovery`
+├── services.js           # `startServices` — facility bootstrap helpers
+├── worker.js             # Worker-side entry point
 ├── lib/
-│   └── local-discovery.js # `keysDir`, `publishWorkerKey`: the `discovery: { mode: 'local' }` helpers
-└── utils/
-    ├── constants.js  # MDK_STORE and other well-known names
-    └── initialize.js # Service initialization helpers
+│   ├── local-discovery.js  # `keysDir`, `publishWorkerKey`: the `discovery: { mode: 'local' }` helpers
+│   ├── utils.js            # Shared helpers (isValidSnap, isOffline, etc.)
+│   ├── worker-infra.js     # `createWorkerInfra` — per-Worker infra bootstrap
+│   ├── services/           # One class per domain service (Actions, Alerts, Comments, LogHistory, Logs, Pool, Provisioning, Settings, Snaps, Stats)
+│   │   └── pool-utils/     # Shared pool-service constants and time helpers
+│   ├── templates/          # Alert and stats computation templates
+│   └── things/             # Thing subclasses — Container, Miner, PowerMeter, Sensor (base: Thing)
+├── utils/
+│   ├── constants.js        # MDK_STORE and other well-known names
+│   ├── index.js            # Facility bootstrap helpers (Intervals, Store, ActionApprover)
+│   ├── initialize.js       # Service initialization helpers
+│   ├── service-bootstrap.js # Spawns/manages service subprocesses
+│   └── compose-yaml.js     # `buildComposeYaml` — docker-compose file generation
+└── tests/
+    ├── unit/                # One suite per lib/service/thing/util module
+    └── integration/         # Kernel-key-file, local-discovery, actions-flow (per Worker family)
 ```
 
 ## Next steps
 
 - [Run the Gateway](../../../docs/guides/gateway/run.md): programmatic and standalone startup, auth configuration, and HRPC key setup
-- [Add hardware devices](../../../docs/concepts/stack/workers.md): understand how Workers register devices and expose them to Kernel
+- [Add hardware devices](../../workers/README.md): understand how Workers register devices and expose them to Kernel
 - [Add custom routes with plugins](../../../docs/guides/gateway/plugins.md): extend the Gateway via `extraPluginDirs`
 - [See the full-site example](../../../examples/full-site/README.md): multi-Worker, multi-device setup in a separate-process topology
 - [Understand the the full MDK layer model](../../../docs/concepts/architecture.md)

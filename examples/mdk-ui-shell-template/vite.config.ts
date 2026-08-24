@@ -3,7 +3,7 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 
 // The dev server defaults to port 3030, the host your identity plugin is
 // expected to redirect back to with `?authToken=` (http://localhost:3030).
@@ -21,7 +21,14 @@ const devkitRoot = dirname(_require.resolve('@tetherto/mdk-react-devkit/package.
 const appRoot = dirname(fileURLToPath(import.meta.url))
 const mdkPackagesRoot = dirname(devkitRoot)
 
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  // Where the dev server proxies /auth, /oauth, /api, /pub. Defaults to the
+  // mvp-site gateway (:3000); `mdk create dashboard` sets VITE_GATEWAY_URL from
+  // the stack's mdk.yaml gateway port so the UI hits the right backend.
+  const env = loadEnv(mode, process.cwd(), 'VITE_')
+  const gatewayUrl = env.VITE_GATEWAY_URL || 'http://localhost:3000'
+
+  return {
   plugins: [react()],
   resolve: {
     alias: {
@@ -43,10 +50,10 @@ export default defineConfig({
     },
     port: 3030,
     proxy: {
-      '/auth': 'http://localhost:3000',
-      '/oauth': 'http://localhost:3000',
-      '/api': 'http://localhost:3000',
-      '/pub': 'http://localhost:3000',
+      '/auth': gatewayUrl,
+      '/oauth': gatewayUrl,
+      '/api': gatewayUrl,
+      '/pub': gatewayUrl,
     },
   },
   css: {
@@ -56,4 +63,5 @@ export default defineConfig({
       },
     },
   },
+  }
 })

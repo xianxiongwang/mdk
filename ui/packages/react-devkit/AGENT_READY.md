@@ -174,7 +174,7 @@ npm run fullcheck
 # Auto-runs on every PR in the `quality` CI job.
 ```
 
-The check loads `dist/registry.json` and `dist/blueprints.json`, applies the
+The check loads [`dist/registry.json`](./dist/registry.json) and [`dist/blueprints.json`](./dist/blueprints.json), applies the
 rules above, and compares against
 [`scripts/agent-ready-baseline.json`](scripts/agent-ready-baseline.json):
 
@@ -216,7 +216,7 @@ Every rule emitted by `check:agent-ready` and the one-line fix:
 Once a component is `agent-ready`, an LLM can find it via three layered
 surfaces, none of which require model calls:
 
-### 1. O(1) lookup indexes (`dist/registry.json` → `indexes`)
+### 1. O(1) lookup indexes ([`dist/registry.json`](./dist/registry.json) → `indexes`)
 
 The registry ships indexes alongside the flat arrays:
 
@@ -234,7 +234,7 @@ The registry ships indexes alongside the flat arrays:
 The other indexes return arrays of names; agents combine them with the
 `byName` lookup.
 
-### 2. Blueprints (`dist/blueprints.json`)
+### 2. Blueprints ([`dist/blueprints.json`](./dist/blueprints.json))
 
 Curated recipes mapping a user intent to a concrete starting set. Authored
 under [`blueprints/`](blueprints/README.md) and machine-indexed at build time.

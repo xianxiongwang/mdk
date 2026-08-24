@@ -96,8 +96,11 @@ const mapPool = async (pool, mdkClient) => {
 
 // Live site snapshot — all containers with linked miners, site power from the
 // powermeter, sensors, and pools — all sourced via mdkClient over the RPC listener.
-module.exports = async (req, services) => {
-  const { byFamily, pools } = await loadSite(services.mdkClient, { status: true })
+//
+// `ctx` is a test-only seam — see command.js.
+module.exports = async (req, ctx) => {
+  const mdkClient = ctx === undefined ? require('../lib/client') : ctx.mdkClient
+  const { byFamily, pools } = await loadSite(mdkClient, { status: true })
 
   const minerThings = byFamily.miner || []
   const containerThings = byFamily.container || []
@@ -177,7 +180,7 @@ module.exports = async (req, services) => {
   const sitePower = aggregateSiteMeters(siteMeters)
   const powermeters = siteMeters.map(mapPowermeter).sort((a, b) => a.label.localeCompare(b.label))
 
-  const poolData = (await Promise.all(pools.map((p) => mapPool(p, services.mdkClient))))
+  const poolData = (await Promise.all(pools.map((p) => mapPool(p, mdkClient))))
     .filter(Boolean)
     .sort((a, b) => a.poolType.localeCompare(b.poolType))
 

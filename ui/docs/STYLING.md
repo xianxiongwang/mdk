@@ -8,7 +8,7 @@ This guide covers both halves of the styling story:
   layer-wrapped CSS files (`styles.css` and `styles-domain.css`).
 
 For the overarching repository conventions (BEM naming, CVA variant props,
-no inline styles), see the styling section of `CLAUDE.md` at the repo root.
+no inline styles), see the styling section of [`CLAUDE.md`](../CLAUDE.md) at the repo root.
 
 ## Theming model
 
@@ -188,7 +188,7 @@ authored as SCSS and shipped as two layer-wrapped CSS files.
 - **Build orchestrator**: Turborepo.
 - **CSS bundler**: Vite (modern Sass compiler API).
 - **PostCSS**: a custom `postcss-mdk-layer` plugin
-  (`packages/react-devkit/postcss-mdk-layer.mjs`) that wraps top-level
+  ([`packages/react-devkit/postcss-mdk-layer.mjs`](../packages/react-devkit/postcss-mdk-layer.mjs)) that wraps top-level
   rules in `@layer mdk` and prepends `@layer base, mdk, app;`.
 - **Module resolution**: native npm-workspace package names —
   `@use '@tetherto/mdk-react-devkit/styles'` and friends just work because
@@ -198,14 +198,14 @@ authored as SCSS and shipped as two layer-wrapped CSS files.
 
 | Package                        | Source                                  | Output                              |
 | ------------------------------ | --------------------------------------- | ----------------------------------- |
-| `@tetherto/mdk-react-devkit`   | `src/styles.scss`                       | `dist/styles.css` (core)            |
-| `@tetherto/mdk-react-devkit`   | `src/styles-domain.scss`                | `dist/styles-domain.css`            |
-| `@tetherto/mdk-fonts`          | `src/jetbrains-mono.scss`               | `dist/jetbrains-mono.css`           |
+| `@tetherto/mdk-react-devkit`   | [`src/styles.scss`](../packages/react-devkit/src/styles.scss)                       | `dist/styles.css` (core)            |
+| `@tetherto/mdk-react-devkit`   | [`src/styles-domain.scss`](../packages/react-devkit/src/styles-domain.scss)                | `dist/styles-domain.css`            |
+| `@tetherto/mdk-fonts`          | [`src/jetbrains-mono.scss`](../packages/fonts/src/jetbrains-mono.scss)               | `dist/jetbrains-mono.css`           |
 
 The other two TypeScript packages (`mdk-ui-foundation` and
 `mdk-react-adapter`) have no styles.
 
-### Configuration: devkit `vite.config.js`
+### Configuration: devkit [`vite.config.js`](../packages/react-devkit/vite.config.js)
 
 ```js
 import { dirname, resolve } from "node:path"
@@ -257,7 +257,7 @@ following treatment:
 3. Everything else at the top level is wrapped in `@layer mdk { … }`.
 
 Tests for the plugin live at
-`packages/react-devkit/src/primitives/styles/specs/postcss-mdk-layer.test.ts`.
+[`packages/react-devkit/src/primitives/styles/specs/postcss-mdk-layer.test.ts`](../packages/react-devkit/src/primitives/styles/specs/postcss-mdk-layer.test.ts).
 
 ### Turborepo wiring
 
@@ -277,7 +277,7 @@ script (currently the devkit and fonts packages).
 
 #### Import shared mixins from the devkit
 
-The devkit exposes `_mixins.scss` and `_colors.scss` via its public
+The devkit exposes [`_mixins.scss`](../packages/react-devkit/src/primitives/styles/_mixins.scss) and [`_colors.scss`](../packages/react-devkit/src/primitives/styles/_colors.scss) via its public
 exports:
 
 ```jsonc

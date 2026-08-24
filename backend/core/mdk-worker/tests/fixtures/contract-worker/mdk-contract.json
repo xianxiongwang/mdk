@@ -1,0 +1,19 @@
+{
+  "metadata": {
+    "provider": "test",
+    "deviceFamily": "sensor",
+    "brand": "ContractWorkerFixture",
+    "modelsSupported": ["CW-1"],
+    "overview": "Minimal directory-loaded plugin used by worker-runtime-v2 tests to prove per-device instance isolation: one telemetry channel and one command, both reading the ambient device module."
+  },
+  "capabilities": {
+    "telemetry": [
+      { "name": "status", "unit": "", "type": "object", "handler": "src/telemetry/status.js", "description": "Echoes this instance's device.id/opts/env plus a module-level per-instance call counter and the shared debug module reference." }
+    ],
+    "commands": [
+      { "name": "echo", "handler": "src/commands/echo.js", "description": "Echoes params.value alongside this instance's device.id.", "params": [{ "name": "value", "type": "string" }] }
+    ],
+    "health": { "supportedStates": ["OK", "OFFLINE"] },
+    "errors": {}
+  }
+}

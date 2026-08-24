@@ -1,8 +1,8 @@
 {
   "name": "@tetherto/mdk",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
-  "description": "MDK umbrella repository - thin federated root orchestrator. Forwards install/build/test/lint/typecheck to the UI npm workspace (ui/) and the federated backend (backend/core, backend/workers). No shared dependency graph, no Turbo - each domain keeps its own package manager and install scripts, except backend/core, backend/core/gateway, backend/core/kernel, backend/core/mdk, backend/core/mdk-worker, backend/core/plugins, backend/workers packages, and examples/mvp-site which are linked via root npm workspaces.",
+  "description": "MDK umbrella repository - thin federated root orchestrator. Forwards install/build/test/lint/typecheck to the UI npm workspace (ui/) and the federated backend (backend/core, backend/workers). No shared dependency graph, no Turbo - each domain keeps its own package manager and install scripts, except backend/core, backend/core/gateway, backend/core/kernel, backend/core/mdk, backend/core/mdk-worker, backend/core/plugins, backend/workers packages, and examples/backend, examples/mvp-site which are linked via root npm workspaces.",
   "license": "Apache-2.0",
   "author": "Tether",
   "engines": {
@@ -29,19 +29,21 @@
     "backend/workers/power-meter/schneider",
     "backend/workers/samples/demo-worker",
     "backend/workers/temperature/seneca",
+    "examples/backend",
     "examples/mvp-site"
   ],
   "overrides": {
-    "@tootallnate/once": "3.0.1",
     "brace-expansion": "5.0.9",
+    "@tootallnate/once": "3.0.1",
     "tar": ">=7.5.4",
     "fastify": "5.10.0",
     "@fastify/static": "10.1.2",
     "@fastify/oauth2": "8.2.0",
+    "@hono/node-server": "2.0.12",
     "fast-uri@>=3.0.0 <3.1.5": "3.1.5",
     "fast-uri@>=4.0.0 <4.1.2": "4.1.2",
     "hono": ">=4.12.34",
-    "js-yaml@>=4.0.0 <4.3.1": ">=4.3.1 <5.0.0",
+    "js-yaml": "4.3.1",
     "ip-address": ">=10.3.1"
   },
   "scripts": {

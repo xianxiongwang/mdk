@@ -285,7 +285,11 @@ async function bootWorker (spec, { kernel, kernelTopic, root, minerCount, mode =
 
   if (spec.pool) {
     // Scheduler-driven pool worker — no things to seed; just pace it.
-    drivePool(handle.pool)
+    const poolTimer = drivePool(handle.pool)
+    // unshift, not push: this must run before this worker's own handle.stop()
+    // (already pushed above, at the top of this function, for every spec) —
+    // otherwise a tick fires against a worker that's already mid-teardown.
+    if (kernel && Array.isArray(kernel._cleanup)) kernel._cleanup.unshift(() => clearInterval(poolTimer))
     debug('%s pool driver started', spec.workerId)
     return { ...handle, seeded: 0, mockHandle }
   }

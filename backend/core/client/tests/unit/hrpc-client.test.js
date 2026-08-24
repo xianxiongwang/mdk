@@ -2,7 +2,7 @@
 
 const test = require('brittle')
 const { HRPCListener } = require('../../../kernel/lib/transport/hrpc-listener')
-const { createMdkClient } = require('../../index')
+const { createRawMdkClient } = require('../../index')
 
 function createMockModules () {
   const workers = [
@@ -42,10 +42,10 @@ async function startListener (t) {
   return { listener, publicKey }
 }
 
-test('hrpc client - createMdkClient over HRPC exposes the full method surface', async (t) => {
+test('hrpc client - createRawMdkClient over HRPC exposes the full method surface', async (t) => {
   const { publicKey } = await startListener(t)
 
-  const client = createMdkClient({ hrpc: { key: publicKey } })
+  const client = createRawMdkClient({ hrpc: { key: publicKey } })
   await client.connect()
   t.teardown(() => client.close())
 
@@ -61,7 +61,7 @@ test('hrpc client - createMdkClient over HRPC exposes the full method surface', 
 test('hrpc client - worker.list round-trips through the RPC listener', async (t) => {
   const { publicKey } = await startListener(t)
 
-  const client = createMdkClient({ hrpc: { key: publicKey.toString('hex') } })
+  const client = createRawMdkClient({ hrpc: { key: publicKey.toString('hex') } })
   await client.connect()
   t.teardown(() => client.close())
 
@@ -74,7 +74,7 @@ test('hrpc client - worker.list round-trips through the RPC listener', async (t)
 test('hrpc client - telemetry pull and command request carry payload + deviceId', async (t) => {
   const { publicKey } = await startListener(t)
 
-  const client = createMdkClient({ hrpc: { key: publicKey } })
+  const client = createRawMdkClient({ hrpc: { key: publicKey } })
   await client.connect()
   t.teardown(() => client.close())
 
@@ -111,7 +111,7 @@ test('hrpc client - action.push round-trips through the RPC listener', async (t)
   const { publicKey } = await listener.start()
   t.teardown(() => listener.stop())
 
-  const client = createMdkClient({ hrpc: { key: publicKey } })
+  const client = createRawMdkClient({ hrpc: { key: publicKey } })
   await client.connect()
   t.teardown(() => client.close())
 
@@ -131,7 +131,7 @@ test('hrpc client - action.push round-trips through the RPC listener', async (t)
 test('hrpc client - concurrent requests all resolve correctly', async (t) => {
   const { publicKey } = await startListener(t)
 
-  const client = createMdkClient({ hrpc: { key: publicKey } })
+  const client = createRawMdkClient({ hrpc: { key: publicKey } })
   await client.connect()
   t.teardown(() => client.close())
 
@@ -146,13 +146,13 @@ test('hrpc client - concurrent requests all resolve correctly', async (t) => {
 })
 
 test('hrpc client - missing key throws ERR_MDK_CLIENT_HRPC_KEY_REQUIRED', (t) => {
-  t.exception(() => createMdkClient({ hrpc: {} }), /ERR_MDK_CLIENT_HRPC_KEY_REQUIRED/)
+  t.exception(() => createRawMdkClient({ hrpc: {} }), /ERR_MDK_CLIENT_HRPC_KEY_REQUIRED/)
 })
 
 test('hrpc client - no transport throws ERR_MDK_CLIENT_TRANSPORT_REQUIRED', (t) => {
-  t.exception(() => createMdkClient({}), /ERR_MDK_CLIENT_TRANSPORT_REQUIRED/)
+  t.exception(() => createRawMdkClient({}), /ERR_MDK_CLIENT_TRANSPORT_REQUIRED/)
 })
 
 test('hrpc client - removed ipc option no longer selects a transport', (t) => {
-  t.exception(() => createMdkClient({ ipc: '/tmp/kernel.sock' }), /ERR_MDK_CLIENT_TRANSPORT_REQUIRED/)
+  t.exception(() => createRawMdkClient({ ipc: '/tmp/kernel.sock' }), /ERR_MDK_CLIENT_TRANSPORT_REQUIRED/)
 })

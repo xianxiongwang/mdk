@@ -17,10 +17,14 @@ import { useNotification } from '../../../utils/use-notification'
  */
 export const useHeaderControls = () => {
   const { notifySuccess } = useNotification()
-  const [preferences, setPreferences] = useLocalStorage<HeaderPreferences>(
+  const [storedPreferences, setPreferences] = useLocalStorage<HeaderPreferences>(
     HEADER_PREFERENCES_STORAGE_KEY,
     DEFAULT_HEADER_PREFERENCES,
   )
+  /* Stored entries may predate newly added (or renamed) preference keys —
+   * merge over the defaults so missing keys fall back instead of reading
+   * as `undefined` (which would render every affected toggle as off). */
+  const preferences = { ...DEFAULT_HEADER_PREFERENCES, ...storedPreferences }
 
   const handleToggle = (key: keyof HeaderPreferences, value: boolean) => {
     setPreferences({ ...preferences, [key]: value })

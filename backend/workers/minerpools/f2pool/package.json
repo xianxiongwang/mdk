@@ -1,6 +1,6 @@
 {
   "name": "@tetherto/mdk-worker-f2pool",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "F2Pool miner pool lib",
   "keywords": [
     "tether"

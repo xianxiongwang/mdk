@@ -32,24 +32,24 @@ added later without touching the core. Dependency flow:
 `catalog → react-devkit → react-adapter → ui-foundation`. See
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the full picture.
 
-- **`packages/ui-foundation`** (`@tetherto/mdk-ui-foundation`) — framework-agnostic
+- **[`packages/ui-foundation`](./packages/ui-foundation/README.md)** (`@tetherto/mdk-ui-foundation`) — framework-agnostic
   headless layer: Zustand vanilla stores (`authStore`, `devicesStore`,
   `notificationStore`, `timezoneStore`, `actionsStore`), TanStack
   `QueryClient` factory, telemetry primitives, command lifecycle state
   machine, shared types. Pure TS, no React.
-- **`packages/react-adapter`** (`@tetherto/mdk-react-adapter`) — React
+- **[`packages/react-adapter`](./packages/react-adapter/README.md)** (`@tetherto/mdk-react-adapter`) — React
   bindings: `<MdkProvider>`, store hooks (`useAuth`, `useDevices`,
   `useNotifications`, `useTimezone`, `useActions`), pass-through
   re-exports of `useQuery` / `useMutation`.
-- **`packages/react-devkit`** (`@tetherto/mdk-react-devkit`) — React UI
-  library. `src/primitives/` exports generic primitives on Radix UI with BEM
-  + SCSS tokens; `src/domain/` exports mining-domain components and
+- **[`packages/react-devkit`](./packages/react-devkit/README.md)** (`@tetherto/mdk-react-devkit`) — React UI
+  library. [`src/primitives/`](./packages/react-devkit/src/primitives/) exports generic primitives on Radix UI with BEM
+  + SCSS tokens; [`src/domain/`](./packages/react-devkit/src/domain/) exports mining-domain components and
   hooks.
-- **`packages/cli`** (`@tetherto/mdk-ui-cli`, bin `mdk-ui`) — agent-first
+- **[`packages/cli`](./packages/cli/README.md)** (`@tetherto/mdk-ui-cli`, bin `mdk-ui`) — agent-first
   CLI: registry discovery, doc/example fetching, page scaffolding,
   typecheck/lint helpers.
-- **`packages/fonts`** (`@tetherto/mdk-fonts`) — JetBrains Mono assets.
-- **`apps/catalog`** — Vite/React showcase wrapped in `<MdkProvider>`.
+- **[`packages/fonts`](./packages/fonts/README.md)** (`@tetherto/mdk-fonts`) — JetBrains Mono assets.
+- **[`apps/catalog`](./apps/catalog/README.md)** — Vite/React showcase wrapped in `<MdkProvider>`.
 
 All three TS packages ship pre-built `dist/` so consumers don't compile
 our source. Run `npm run build` once on a fresh checkout. Build details
@@ -82,12 +82,12 @@ via `createMdkQueryClient` from `@tetherto/mdk-ui-foundation` and `<MdkProvider>
   component imports its own stylesheet from its `.tsx`
   (`import "./foo.scss"`), but the published package strips those imports
   from `dist/*.js` — so a stylesheet only ships if it is also
-  `@forward`/`@use`-d from `src/styles-domain.scss` (domain, via
-  `src/domain/styles/index.scss`) or `src/styles.scss` (primitives, via
-  `src/primitives/styles/index.scss`). Miss it and the component compiles,
+  `@forward`/`@use`-d from [`src/styles-domain.scss`](./packages/react-devkit/src/styles-domain.scss) (domain, via
+  [`src/domain/styles/index.scss`](./packages/react-devkit/src/domain/styles/index.scss)) or [`src/styles.scss`](./packages/react-devkit/src/styles.scss) (primitives, via
+  [`src/primitives/styles/index.scss`](./packages/react-devkit/src/primitives/styles/index.scss)). Miss it and the component compiles,
   passes tests, and renders **completely unstyled** in built consumers
   (the operator shell, not the catalog). `npm run build` runs
-  `check:styles` (`scripts/check-style-forwards.mjs`) to fail fast on any
+  `check:styles` ([`scripts/check-style-forwards.mjs`](./packages/react-devkit/scripts/check-style-forwards.mjs)) to fail fast on any
   unregistered stylesheet — do not bypass it; add the `@forward` line.
 
 ### Separation of concerns (load-bearing rule)
@@ -110,7 +110,7 @@ This is the rule that organises everything else — break it and the layers coll
   but never reimplement them.
 - **No tag / aggregate-field strings leak past the data layer.** Page
   files must never reference `t-miner`, `t-powermeter`, `power_w_sum_aggr`,
-  `site_power_w`, etc. Those belong in `packages/ui-foundation/src/utils/dashboard-queries.ts`
+  `site_power_w`, etc. Those belong in [`packages/ui-foundation/src/utils/dashboard-queries.ts`](./packages/ui-foundation/src/presets/mining/dialect/dashboard-queries.ts)
   (and similar builders) and are consumed by adapter hooks.
 
 **Red flag — stop and refactor (or file techdebt):**
@@ -149,13 +149,13 @@ violates) — see [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md#tracking-tech-de
   `@tetherto/mdk-ui-foundation` — use `vi.spyOn` on store actions and
   `getState().reset()` in `beforeEach`. Do **not** mock `react-redux`
   or reintroduce a Provider.
-- Test utilities are exported from each package's `src/test-utils/`.
+- Test utilities are exported from each package's `src/test-utils/` (e.g. [`packages/react-devkit/src/test-utils/`](packages/react-devkit/src/test-utils/index.ts)).
 - Coverage thresholds and exclusions: [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md#coverage).
 
 ### TypeScript
 
 Strict mode (`strict`, `noUncheckedIndexedAccess`, `noImplicitAny`),
-target ES2022, ESM-only. All packages extend `tsconfig.base.json`.
+target ES2022, ESM-only. All packages extend [`tsconfig.base.json`](./tsconfig.base.json).
 
 ### Code style
 
@@ -170,28 +170,28 @@ lint-staged enforce on staged files.
 `refactor`, `test`, `chore`. Example:
 `feat(react-devkit): add MinerCard component`.
 
-## Catalog app conventions (`apps/catalog`)
+## Catalog app conventions ([`apps/catalog`](./apps/catalog/README.md))
 
 Wrapped in `<MdkProvider>` at the root; each route maps to a page or
 example.
 
-**Navigation** — Add routes to both `src/constants/navigation.tsx`
-(under `Guides`, `Core`, or `Foundation`) and `src/router.tsx`. Nav
+**Navigation** — Add routes to both [`src/constants/navigation.tsx`](./apps/catalog/src/constants/navigation.tsx)
+(under `Guides`, `Core`, or `Foundation`) and [`src/router.tsx`](./apps/catalog/src/router.tsx). Nav
 labels must match page titles exactly.
 
 **Page headers** — Every routed page opens with `<DemoPageHeader>`
-from `src/components/demo-page-header.tsx`. Do **not** use raw `<h1>`,
+from [`src/components/demo-page-header.tsx`](./apps/catalog/src/components/demo-page-header.tsx). Do **not** use raw `<h1>`,
 `<h2>`, or `<Typography variant="heading1/2">` as the page title.
 
-**Sub-sections** — Use `<DemoBlock>` from `src/components/demo-block.tsx`
+**Sub-sections** — Use `<DemoBlock>` from [`src/components/demo-block.tsx`](./apps/catalog/src/components/demo-block.tsx)
 for variant demos within a page (renders `heading3` + card wrapper).
 
 **No inline styles** — Use existing `demo-section__*` utility classes
-in `App.scss` or add new BEM modifiers there. The Theming demo is the
+in [`App.scss`](./apps/catalog/src/App.scss) or add new BEM modifiers there. The Theming demo is the
 only exception (sets `--mdk-*` CSS variables on a preview region).
 
 **Toasts, not alerts** — Use `useDemoToast` from
-`src/utils/use-demo-toast.tsx` instead of `alert()` / `window.alert()`.
+[`src/utils/use-demo-toast.tsx`](./apps/catalog/src/utils/use-demo-toast.tsx) instead of `alert()` / `window.alert()`.
 
 **Seeding store state** — Demos that drive a component reading from a
 shared Zustand store should seed the singleton from `useEffect` and
@@ -206,5 +206,5 @@ npm install -D <pkg> --workspace @tetherto/mdk-ui-foundation      # dev dep
 npm install -w <pkg>                                        # to workspace root
 ```
 
-Check `package.json` workspaces/overrides before adding deps — versions
+Check [`package.json`](./package.json) workspaces/overrides before adding deps — versions
 are centrally managed.

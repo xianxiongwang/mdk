@@ -90,7 +90,7 @@
     --mdk-color-blue: #357af6;
     --mdk-color-blue-rgb: 53, 122, 246; /* #357AF6 in RGB */
 
-    /* Neutral / Gray scale — warm browns match the Mining OS/Figma canon
+    /* Neutral / Gray scale — warm browns match the reference app/Figma canon
        (DARK_BACK #1a1815, BLACK #17130f, DARK_ORANGE_BG #3b2b20). */
     --mdk-color-gray-900: #1a1815;
     --mdk-color-gray-500: #777777;
@@ -190,7 +190,7 @@
     --mdk-table-text-primary: #ffffff80;
     --mdk-table-text-secondary: #ffffffb3;
 
-    /* mdk button tokens (mining-os baseline) */
+    /* mdk button tokens (the reference app baseline) */
     --mdk-radius: 0px;
     --mdk-font-size: 14px;
     --mdk-line-height: 22px;

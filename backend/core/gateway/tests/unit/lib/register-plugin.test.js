@@ -19,12 +19,16 @@ function writeFixture (dir, files) {
 
 // registerPlugin is the per-dir unit the ctx.extraPluginDirs boot loop invokes once
 // per extra plugin package. Exercised here via prototype.call to avoid booting the
-// full worker (facilities, httpd). It must load the manifest and wrap each route's
-// handler so the controller receives the shared services object as its second arg.
+// full worker (facilities, httpd). It must load the manifest and load each route's
+// handler through a per-plugin module context whose ambient
+// '@tetherto/mdk-gateway/plugin' resolves to the frozen context.
 
 function makeFakeWrk () {
-  const services = { mdkClient: { tag: 'mdk' }, dataProxy: {}, authLib: {}, conf: {} }
-  return { _plugins: [], _pluginServices: services, _services: services }
+  return {
+    _plugins: [],
+    conf: { site: { name: 'test-site' } },
+    ctx: { kernelKey: 'a'.repeat(64), kernelBootstrap: null }
+  }
 }
 
 test('registerPlugin - loads an extra plugin dir and registers its routes', (t) => {
@@ -35,7 +39,7 @@ test('registerPlugin - loads an extra plugin dir and registers its routes', (t) 
       version: '1.0.0',
       routes: [{ id: 'site.devices', method: 'GET', path: '/site/devices', handler: './controllers/devices.js', auth: false }]
     },
-    'controllers/devices.js': '\'use strict\'\nmodule.exports = async function (req, services) { return { devices: [], svc: services } }'
+    'controllers/devices.js': '\'use strict\'\nmodule.exports = async function (req) { return { devices: [] } }'
   })
 
   const wrk = makeFakeWrk()
@@ -44,25 +48,56 @@ test('registerPlugin - loads an extra plugin dir and registers its routes', (t) 
   t.is(wrk._plugins.length, 1, 'plugin registered')
   t.is(wrk._plugins[0].manifest.name, '@example/mdk-plugin-site')
   t.is(wrk._plugins[0].routes[0].id, 'site.devices')
-  t.is(typeof wrk._plugins[0].routes[0]._handler, 'function', 'handler wrapped')
+  t.is(typeof wrk._plugins[0].routes[0]._handler, 'function', 'handler loaded')
 })
 
-test('registerPlugin - wrapped handler injects services as the second argument', async (t) => {
-  const dir = path.join(FIXTURES_DIR, 'svc')
+test('registerPlugin - handler reads the frozen ambient context', async (t) => {
+  const dir = path.join(FIXTURES_DIR, 'ctx')
   writeFixture(dir, {
     'mdk-plugin.json': {
-      name: '@example/mdk-plugin-svc',
+      name: '@example/mdk-plugin-ctx',
       version: '1.0.0',
-      routes: [{ id: 'svc.echo', method: 'GET', path: '/svc/echo', handler: './controllers/echo.js', auth: false }]
+      routes: [{ id: 'ctx.echo', method: 'GET', path: '/ctx/echo', handler: './controllers/echo.js', auth: false }]
     },
-    'controllers/echo.js': '\'use strict\'\nmodule.exports = async function (req, services) { return { mdk: services.mdkClient } }'
+    'controllers/echo.js': [
+      '\'use strict\'',
+      'const { config } = require(\'@tetherto/mdk-gateway/plugin\')',
+      'module.exports = async function (req) {',
+      '  return { kernelKey: config.kernelKey, site: config.site, frozen: Object.isFrozen(config) }',
+      '}'
+    ].join('\n')
   })
 
   const wrk = makeFakeWrk()
   WrkServerHttp.prototype.registerPlugin.call(wrk, dir)
 
   const out = await wrk._plugins[0].routes[0]._handler({ params: {}, query: {}, body: {}, headers: {} })
-  t.is(out.mdk.tag, 'mdk', 'controller received the shared mdkClient via services')
+  t.is(out.kernelKey, 'a'.repeat(64), 'config.kernelKey came from ctx')
+  t.alike(out.site, { name: 'test-site' }, 'gateway conf spread into config')
+  t.is(out.frozen, true, 'config arrives frozen')
+})
+
+test('registerPlugin - per-plugin config reaches the ambient context', async (t) => {
+  const dir = path.join(FIXTURES_DIR, 'per-plugin-conf')
+  writeFixture(dir, {
+    'mdk-plugin.json': {
+      name: '@example/mdk-plugin-conf',
+      version: '1.0.0',
+      routes: [{ id: 'conf.echo', method: 'GET', path: '/conf/echo', handler: './controllers/echo.js', auth: false }]
+    },
+    'controllers/echo.js': [
+      '\'use strict\'',
+      'const { config } = require(\'@tetherto/mdk-gateway/plugin\')',
+      'module.exports = async function () { return { agent: config.agent, site: config.site } }'
+    ].join('\n')
+  })
+
+  const wrk = makeFakeWrk()
+  WrkServerHttp.prototype.registerPlugin.call(wrk, dir, { agent: { provider: { kind: 'qvac' } } })
+
+  const out = await wrk._plugins[0].routes[0]._handler({ params: {}, query: {}, body: {}, headers: {} })
+  t.alike(out.agent, { provider: { kind: 'qvac' } }, 'plugin config block visible in config')
+  t.alike(out.site, { name: 'test-site' }, 'gateway conf still underneath')
 })
 
 test('registerPlugin - multiple extra dirs accumulate in order', (t) => {

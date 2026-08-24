@@ -43,5 +43,5 @@ drop down to `MinerExplorer`.
 
 ## Data contracts
 
-- `Device` — `foundation/types/device`.
+- `Device` — [`foundation/types/device`](../../../types/device.ts).
 - `PoolConfigData` — exported from `@tetherto/mdk-react-devkit`.

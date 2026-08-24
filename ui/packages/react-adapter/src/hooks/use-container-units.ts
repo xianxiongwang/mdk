@@ -1,7 +1,7 @@
-import { type ListThingsDevice, listThingsQuery } from '@tetherto/mdk-ui-foundation'
+import type { ListThingsDevice } from '@tetherto/mdk-ui-foundation'
+import { flattenKernelEnvelope, listThingsQuery  } from '@tetherto/mdk-ui-foundation/presets/mining'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { headOrEmpty } from './list-things-utils'
 import { POOL_MANAGER_POLL_INTERVAL_MS } from './poll-intervals'
 import { useAuthToken } from './use-auth-token'
 import type { ContainerUnit } from './use-sites-overview-data'
@@ -9,7 +9,7 @@ import type { ContainerUnit } from './use-sites-overview-data'
 /**
  * `t-container` is the tag every container thing carries (mirrors
  * `useSiteContainerCapacity`, which reads the same tag from the tail-log).
- * QA against a live MiningOS to confirm the tag/field projection.
+ * QA against a live reference app deployment to confirm the tag/field projection.
  */
 const CONTAINER_TAG = 't-container'
 const CONTAINER_FIELDS = JSON.stringify({
@@ -45,12 +45,11 @@ export type UseContainerUnitsResult = {
  * sources the inventory.
  *
  * @remarks
- * The `/auth/list-things` endpoint is illustrative. MDK does not ship built-in
- * endpoints — create your own via a
+ * The `/auth/list-things` endpoint is illustrative. MDK does not ship a built-in
+ * endpoint for it — create your own via a
  * [Gateway plugin](https://docs.tether.io/mdk/guides/gateway/plugins) matching
- * your Worker/business logic. See the
- * [full-site example](https://github.com/tetherto/mdk/tree/main/examples/full-site/plugins/site)
- * for a working reference.
+ * your Worker/business logic. No reference implementation of `/auth/list-things`
+ * ships in this repo.
  *
  * @category dashboard
  */
@@ -69,7 +68,7 @@ export const useContainerUnits = (
     ...factory,
     refetchInterval: options.refetchInterval ?? POOL_MANAGER_POLL_INTERVAL_MS,
     enabled: options.enabled ?? !!token,
-    select: (raw: ListThingsDevice[][]) => headOrEmpty(raw) as unknown as ContainerUnit[],
+    select: (raw: ListThingsDevice[][]) => flattenKernelEnvelope(raw) as unknown as ContainerUnit[],
   })
 
   return {

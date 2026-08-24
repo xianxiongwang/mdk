@@ -79,21 +79,22 @@ method and path. It also carries the response schema, `constraints`, `errors`, a
 route self-describing to both a reader and an agent.
 
 [`gateway-plugin/controllers/fleet-summary.js`][plugin-controller] is the handler. Every controller is
-`async function (req, services)` and returns a plain object, which the Gateway serialises. It never touches a response object:
+`async function (req)` and returns a plain object, which the Gateway serialises. It never touches a response object:
 
 ```js
-module.exports = async function fleetSummary (req, services) {
-  const { mdkClient } = services
-  if (!mdkClient) throw new Error('ERR_MDK_CLIENT_UNAVAILABLE')
+const mdkClient = require('../lib/client')
 
+module.exports = async function fleetSummary (req) {
   const workersResp = await mdkClient.listWorkers()
   const deviceIds = (workersResp?.workers || []).flatMap(w => w.deviceIds || [])
   // fan out one telemetry pull per device, then combine
 }
 ```
 
-`services.mdkClient` is the same protocol client used everywhere else in MDK. **Aggregation lives here, in the plugin.** Workers are
-structurally single-device, so a Worker can only ever answer for one device; combining them into a fleet total is the plugin's job.
+`mdkClient` — built once for the plugin in [`gateway-plugin/lib/client.js`][plugin-client] from
+`require('@tetherto/mdk-gateway/plugin')` — is the same protocol client used everywhere else in MDK. **Aggregation lives here, in the
+plugin.** Workers are structurally single-device, so a Worker can only ever answer for one device; combining them into a fleet total
+is the plugin's job.
 
 </Step>
 
@@ -128,7 +129,7 @@ await startGateway({
 1. **Mock devices** started two `SimMinerMock` servers on ports `15101` and `15102`, each reporting its own hashrate and power so the totals are provably a sum rather than a single reading doubled.
 2. **Worker runtime** constructed one `WorkerRuntime` from the example's worker plugin, hosting both devices over a single RPC channel to the Kernel. One runtime means one plugin type and N devices, not one process per device.
 3. **Kernel** started and discovered the runtime, reporting `sim-rack-1 [READY] devices=SIM-001,SIM-002`.
-4. **Gateway** started with `extraPluginDirs` pointing at the plugin directory, read its `mdk-plugin.json`, and registered `GET /api/fleet/summary`. Without that option the Gateway would have served no data routes at all.
+4. **Gateway** started with `extraPluginDirs` pointing at the plugin directory, read its [`mdk-plugin.json`][plugin-manifest], and registered `GET /api/fleet/summary`. Without that option the Gateway would have served only the three built-in plugin routes ([`telemetry`][plugin-telemetry], [`site-hashrate`][plugin-site-hashrate], [`site-monitor`][plugin-site-monitor]), not your custom data route.
 5. **The request** hit the controller, which called `listWorkers()` to enumerate device IDs, pulled `metrics` telemetry for each one, and summed `hashrate_rt` and `power` into fleet totals.
 6. **The assertion** compared those totals against the mock configuration, printed `E2E OK`, shut the Kernel down, and exited zero.
 
@@ -157,6 +158,9 @@ None. The example removes its own state directory on start and exits when the ch
 [plugin-controller]: ../../examples/backend/mdk-plugin-e2e/gateway-plugin/controllers/fleet-summary.js
 <!-- docs@tether.io: plugin-controller → https://github.com/tetherto/mdk/blob/main/examples/backend/mdk-plugin-e2e/gateway-plugin/controllers/fleet-summary.js -->
 
+[plugin-client]: ../../examples/backend/mdk-plugin-e2e/gateway-plugin/lib/client.js
+<!-- docs@tether.io: plugin-client → https://github.com/tetherto/mdk/blob/main/examples/backend/mdk-plugin-e2e/gateway-plugin/lib/client.js -->
+
 [plugin-run]: ../../examples/backend/mdk-plugin-e2e/run.js
 <!-- docs@tether.io: plugin-run → https://github.com/tetherto/mdk/blob/main/examples/backend/mdk-plugin-e2e/run.js -->
 
@@ -171,3 +175,12 @@ None. The example removes its own state directory on start and exits when the ch
 
 [run-a-site]: run-a-site.md
 <!-- docs@tether.io: run-a-site → tutorials/run-a-site -->
+
+[plugin-telemetry]: ../../backend/core/plugins/telemetry
+<!-- docs@tether.io: plugin-telemetry → https://github.com/tetherto/mdk/tree/main/backend/core/plugins/telemetry -->
+
+[plugin-site-hashrate]: ../../backend/core/plugins/site-hashrate
+<!-- docs@tether.io: plugin-site-hashrate → https://github.com/tetherto/mdk/tree/main/backend/core/plugins/site-hashrate -->
+
+[plugin-site-monitor]: ../../backend/core/plugins/site-monitor
+<!-- docs@tether.io: plugin-site-monitor → https://github.com/tetherto/mdk/tree/main/backend/core/plugins/site-monitor -->

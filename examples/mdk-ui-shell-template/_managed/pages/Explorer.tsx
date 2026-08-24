@@ -35,7 +35,7 @@ const ExplorerPage = () => {
   const [selected, setSelected] = useState<DataTableRowSelectionState>({})
 
   // Search / status-filter / sort are client-side over a tag-filtered fetch —
-  // this mirrors MOS (BE-side paging is tracked separately with management).
+  // this mirrors the reference app (BE-side paging is tracked separately with management).
   const { data, searchOptions, filterOptions } = useExplorerData({
     deviceType,
     searchTags,

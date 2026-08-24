@@ -3,21 +3,30 @@
 ## Overview
 
 **Kernel** is the orchestrator, the trusted coordination daemon at the center of the [MDK stack](../../../docs/concepts/architecture.md).
-It discovers and registers [Workers](../../../docs/concepts/stack/workers.md), maintains a live registry of devices, dispatches commands, collects
-telemetry on a schedule, and monitors Worker health. The [Workers discovery model](../../../docs/concepts/stack/workers.md#discovery-model)
+It discovers and registers [Workers](../../workers/README.md), maintains a live registry of devices, dispatches commands, collects
+telemetry on a schedule, and monitors Worker health. The [Workers discovery model](../../workers/docs/architecture.md#discovery-model)
 covers local, same-process, and DHT modes. 
 
 The Kernel discovers and registers Workers, dispatches commands through a crash-recoverable state machine, and pulls telemetry on a fixed schedule. 
-The Kernel is **pull-only and passive** — it never pushes to your app. Callers connect over HRPC using the Kernel's public key 
-(published to `<tmpdir>/mdk/.kernel-key` on start). For telemetry, the scheduler fans `telemetry.pull` out to ready Workers; on-demand queries route 
-to the owning Worker for a specific device.
+The Kernel is **pull-only and passive** — it never pushes to your app, and it never receives unsolicited MDK Protocol data from a
+Worker (the one inbound exception is the public key a Worker offers once on the discovery swarm connection). It always
+initiates, on the cadences set in `opts.cadences`, which is what keeps it from being overwhelmed by upstream pressure and why Workers
+are described as passive. Callers connect over HRPC using the Kernel's public key (published to `<tmpdir>/mdk/.kernel-key` on start).
+For telemetry, the scheduler fans `telemetry.pull` out to ready Workers; on-demand queries route to the owning Worker for a specific
+device. Callers do send command requests to Kernel, but Kernel then dispatches each one to the owning Worker via its own initiated call.
 
 Kernel does **not** extend any Worker class. It is a standalone `EventEmitter`-based lib, independent of the
-[`WorkerRuntime`](../mdk-worker/lib/worker-runtime.js) class that hosts [device Workers](../../../docs/concepts/stack/workers.md).
+[`WorkerRuntime`](../mdk-worker/lib/worker-runtime.js) class that hosts [device Workers](../../workers/README.md).
+
+Kernel is a pass-through coordinator, and the list of what it leaves alone is deliberately long: it has no HTTP surface, performs no
+user authentication, and holds no business logic or cross-Worker aggregation. Consumers reach it through the
+[Gateway](../gateway/README.md)'s REST or MCP endpoints, and everything above routing is the caller's responsibility — see
+[responsibility boundaries](../../../docs/concepts/control-plane.md#responsibility-boundaries). Its one brush with permissions is the
+write-action path, which requires a device-family permission such as `miner:w` in the `authPerms` the caller sends.
 
 > [!TIP]
-> New to Kernel? Read the [Kernel concept page](../../../docs/concepts/stack/kernel.md) for the developer model: what Kernel owns, the pull-only 
-> model, transports, and what it deliberately does not handle.
+> New to Kernel? The [control plane](../../../docs/concepts/control-plane.md) explains which layer owns what and how a request travels
+> from a consumer down to a device.
 > For deployment shapes and the active/passive connection model, see [deployment topologies](../../../docs/concepts/deployment-topologies.md).
 > Most apps start Kernel via [`getKernel()`](../mdk/README.md) — the `@tetherto/mdk` bootstrap API — rather than calling `createKernel()` directly.
 
@@ -119,24 +128,33 @@ of single-responsibility modules that do the work. Modules communicate only thro
 
 ### `WorkerRegistry`
 
-Maps `deviceId → workerId → RPC channel`. Source of truth for routability.
+Two flat indexes — `deviceId → { workerId, channel, capabilities }` and `workerId → { state, deviceIds, channel, rpcKey, … }`.
+Source of truth for routability.
 
-**State machine:**
+**State machine** (constants in [`lib/modules/worker-registry/states.js`](lib/modules/worker-registry/states.js)):
 ```
-Unregistered → Discovered → IdentitySaved → Ready → Terminated
+UNREGISTERED → DISCOVERED → IDENTITY_SAVED → READY → TERMINATED
 ```
 
-Workers progress through this lifecycle automatically as Kernel pulls their identity and capabilities over DHT.
+Workers progress through this lifecycle automatically as Kernel pulls their identity and capabilities over DHT, though the live path
+is shorter than the table suggests: a Worker discovered over DHT is registered straight into `IDENTITY_SAVED` and then `READY`.
+`DISCOVERED` is what a persisted Worker reloads into on `recover()` while it waits to reconnect. `UNREGISTERED` and `TERMINATED` are
+declared in the transition table but never assigned at runtime — `terminate()` deletes the Worker's registry entry outright.
 
 ### `CommandDispatcher`
 
-Validates incoming command envelopes, resolves the owning Worker from the registry, checks that the command exists in the Worker's declared 
-capabilities, then enqueues via the state machine.
+Validates incoming command envelopes, resolves the owning Worker from the registry — by `deviceId` for device scope, by `workerId` for
+worker and rack scope — checks that the command exists in the Worker's declared capabilities, then enqueues via the state machine.
+See [Command control](#command-control) for how scopes and targets are handled.
 
 ### `CommandStateMachine`
 
-Tracks every command's full execution lifecycle. Backed by a Write-Ahead Log (WAL) in Hyperbee — every state transition is written to WAL before it 
-takes effect. On restart, `recover()` sweeps non-terminal states and retries or fails them.
+Tracks every command's full execution lifecycle, backed by a Write-Ahead Log (WAL) in Hyperbee. The guarantee that matters is on the
+outbound side: a command's RPC to its Worker is issued only after the `DISPATCHED` and `EXECUTING` transitions have been appended to
+the WAL, so a crash mid-flight leaves a durable record of what was in progress. On restart, `recover()` sweeps the whole WAL: in-flight commands with
+retries left are restored to `QUEUED`, those out of retries are failed with `ERR_RECOVERY_EXHAUSTED`, and terminal entries are deleted to
+compact the log. Restoring to `QUEUED` does not re-send the command; `recover()` never calls `_dispatch`, so a recovered command waits for a
+caller to drive it.
 
 **State machine:**
 ```
@@ -147,8 +165,9 @@ QUEUED → DISPATCHED → EXECUTING → SUCCESS
 
 ### `TelemetryCollector`
 
-Stateless proxy. Routes `telemetry.pull` queries to the appropriate Worker and passes the response back to the caller. Workers own
-all aggregation and storage — Kernel is a thin router.
+Thin proxy. Routes `telemetry.pull` queries to the appropriate Worker and passes the response back to the caller. Workers own
+all aggregation and storage — Kernel persists no telemetry at all. (It does hold an in-process subscriber list for callback fan-out,
+so it is not literally stateless, but nothing it keeps survives the process.)
 
 **Supported query types:** `metrics`, `list`, `count`, `logs`, `logs_multi`, `historical_logs`, `settings`, `config`, 
 `thing_config`, `stats`, `ext_data`
@@ -190,6 +209,10 @@ Handles the write-action approval lifecycle at the Kernel layer. Methods are inv
 Resolves a staged action into per-Worker write calls via `getWriteCalls(query, action, params, authPerms)`. Returns the targets
 map, required permission strings, and per-Worker call payloads that `ActionManager` passes to the action approver.
 
+Once an action clears its vote threshold, the approver calls back into `callTargets()`, which builds a `command.request` envelope and
+hands it to `CommandDispatcher` — the same path a direct write takes. Approval gates which writes execute; it does not give them a
+separate execution route.
+
 ### Permissions
 
 Colon-delimited permission evaluation for write paths:
@@ -206,13 +229,28 @@ consumer.
 
 ### HRPC (Hyperswarm RPC)
 
-Production transport. Uses encrypted Noise protocol connections over the Hyperswarm DHT. Callers must be allowlisted by hex public key.
+The only client transport: encrypted Noise connections over the Hyperswarm DHT, addressed by Kernel's public key. Kernel is the
+**passive listener** — the caller always initiates the connection.
+
+How the caller obtains that key depends on where it runs:
+
+- **Same host (zero-config default)**: `getKernel()` writes Kernel's HRPC public key as hex to a well-known key file
+  (`<tmpdir>/mdk/.kernel-key`) after start, and the caller reads it from there automatically. The file is not deleted on
+  shutdown, and the key stays stable across restarts because the RPC seed is persisted in Kernel's conf store rather than
+  regenerated. Override the path with `opts.keyFile`, or pass `keyFile: false` to disable publishing
+- **Remote or multi-host**: share the key from `kernel.getPublicKey()` with the caller out-of-band
+
+Admission is controlled by an allowlist of hex public keys. An empty allowlist admits any HRPC caller, so a configured
+allowlist is what restricts connections to approved callers:
 
 ```js
 createKernel({
   auth: { whitelist: ['<gateway-pubkey-hex>'] }
 })
 ```
+
+This is a transport-level check on which backend processes may connect. It says nothing about the person or agent behind a
+request — see [control plane](../../../docs/concepts/control-plane.md#transport-identity-and-admission) for that distinction.
 
 ## MDK Protocol
 
@@ -232,7 +270,7 @@ All messages use the envelope format:
 }
 ```
 
-**Action constants** (from `lib/protocol/actions.js`, `PROTOCOL_VERSION = '0.2.0'`):
+**Action constants** (from [`lib/protocol/actions.js`](./lib/protocol/actions.js), `PROTOCOL_VERSION = '0.2.0'`):
 
 | Constant | Wire value | Direction |
 |----------|-----------|-----------|
@@ -263,21 +301,26 @@ All messages use the envelope format:
 
 Beyond the basic dispatch/result cycle, four exported constants extend the CSM with status queries, cancellation, scoped fan-out, and a fan-out cap.
 
-**`COMMAND_STATUS` / `COMMAND_STATUS_RESPONSE`**: query the live state of an in-flight or recently settled command. The Gateway sends `command.status` with a `commandId`; Kernel replies with the current CSM state (`QUEUED`, `DISPATCHED`, `EXECUTING`, `SUCCESS`, `FAILED`, or `TIMEOUT`). Routed by `envelope-router.js` → `dispatcher.getStatus(commandId)`.
+**`COMMAND_STATUS` / `COMMAND_STATUS_RESPONSE`**: query the live state of an in-flight or recently settled command. The Gateway sends `command.status` with a `commandId`; Kernel replies with the current CSM state (`QUEUED`, `DISPATCHED`, `EXECUTING`, `SUCCESS`, `FAILED`, or `TIMEOUT`). Routed by [`envelope-router.js`](./lib/transport/envelope-router.js) → `dispatcher.getStatus(commandId)`.
 
 **`COMMAND_CANCEL` / `COMMAND_CANCEL_RESPONSE`**: attempt to cancel a command before or during execution. Cancellation succeeds only when the command is in a `QUEUED` or `DISPATCHED` state; commands already in `EXECUTING` or a terminal state return an error response. Routed → `dispatcher.cancel(commandId)`.
 
 **`COMMAND_SCOPES`**: an object (`{ DEVICE: 'device', WORKER: 'worker', RACK: 'rack' }`) that sets the targeting resolution for a command:
 
-| Scope | Resolves to |
-|-------|-------------|
-| `device` | A single target device |
-| `worker` | All devices registered to a Worker |
-| `rack` | All devices across all Workers in a rack |
+| Scope | Addresses | Routed by |
+|-------|-----------|-----------|
+| `device` | A single target device | `deviceId` on the envelope |
+| `worker` | Devices registered to a Worker | `workerId` in the payload |
+| `rack` | Devices across the Workers in a rack | `workerId` in the payload |
 
-The scope field is validated in `lib/protocol/schemas.js` against `VALID_COMMAND_SCOPES` and resolved to individual target device IDs in `command-dispatcher`. Both `COMMAND_SCOPES` and `VALID_COMMAND_SCOPES` are exported from `lib/protocol/actions.js`.
+The scope field is validated in [`lib/protocol/schemas.js`](./lib/protocol/schemas.js) against `VALID_COMMAND_SCOPES`. Both `COMMAND_SCOPES` and `VALID_COMMAND_SCOPES` are exported from [`lib/protocol/actions.js`](./lib/protocol/actions.js).
 
-**`MAX_TARGETS`** (`1024`): hard cap on the number of resolved target devices per command. Enforced in `lib/protocol/schemas.js` before dispatch — exceeding it rejects the envelope immediately, before any CSM state is written. Prevents accidental fleet-wide fan-out from a single command request.
+Kernel does not expand a scope into a device list. For `worker` and `rack` scope the caller supplies the `targets` array, and `_resolveTarget` passes it through unchanged; for `device` scope `targets` is `null` and the envelope's `deviceId` routes the command. Enumerating which devices a scope covers is the caller's job.
+
+**`MAX_TARGETS`** (`1024`): the declared cap on the number of targets a command may carry, intended to prevent accidental fleet-wide fan-out from a single request. The check lives in `validateCommandRequest` in [`lib/protocol/schemas.js`](./lib/protocol/schemas.js), which validates the envelope *payload*.
+
+> [!WARNING]
+> This cap is not applied on the live HRPC dispatch path. Both [`command-dispatcher`](./lib/modules/command-dispatcher/index.js) and [`envelope-router`](./lib/transport/envelope-router.js) call `validateEnvelope()`, which checks envelope structure only and never invokes payload validation. A caller that submits more than 1024 targets over HRPC is not rejected. Treat the cap as a contract callers are expected to honour, or validate the full payload yourself, until the dispatch path enforces it.
 
 ## Storage
 
@@ -308,7 +351,8 @@ kernel/
 │   ├── kernel.manager.js        # KernelManager (EventEmitter) — lifecycle orchestration
 │   ├── protocol/
 │   │   ├── actions.js        # ACTIONS, MESSAGE_TYPES, PROTOCOL_VERSION
-│   │   └── envelope.js       # build(), buildResponse(), serialize(), deserialize()
+│   │   ├── envelope.js       # build(), buildResponse(), serialize(), deserialize()
+│   │   └── schemas.js        # Envelope/command validation, VALID_COMMAND_SCOPES, MAX_TARGETS
 │   ├── modules/
 │   │   ├── worker-registry/  # WorkerRegistry + states
 │   │   ├── command-dispatcher/
@@ -336,8 +380,8 @@ kernel/
 ## Next steps
 
 - [Start Kernel and wire it to the Gateway](../../../docs/guides/gateway/run.md)
-- Understand Kernel's [pull-only model](../../../docs/concepts/stack/kernel.md)
-- Learn how [Workers discover Kernel, register devices, and expose capabilities](../../../docs/concepts/stack/workers.md)
+- Understand [which layer owns what, and how a request reaches a device](../../../docs/concepts/control-plane.md)
+- Learn how [Workers register devices and expose capabilities](../../workers/README.md), and how [Kernel discovers them](../../workers/docs/architecture.md#discovery-model)
 - See the [write-action approval flow (UI → Gateway → Kernel)](../../../docs/guides/gateway/write-actions.md)
 - Choose a [deployment shape](../../../docs/concepts/deployment-topologies.md)
 - See the [full MDK architectural model](../../../docs/concepts/architecture.md)

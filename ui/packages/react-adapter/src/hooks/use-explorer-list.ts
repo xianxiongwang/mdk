@@ -1,10 +1,6 @@
-import {
-  buildExplorerListThingsParams,
-  type ExplorerTabValue,
-  flattenKernelEnvelope,
-  type ListThingsDevice,
-  listThingsQuery,
-} from '@tetherto/mdk-ui-foundation'
+import type { ListThingsDevice } from '@tetherto/mdk-ui-foundation'
+import { listThingsQuery } from '@tetherto/mdk-ui-foundation/presets/mining'
+import { buildExplorerListThingsParams, type ExplorerTabValue, flattenKernelEnvelope } from '@tetherto/mdk-ui-foundation/presets/mining'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { POOL_MANAGER_POLL_INTERVAL_MS } from './poll-intervals'
@@ -38,12 +34,11 @@ export type UseExplorerListResult = {
  * per-Kernel envelope so rack-sharded deployments list every shard's things.
  *
  * @remarks
- * The `/auth/list-things` endpoint is illustrative. MDK does not ship built-in
- * endpoints — create your own via a
+ * The `/auth/list-things` endpoint is illustrative. MDK does not ship a built-in
+ * endpoint for it — create your own via a
  * [Gateway plugin](https://docs.tether.io/mdk/guides/gateway/plugins) matching
- * your Worker/business logic. See the
- * [full-site example](https://github.com/tetherto/mdk/tree/main/examples/full-site/plugins/site)
- * for a working reference.
+ * your Worker/business logic. No reference implementation of `/auth/list-things`
+ * ships in this repo.
  *
  * @category op-centre
  */

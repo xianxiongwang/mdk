@@ -12,3 +12,4 @@ deploy/ecosystem.config.js
 config/*.json
 !config/facs/*.json.example
 config/facs/*.json
+.mcp.json

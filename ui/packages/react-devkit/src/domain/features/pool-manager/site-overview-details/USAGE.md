@@ -32,10 +32,10 @@ Use this as the `/pool-manager/sites/:id` route.
 
 ## Data contracts
 
-- `Device` — `foundation/types/device`. The full site/container row.
+- `Device` — [`foundation/types/device`](../../../types/device.ts). The full site/container row.
 - `PoolConfigData` — exported from `@tetherto/mdk-react-devkit`.
 - `SiteOverviewDetailsDataOptions` — exported from
-  `foundation/components/pool-manager/site-overview-details/use-site-overview-details-data`.
+  [`foundation/components/pool-manager/site-overview-details/use-site-overview-details-data`](../../../components/pool-manager/site-overview-details/use-site-overview-details-data.ts).
 
 ## Notes
 

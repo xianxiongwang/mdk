@@ -14,12 +14,21 @@ const SECTIONS = ['telemetry', 'commands']
  * Returns { contract, publishedContract, handlers, connect, disconnect }.
  * `publishedContract` is a copy with `handler` fields stripped — handler
  * paths are plugin-internal and never leave the process on capability pulls.
+ *
+ * `plugin.loadHandler` (optional) replaces the `require` used to bind each
+ * handler: it is called with (absoluteFile, { section, name }) and must return
+ * the function to publish. It is the seam for hosts that bind handlers
+ * per device rather than once per process — contract-loader.js resolves paths
+ * through it without executing them, and worker-runtime-v2.js binds shims.
  */
 function loadPlugin (plugin) {
   if (!plugin || typeof plugin !== 'object') throw new Error('ERR_PLUGIN_REQUIRED')
   if (typeof plugin.connect !== 'function') throw new Error('ERR_PLUGIN_CONNECT_NOT_FUNCTION')
   if (plugin.disconnect !== undefined && typeof plugin.disconnect !== 'function') {
     throw new Error('ERR_PLUGIN_DISCONNECT_NOT_FUNCTION')
+  }
+  if (plugin.loadHandler !== undefined && typeof plugin.loadHandler !== 'function') {
+    throw new Error('ERR_PLUGIN_LOAD_HANDLER_NOT_FUNCTION')
   }
   if (typeof plugin.dir !== 'string' || !plugin.dir) throw new Error('ERR_PLUGIN_DIR_MISSING')
 
@@ -31,7 +40,7 @@ function loadPlugin (plugin) {
 
   const handlers = {}
   for (const section of SECTIONS) {
-    handlers[section] = _loadSection(contract, plugin.dir, section)
+    handlers[section] = _loadSection(contract, plugin.dir, section, plugin.loadHandler || require)
   }
 
   return {
@@ -43,7 +52,7 @@ function loadPlugin (plugin) {
   }
 }
 
-function _loadSection (contract, dir, section) {
+function _loadSection (contract, dir, section, load) {
   const entries = contract.capabilities[section] || []
   if (!Array.isArray(entries)) throw new Error(`ERR_PLUGIN_SECTION_NOT_ARRAY: ${section}`)
 
@@ -60,7 +69,7 @@ function _loadSection (contract, dir, section) {
     const file = path.resolve(dir, entry.handler)
     let fn
     try {
-      fn = require(file)
+      fn = load(file, { section, name: entry.name })
     } catch (err) {
       throw new Error(`ERR_PLUGIN_HANDLER_NOT_FOUND: ${section}.${entry.name}: ${file}: ${err.message}`)
     }

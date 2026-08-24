@@ -26,6 +26,10 @@ components in `@tetherto/mdk-react-devkit`**.
 
 ## Quick start
 
+> [!NOTE]
+> [`mdk create dashboard`](../../packages/cli/README.md) performs step 2 below automatically, including the `.env` values.
+> `mdk run dashboard` then starts it. The manual steps here are for working on this template directly.
+
 ```bash
 # 1. Backend: configure and start (one-time). The Gateway ships in the MDK
 #    repo, so run this from your MDK checkout — not from this app.
@@ -49,7 +53,7 @@ Then open `http://localhost:3030` and click **Sign in with Google**.
 **MDK ships no OAuth implementation.** As of v0.6 the Gateway is a plugin host
 with no API of its own, so sign-in is something you supply as a Gateway plugin
 and mount with `startGateway({ extraPluginDirs: [...] })`. See
-`docs/guides/gateway/plugins.md` in the MDK repo for the manifest and
+[`docs/guides/gateway/plugins.md`](../../docs/guides/gateway/plugins.md) in the MDK repo for the manifest and
 controller contract.
 
 This app needs that plugin to honour two ends of a redirect:
@@ -57,7 +61,7 @@ This app needs that plugin to honour two ends of a redirect:
 - a **start endpoint** at `${VITE_OAUTH_BASE_URL}/oauth/google`, which the
   sign-in button navigates to;
 - a **return redirect** to `http://localhost:3030/?authToken=<jwt>` (the
-  frontend port set in `vite.config.ts`).
+  frontend port set in [`vite.config.ts`](./vite.config.ts)).
 
 You will also need a Google OAuth 2.0 client:
 
@@ -75,13 +79,22 @@ development against `miningos-gateway` on `localhost:3000`.
 
 | Variable               | Required | Dev default                | What it controls                                                                                                                                                                                                                                            |
 | ---------------------- | -------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `VITE_API_BASE_URL`    | no       | *(empty)*                  | Base URL for authenticated XHRs (`/auth/*`, `/api/*`). Leave empty in dev — Vite's proxy keeps requests same-origin. Set this **only** when the production frontend lives on a different origin than the backend and no reverse proxy sits between them.   |
+| `VITE_MDK_API_URL`     | no       | *(empty)*                  | Base URL for authenticated XHRs (`/auth/*`, `/api/*`). Leave empty in dev — Vite's proxy keeps requests same-origin. Set this **only** when the production frontend lives on a different origin than the backend and no reverse proxy sits between them.   |
 | `VITE_OAUTH_BASE_URL`  | yes      | `http://localhost:3000`    | Absolute base URL of the OAuth issuer (e.g. `http://localhost:3000` in dev, `https://api.your-site.com` in prod). Used by the Sign-In button, which issues a top-level navigation that the Vite proxy cannot rewrite — so this must always be absolute.    |
+| `VITE_GATEWAY_URL`     | no       | `http://localhost:3000`    | Gateway URL the Vite dev server proxies `/auth`, `/oauth`, `/api` and `/pub` to. `mdk create dashboard` sets this from your stack's `mdk.yaml` gateway port; defaults to the mvp-site gateway (`:3000`) when unset.                                        |
+| `VITE_AUTH_BYPASS`     | no       | `true`                     | Dev-only auth bypass. `true` skips the `/signin` gate and lands straight on the dashboard with a stub session (no OAuth backend needed) and disables token-refresh polling. Set to `false` (or delete) once auth is wired up. **Never enable in production.** |
 
-Both variables are read through `src/constants/env.ts`; reach for that
-file (don't sprinkle raw `import.meta.env` lookups across the app) when
-adding new ones. The accompanying `src/vite-env.d.ts` declares the
-typed shape, so missing/misnamed variables surface as type errors.
+`VITE_API_BASE_URL` is the former name of `VITE_MDK_API_URL`. It is still
+read, with a one-time console warning, and stops being read in the next
+major — the `VITE_MDK_` prefix keeps it from colliding with your own app's
+API URL.
+
+`VITE_MDK_API_URL`, `VITE_OAUTH_BASE_URL` and `VITE_AUTH_BYPASS` are read through [`src/constants/env.ts`](./src/constants/env.ts);
+reach for that file (don't sprinkle raw `import.meta.env` lookups across the app) when adding new ones. The
+accompanying [`src/vite-env.d.ts`](./src/vite-env.d.ts) declares the typed shape, so missing/misnamed variables
+surface as type errors. `VITE_GATEWAY_URL` is a config-time-only variable read directly in
+[`vite.config.ts`](./vite.config.ts) (it configures the dev-server proxy itself), so it isn't part of that runtime
+`import.meta.env` shape.
 
 ## Known limitation: no data without miners
 
@@ -121,7 +134,7 @@ src/
 ```
 
 The **System Info page is the one to read first** — it's the smallest complete
-example of the layered data flow (see `USAGE.md` → "Worked example"). Copy its
+example of the layered data flow (see [`USAGE.md`](./USAGE.md) → "Worked example"). Copy its
 shape for a bespoke API page; use `mdk-ui add page` for the managed reference
 pages.
 
@@ -138,9 +151,9 @@ npx mdk-ui add page Devices --component DeviceExplorer
 ```
 
 Either way the CLI writes `src/pages/<Name>.tsx` and appends an entry to
-`src/routes.ts`; the sidebar updates automatically. New pages are
+[`src/routes.ts`](./src/routes.ts); the sidebar updates automatically. New pages are
 auth-gated by default because they live inside the `<RequireAuth>` wrapper
-applied in `src/router.tsx`. Remove one with `npx mdk-ui remove page <Name>`.
+applied in [`src/router.tsx`](./src/router.tsx). Remove one with `npx mdk-ui remove page <Name>`.
 
 ## Troubleshooting
 
@@ -153,7 +166,7 @@ applied in `src/router.tsx`. Remove one with `npx mdk-ui remove page <Name>`.
   sends the token to doesn't match the FE port. The expected value is
   `http://localhost:3030` and the FE defaults to port 3030 — keep them aligned.
 - **CORS errors**: the backend has no CORS plugin; you must use the Vite
-  proxy. `vite.config.ts` already proxies `/auth`, `/oauth`, `/api`, and
+  proxy. [`vite.config.ts`](./vite.config.ts) already proxies `/auth`, `/oauth`, `/api`, and
   `/pub` to `http://localhost:3000`. Do not call the backend directly from
   the FE.
 - **Empty charts**: see "Known limitation" above. The backend is up but no
@@ -161,7 +174,7 @@ applied in `src/router.tsx`. Remove one with `npx mdk-ui remove page <Name>`.
 
 ## Architecture rules
 
-Read `USAGE.md` before extending this template. The composition rules
+Read [`USAGE.md`](./USAGE.md) before extending this template. The composition rules
 (which package owns which concern) matter — breaking them is the easiest
 way to make the dashboard hard to maintain.
 

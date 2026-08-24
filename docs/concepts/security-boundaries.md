@@ -1,8 +1,7 @@
 ---
 title: Security boundaries
 description: Security model, trust boundaries, and isolation between MDK components
-docs@tether_slug: concepts/security-boundaries
-todo: "Gap — no user-authentication boundary exists to document; do not describe the Gateway path as authenticated. Needs a proper treatment of what an integrator must build, and where."
+todo: "Gap: no user-authentication boundary exists to document; do not describe the Gateway path as authenticated. Needs a proper treatment of what an integrator must build, and where. There is also no how-to for wiring an identity layer into plugin controllers, and no MDK-defined roles or role strings to document: the only permission vocabulary the stack enforces is Kernel's device-family write perms (miner:w, container:w) read from authPerms."
 ---
 
 > [!NOTE]
@@ -31,20 +30,29 @@ deployment configuration, distribute them through an authenticated control plane
 policy, and never expose device management interfaces publicly. DHT topics provide rendezvous only; they are not credentials or authorization tokens.
 
 The minimal host passes `services: null`. It therefore does not provide first-party service built-ins or
-`write.calls.request` approval integration — see
-[Worker Runtime legacy services][worker-runtime-legacy-services] for the full built-in
+`write.calls.request` approval integration; the
+[Worker Runtime legacy services][worker-runtime-legacy-services] page covers the full built-in
 surface an `opts.services` object can activate. Direct `command.request` dispatch still reaches plugin command handlers.
 Production command paths must authenticate the requester at the Gateway/control plane, authorize each device and
 command, optionally require approval for high-impact actions, validate again in the handler, rate-limit, and create
 an audit record containing actor, target, requested parameters, outcome, and correlation ID. The handler context does
-not currently include actor identity, so actor-level auditing belongs upstream; handler logs supplement it. See the
-[control-plane security model](control-plane.md) for the production trust path.
+not currently include actor identity, so actor-level auditing belongs upstream; handler logs supplement it. The
+[control-plane security model](control-plane.md) covers the production trust path.
 
 Inject credentials through the host process from a secret manager or protected environment, pass only the minimum
 device-specific values in `config`, never place secrets in `mdk-contract.json`, and redact credentials and device
 responses from errors, debug logs, telemetry, and audit records.
 
+## Next steps
+
+- [Understand the Gateway's security model][gateway-auth-design]: where user identity checks are meant to live
+- [Review the control-plane security model](control-plane.md): the production trust path for approval-gated writes
+- [Read the Worker Runtime legacy services reference][worker-runtime-legacy-services]: the full built-in surface `opts.services` can activate
+
 ## Links
+
+[gateway-auth-design]: ../../backend/core/gateway/README.md#security-model
+<!-- docs@tether.io: gateway-auth-design → https://github.com/tetherto/mdk/blob/main/backend/core/gateway/README.md#security-model -->
 
 [worker-runtime-legacy-services]: ../reference/maintainers/worker-runtime-legacy-services.md
 <!-- docs@tether.io: worker-runtime-legacy-services → https://github.com/tetherto/mdk/blob/main/docs/reference/maintainers/worker-runtime-legacy-services.md -->

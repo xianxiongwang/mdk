@@ -1,6 +1,8 @@
 'use strict'
 
 const crypto = require('crypto')
+const fs = require('fs')
+const path = require('path')
 const HyperswarmRPC = require('@hyperswarm/rpc')
 const Hyperswarm = require('hyperswarm')
 const DHT = require('hyperdht')
@@ -26,6 +28,10 @@ const { telemetryBuiltin, commandBuiltin, mergeBuiltinCommands } = require('./se
  * runtime serves the legacy adapter surface from them as built-ins (see
  * service-builtins.js) and exposes the same object to handlers as
  * ctx.services. Services are process-owned, never plugin-owned.
+ *
+ * DHT/RPC identity: pass `opts.store` (Hyperbee-style) or `opts.storeDir`
+ * (directory of seed files) so the public key is stable across restarts.
+ * Without either, seeds are random per boot.
  */
 class WorkerRuntime {
   constructor (plugin, opts) {
@@ -36,6 +42,7 @@ class WorkerRuntime {
     this.workerId = opts.workerId
     this.kernelTopic = opts.kernelTopic || null
     this.store = opts.store || null
+    this.storeDir = opts.storeDir || null
     this.services = opts.services || null
     this._publishedContract = mergeBuiltinCommands(this._plugin.publishedContract, this.services)
 
@@ -170,23 +177,47 @@ class WorkerRuntime {
   }
 
   async _getOrCreateSeed (name) {
-    if (!this.store) return crypto.randomBytes(32)
+    if (this.store) {
+      if (!this._confBee) {
+        this._confBee = this.store.getBee
+          ? this.store.getBee({ name: 'workerConf' }, { keyEncoding: 'utf-8' })
+          : this.store.sub('workerConf')
+        if (this._confBee.ready) await this._confBee.ready()
+      }
 
-    if (!this._confBee) {
-      this._confBee = this.store.getBee
-        ? this.store.getBee({ name: 'workerConf' }, { keyEncoding: 'utf-8' })
-        : this.store.sub('workerConf')
-      if (this._confBee.ready) await this._confBee.ready()
+      const existing = await this._confBee.get(name)
+      if (existing && existing.value) {
+        return Buffer.isBuffer(existing.value) ? existing.value : Buffer.from(existing.value)
+      }
+
+      const seed = crypto.randomBytes(32)
+      await this._confBee.put(name, seed)
+      debug('created persistent seed: %s', name)
+      return seed
     }
 
-    const existing = await this._confBee.get(name)
-    if (existing && existing.value) {
-      return Buffer.isBuffer(existing.value) ? existing.value : Buffer.from(existing.value)
+    if (this.storeDir) return this._getOrCreateSeedFile(name)
+
+    return crypto.randomBytes(32)
+  }
+
+  // File-backed seeds for hosts that own a directory but not a Hyperbee store
+  // (WorkerRuntimeV2 / CLI / demo-worker-caller). Same 32-byte seedDht/seedRpc
+  // names the Hyperbee path uses, so the RPC public key stays stable across
+  // process restarts without pulling in worker-infra.
+  _getOrCreateSeedFile (name) {
+    fs.mkdirSync(this.storeDir, { recursive: true })
+    const seedPath = path.join(this.storeDir, name)
+    try {
+      const existing = fs.readFileSync(seedPath)
+      if (existing.length === 32) return existing
+    } catch (err) {
+      if (err.code !== 'ENOENT') throw err
     }
 
     const seed = crypto.randomBytes(32)
-    await this._confBee.put(name, seed)
-    debug('created persistent seed: %s', name)
+    fs.writeFileSync(seedPath, seed)
+    debug('created persistent seed file: %s', name)
     return seed
   }
 

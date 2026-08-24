@@ -2,19 +2,22 @@
 
 Follow-on to the container-detail **basement** (shell + routing + back-nav). These
 are the tab bodies that mount into the `ContainerDetail` shell, written so a
-junior dev can pick one up cold. Companion: `operational-centre-sprint.md` /
-`operational-centre-pages.md`.
+junior dev can pick one up cold. Companion: [`operational-centre-pages.md`](./operational-centre-pages.md).
+
+<!-- mdk-monorepo: this section previously also named a sibling "operational-centre-sprint.md" doc that
+     no longer exists in the repo — likely a stale pre-rename reference to what's now
+     operational-centre-pages.md. Flagging in case other content here is similarly stale. -->
 
 ---
 
 ## Definition of Done — applies to EVERY task below
 
 **Main goal:** the tab works in the **generated shell app** against **real
-MiningOS backend data** — not mocks, not hardcoded values.
+reference app backend data** — not mocks, not hardcoded values.
 
 **Two required side-effects — the task isn't done without them:**
 
-1. **Catalog demo** — the components are demoable in isolation in `apps/catalog`
+1. **Catalog demo** — the components are demoable in isolation in [`apps/catalog`](../../../../ui/apps/catalog/README.md)
    (seeded **synthetic** data, `DemoPageHeader` + `DemoBlock`). No real
    site/device names or emails — run the `mdk-security-check` skill before any PR.
 2. **Clean layered extraction — zero tech debt lands in MDK.** Each piece goes in
@@ -30,10 +33,10 @@ MiningOS backend data** — not mocks, not hardcoded values.
    - **shell page** — thin glue: call the hook, pass output to the component,
      mount into the `ContainerDetail` tab slot.
 
-**Refactoring rule:** you're porting from MOS (Ant Design + Redux +
+**Refactoring rule:** you're porting from the reference app (Ant Design + Redux +
 styled-components). **Translate, don't copy:** antd table → TanStack Table, Redux
 → Zustand stores + TanStack hooks, styled-components → SCSS/BEM, Formik/Yup →
-React Hook Form + Zod. If you're pasting MOS logic into a component, stop — it
+React Hook Form + Zod. If you're pasting reference-app logic into a component, stop — it
 belongs in a hook or `ui-foundation`. Can't fix a violation in scope? File a
 `techdebt` issue instead of shipping it.
 
@@ -54,8 +57,9 @@ plumbing — check what exists first.
 
 - **Sees:** container summary — status/content box, controls box, stats group card
   (temp/power/hashrate), and a table of connected miners.
-- **Port from:** the reference app's `src/Views/Container/Tabs/HomeTab/HomeTab.tsx`
-  (later tabs abbreviate this path as `.../Tabs/…`).
+- **Port from:** the reference app's container Home tab
+  (historically `src/Views/Container/Tabs/HomeTab/HomeTab.tsx`; path may differ upstream —
+  the `.../Tabs/…` references below are relative to that tab tree).
 - **Reuse:** `useThingDetail` + `useContainerSnapshots`; connected miners via the
   existing list-things-by-container query.
 - **Lands:** any missing miners query → foundation; `useContainerHome(id)`
@@ -164,21 +168,21 @@ states (loading / empty / error / populated).
 
 > [!NOTE]
 > Incompatible from 0.6.0: `apps/mdk-ui-shell` and the `generate:shell` script below were
-> removed. The shell is now `examples/mdk-ui-shell-template`, a checked-in runnable app;
+> removed. The shell is now [`examples/mdk-ui-shell-template`](../../../../examples/mdk-ui-shell-template/README.md), a checked-in runnable app;
 > pages are added via `mdk-ui add page`, not regeneration.
 
-`apps/mdk-ui-shell` is a **generated artifact** — the template at
-`ui/packages/cli/templates/mdk-ui-shell/` is the source of truth. **Edit the
-template, then regenerate.** Never hand-edit the generated app (it's wiped on
-regen).
+`apps/mdk-ui-shell` is a **removed generated artifact**. The checked-in shell is
+[`examples/mdk-ui-shell-template/`](../../../../examples/mdk-ui-shell-template/README.md).
+**Edit that example** (add pages with `mdk-ui add page`); do not revive the old
+`ui/packages/cli/templates/mdk-ui-shell/` generate path.
 
 ```bash
-# 1. Backend — MiningOS gateway on :3000 (one-time), per the template README:
-git clone https://github.com/tetherto/miningos-gateway.git
-cd miningos-gateway && ./setup-config.sh
-#   paste a real Google OAuth client id + secret into
-#   config/facs/httpd-oauth2.config.json (h0.credentials.client.*),
-#   set h0.callbackUriUI = http://localhost:3030, add your Google email to h0.users
+# 1. Backend — the in-repo Gateway on :3000 (one-time), per the template README:
+cd backend/core/gateway && ./setup-config.sh
+#   Google sign-in needs an identity plugin, which MDK does not ship — mount
+#   one via startGateway({ extraPluginDirs: [...] }) serving /oauth/google and
+#   redirecting back to http://localhost:3030/?authToken=<jwt>.
+#   See docs/guides/gateway/plugins.md.
 npm install && npm start          # http://localhost:3000
 
 # 2. Regenerate + run the shell app (one command builds + regenerates):
@@ -198,5 +202,5 @@ npm run dev                       # http://localhost:3030
 - Write tabs (PDU / Power Adjustment / Settings): perform an action → confirm a
   **pending voting action** is created and vote/cancel works.
 
-**Before PR:** `npm run fullcheck` at `ui/` (build + lint + typecheck + format +
+**Before PR:** `npm run fullcheck` at [`ui/`](../../../../ui/README.md) (build + lint + typecheck + format +
 agent-ready + coverage) and the `mdk-security-check` skill clean.

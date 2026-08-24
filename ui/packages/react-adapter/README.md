@@ -28,6 +28,25 @@ headless core into React-native hooks.
 - Re-exports of `useQuery`, `useMutation`, `useQueryClient` from
   `@tanstack/react-query` so consumers can stay on a single import path.
 
+## Authentication
+
+`<MdkProvider auth={...}>` takes an `AuthProvider` (from [`@tetherto/mdk-ui-foundation`](../ui-foundation/README.md)) —
+the seam `useMdkAuth()` reads back. Three are available:
+
+- `noAuth()` — no token, no sign-in, nothing to expire; for an open API or a fixture-backed demo
+- `bearerTokenAuth()` — bearer token in `authStore`, session ends on a `401`; `createMdkQueryClient`'s own default
+  when no provider is passed
+- `gatewayRedirectAuth({ oauthBaseUrl })` (from the mining preset) — OAuth-redirect token capture, refresh polling,
+  and role parsing against the bundled mining Gateway; `MdkProvider`'s own default, minus `oauthBaseUrl`, so
+  `signIn()` throws until one is supplied
+
+> [!IMPORTANT]
+> The frontend seam is complete and tested, but `gatewayRedirectAuth()`'s `refresh()` calls `POST /auth/token`,
+> served by `@tetherto/mdk-plugin-auth`, which
+> [ships without working endpoints](../../../backend/core/plugins/README.md#the-bundled-auth-plugin), `/auth/userinfo` included.
+> Bring your own [Gateway plugin](../../../docs/guides/gateway/plugins.md) serving `/auth/token`, or use `noAuth()` /
+> `bearerTokenAuth()` against your own backend.
+
 ## Op Centre read hooks
 
 These hooks own the fetch → render-shape transformation for the Operational
@@ -70,7 +89,7 @@ Import from `@tetherto/mdk-react-adapter/hooks` or the package root barrel.
 ## Write-action hooks
 
 These hooks connect the UI to the Gateway `/auth/actions*` routes and the Kernel
-write-action approval path. Shared helpers live in `action-write-utils.ts`
+write-action approval path. Shared helpers live in [`action-write-utils.ts`](./src/hooks/action-write-utils.ts)
 (`ACTIONS_WRITE_PERM`, `invalidateAfterActionWrite()`, `extractSubmitError()`,
 `toVotingPayload()`).
 
@@ -85,7 +104,7 @@ write-action approval path. Shared helpers live in `action-write-utils.ts`
 | `useLiveActions()`          | Query live actions every 5 s; partition into `[mine, others]` by submitter email and expose `canApprove` for `actions:w`, `admin`, `site_manager`, or `*` roles |
 | `useThingComment()`         | Add, edit, and delete Thing comments; invalidates `list-things` on every write                                        |
 
-`toVotingPayload()` in `action-write-utils.ts` allowlists only the backend-recognized fields (`query`, `action`, `params`, `rackType`) when building the `POST /auth/actions/voting` body. Targeting reaches the backend solely through `query`: it's built from the action's `tags` as `{ tags: { $in: tags } }`, unless the action opts out with `overrideQuery: false` and supplies its own `query` (pool assignment does this). Every other client-only field (`tags`, `crossThing`, `codesList`, `poolName`, local queue `id`, …) is dropped.
+`toVotingPayload()` in [`action-write-utils.ts`](./src/hooks/action-write-utils.ts) allowlists only the backend-recognized fields (`query`, `action`, `params`, `rackType`) when building the `POST /auth/actions/voting` body. Targeting reaches the backend solely through `query`: it's built from the action's `tags` as `{ tags: { $in: tags } }`, unless the action opts out with `overrideQuery: false` and supplies its own `query` (pool assignment does this). Every other client-only field (`tags`, `crossThing`, `codesList`, `poolName`, local queue `id`, …) is dropped.
 
 Import from `@tetherto/mdk-react-adapter/hooks` or the package root barrel.
 
@@ -119,7 +138,7 @@ machine-readable manifest.
 
 ## Machine-readable hook manifest
 
-Every hook is listed in `dist/hooks.json` (regenerated at build time). Agents
+Every hook is listed in [`dist/hooks.json`](./dist/hooks.json) (regenerated at build time). Agents
 and tooling can load it via the subpath export or the CLI:
 
 ```bash

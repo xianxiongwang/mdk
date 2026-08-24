@@ -4,7 +4,7 @@
  * MDK Operation Parity Tests
  *
  * Each test maps one old Kernel RPC_METHOD or ACTION_TYPE to its MDK equivalent.
- * Source constants: miningos-wrk-kernel/workers/lib/constants.js
+ * Source constants: the reference app's kernel worker (workers/lib/constants.js)
  *
  * The worker side is a WorkerRuntime hosting the parity-plugin fixture;
  * worker-infra operations (logs, settings, provisioning, stats, comments,
@@ -200,7 +200,7 @@ async function commandDispatch (command, params, deviceId) {
 // ─── Section 1: Telemetry Query Types ─────────────────────────────────
 //
 // Old Kernel dataProxy.requestData(method, params) → MDK telemetry.pull with query.type
-// Reference: miningos-wrk-kernel/workers/lib/constants.js RPC_METHODS (read ops)
+// Reference: the reference app's kernel worker constants.js RPC_METHODS (read ops)
 
 test('parity[telemetry] list → old listThings: all registered devices returned', async (t) => {
   const data = await telemetryPull('wm001', { type: 'list' })
@@ -337,7 +337,7 @@ test('parity[telemetry] logs_multi → old tailLogMulti: logs from multiple devi
 // ─── Section 2: Hardware Commands ─────────────────────────────────────
 //
 // Old Kernel ACTION_TYPES (miner actions) → MDK command.request
-// Reference: miningos-wrk-kernel/workers/lib/constants.js ACTION_TYPES
+// Reference: the reference app's kernel worker constants.js ACTION_TYPES
 
 test('parity[command] reboot → ACTION_TYPES.REBOOT: restarts single miner device', async (t) => {
   const done = await commandDispatch('reboot', {})

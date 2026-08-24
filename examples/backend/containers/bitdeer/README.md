@@ -25,7 +25,7 @@ Bitdeer communicates over **MQTT**, not HTTP/Modbus:
   a five-second cycle (so telemetry takes a few seconds to populate).
 - Registration keys on **`containerId`** (matching the mock device's `id`), not `address`/`port`.
 
-> The Bitdeer mock resolves its canned payloads relative to `process.cwd()`, so `index.js` switches
+> The Bitdeer mock resolves its canned payloads relative to `process.cwd()`, so [`index.js`](./index.js) switches
 > the working directory to the Worker package directory before starting it (all other paths are absolute).
 
 ## Prerequisites
@@ -45,12 +45,12 @@ node examples/backend/containers/bitdeer/index.js     # from the repo root
 ```
 
 You'll see the registered device id and `Press Ctrl+C to stop`. To customise the container id, serial
-or model, edit the constants at the top of `index.js` (e.g. set `TYPE = 'd40_s19xp'` and import
+or model, edit the constants at the top of [`index.js`](./index.js) (e.g. set `TYPE = 'd40_s19xp'` and import
 `BD_D40_S19XP`).
 
 ## Inspect over HRPC with `hp-rpc-cli`
 
-`index.js` prints the Kernel key, device ID, and a ready-to-paste telemetry command. The shared
+[`index.js`](./index.js) prints the Kernel key, device ID, and a ready-to-paste telemetry command. The shared
 [`hp-rpc-cli` inspection guide](../../inspect-over-hrpc.md) covers Worker listing, telemetry pulls,
 other actions, and troubleshooting. The mock publishes every five seconds, so give telemetry a few seconds
 to populate before pulling it.
@@ -62,9 +62,7 @@ to populate before pulling it.
 ```
 examples/backend/containers/bitdeer/
 ├── README.md
-├── package.json
-├── index.js                      # Kernel + Bitdeer Worker + MQTT mock + registration
-└── .gitignore
+└── index.js                      # Kernel + Bitdeer Worker + MQTT mock + registration
 ```
 
 ### Generated (ignored)

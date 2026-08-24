@@ -1,0 +1,21 @@
+{
+  "name": "@tetherto/mdk-benchmark",
+  "version": "0.7.0",
+  "description": "Capacity/metrics benchmark harness for MDK — see docs/guides/deployment/capacity-metrics-template.md",
+  "private": true,
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "test": "NODE_ENV=test brittle tests/*.test.js",
+    "benchmark": "node scenarios/benchmark.js",
+    "lint": "standard"
+  },
+  "devDependencies": {
+    "brittle": "3.18.0",
+    "standard": "17.1.0"
+  },
+  "overrides": {
+    "brace-expansion": "5.0.9"
+  }
+}

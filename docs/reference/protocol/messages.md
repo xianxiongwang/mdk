@@ -83,7 +83,7 @@ write action lifecycle) and [command targeting rules][kernel-command-control] (`
 <!-- docs@tether.io: kernel-command-control → https://github.com/tetherto/mdk/blob/main/backend/core/kernel/README.md#command-control -->
 
 [control-plane-writes]: ../../concepts/control-plane.md#approval-gated-writes
-<!-- docs@tether.io: control-plane-writes → concepts/control-plane -->
+<!-- docs@tether.io: control-plane-writes → https://github.com/tetherto/mdk/blob/main/docs/concepts/control-plane.md#approval-gated-writes -->
 
 [write-actions]: ../../guides/gateway/write-actions.md
 <!-- docs@tether.io: write-actions → guides/gateway/write-actions -->

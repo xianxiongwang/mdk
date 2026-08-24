@@ -1,6 +1,6 @@
 /**
  * Display metrics for the financial EBITDA reporting surface (foundation).
- * Values mirror Mining OS `Views/Financial/EBITDA/EBITDA.types` `EbitdaMetrics`.
+ * Values mirror the reference app `Views/Financial/EBITDA/EBITDA.types` `EbitdaMetrics`.
  */
 export type EbitdaDisplayMetrics = {
   bitcoinProductionCost: number

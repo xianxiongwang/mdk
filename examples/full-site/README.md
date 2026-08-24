@@ -25,7 +25,7 @@ The site is **3N miners in 2 containers + 3 site powermeters (ABB + SATEC + Schn
 ## What makes this example "real"
 
 It does **not** use simulated managers. It boots the actual Worker Plugins from
-`backend/workers`, each pointed at that Worker's own **mock device server**
+[`backend/workers`](../../backend/workers/README.md), each pointed at that Worker's own **mock device server**
 (`<worker>/mock/server.js`). Those mocks speak the genuine wire protocols, so the
 real device drivers run their true `connect()` and per-field telemetry/command
 handler paths — only the endpoints are localhost mocks instead of hardware.
@@ -41,10 +41,10 @@ handler paths — only the endpoints are localhost mocks instead of hardware.
 
 ## Layout
 
-The example is split into two layers: **`backend/`** is what it teaches — how to
-drive the kit (`@tetherto/mdk` + `@tetherto/mdk-client`) — and **`cli/`** is just
-the helper that runs it (a process-manager REPL). The two entrypoints, `start.js`
-and `cli.js`, sit at the root.
+The example is split into two layers: **[`backend/`](./backend/)** is what it teaches — how to
+drive the kit (`@tetherto/mdk` + `@tetherto/mdk-client`) — and **[`cli/`](./cli/)** is just
+the helper that runs it (a process-manager REPL). The two entrypoints, [`start.js`](./start.js)
+and [`cli.js`](./cli.js), sit at the root.
 
 ```
 examples/full-site/
@@ -74,8 +74,8 @@ examples/full-site/
 
 - Node.js >= 24
 - A one-time `npm run setup` (see below). The example boots the **real**
-  packages from `backend/core` and `backend/workers`, and its UI imports the
-  devkit packages from the repo-root `ui/` workspace — each with its own
+  packages from [`backend/core`](../../backend/core/README.md) and [`backend/workers`](../../backend/workers/README.md), and its UI imports the
+  devkit packages from the repo-root [`ui/`](../../ui/README.md) workspace — each with its own
   `node_modules`
   > As the repo is federated with no root workspaces, a plain `npm install` is not supported
 
@@ -88,7 +88,7 @@ npm run setup     # first time only — installs backend/core, backend/workers,
                   # devkit packages the UI imports
 ```
 
-If anything is missing, `start.js` and `cli.js` fail fast with a message saying
+If anything is missing, [`start.js`](./start.js) and [`cli.js`](./cli.js) fail fast with a message saying
 exactly what to run instead of a `MODULE_NOT_FOUND` stack trace.
 
 ### Quick smoke test (recommended first run)
@@ -104,12 +104,20 @@ node cli.js
 mdk> up --miners 3 --no-ui
 ```
 
-Watch for `Kernel ready`, `Workers registered`, and `Gateway ready` messages. Once
-all services are up, type `down` then `exit`. If this completes without errors,
-proceed to the full run below. If you see `EMFILE: too many open files`, raise the
-file-descriptor limit — see [Next steps](#next-steps).
+Watch for each component printing `<name> up` (mocks, kernel, every worker, gateway),
+ending in `Site up.`. Once you see that, stop the smoke test at the `mdk>` prompt:
+
+```
+mdk> down
+mdk> exit
+```
+
+If this completes without errors, proceed to the full run below. If you see
+`EMFILE: too many open files`, see [Troubleshooting](#emfile-too-many-open-files).
 
 ### Full run
+
+#### Start the example site
 
 ```bash
 node start.js
@@ -126,6 +134,12 @@ them with the Kernel. The pools warm up after about 15 seconds because the Ocean
 mock client is rate-limited. Re-running `node start.js` resumes the same
 site from `.mdk-data/` — no re-seeding. **Upgrading from an older single-container
 site requires `rm -rf .mdk-data` once** (new Worker IDs and container names).
+
+#### Stop the example site
+
+Stop with `Ctrl+C` in the same terminal that you ran `node start.js`. 
+
+> Re-running it afterward resumes the same site from `.mdk-data/`.
 
 ### Options
 
@@ -145,10 +159,10 @@ DEBUG=mdk:example:* node start.js     # verbose boot logs
 
 ## Interactive CLI / process manager (`node cli.js`)
 
-`start.js` boots everything in **one** process. `cli.js` is a long-running REPL
+[`start.js`](./start.js) boots everything in **one** process. [`cli.js`](./cli.js) is a long-running REPL
 that runs each component as its **own OS process**, with per-process logs, live
-status over HRPC, and runtime device seeding. `start.js` is unchanged — both
-share the MDK boot primitives in `backend/site.js`.
+status over HRPC, and runtime device seeding. [`start.js`](./start.js) is unchanged — both
+share the MDK boot primitives in [`backend/site.js`](./backend/site.js).
 
 ```bash
 cd examples/full-site
@@ -189,7 +203,7 @@ Per-process logs are written to `.mdk-data/logs/<proc>.log`.
 
 ### How out-of-process Workers find the Kernel
 
-A separately-spawned Worker has no in-process `kernel` handle (the one `start.js`
+A separately-spawned Worker has no in-process `kernel` handle (the one [`start.js`](./start.js)
 uses to register Workers directly), so it discovers the Kernel one of two ways,
 chosen with `up --discovery <mode>` (default `local`):
 
@@ -204,9 +218,9 @@ Either way the Kernel runs the normal identity → capability → Ready flow ove
 
 ## Plugin
 
-The site plugin at `plugins/site/` is a worked example of the Gateway plugin format: a three-route `mdk-plugin.json` with controllers for live data, 
-historical series, and a command endpoint. See the [plugin authoring guide][plugin-authoring-guide] for the full manifest and 
-controller contract.
+The site plugin at [`plugins/site/`](./plugins/site/) is a worked example of the Gateway plugin format: a three-route
+[`mdk-plugin.json`](./plugins/site/mdk-plugin.json) with controllers for live data, historical series, and a command
+endpoint. See the [plugin authoring guide][plugin-authoring-guide] for the full manifest and controller contract.
 
 ## API endpoints (served by the site plugin)
 
@@ -270,36 +284,7 @@ history — the next `node start.js` starts a fresh site.
 - The Ocean mock's earnings endpoints return empty, so pool balance / 24h
   revenue read `0`; pool hashrate and Worker count are live
 - The Bitdeer container mock starts **after** the bitdeer Worker (MQTT broker must
-  be up first). In `start.js` this is handled automatically via `afterBoot`.
-
-## Next steps
-
-- **Scale the fleet.** The default run is 10 miners per family (30 total), sized to
-  start fast and stay within the standard file-descriptor limit. To run a larger
-  site, pass `--miners N` for `N` miners per family (`3N` total) — e.g.
-  `node start.js --miners 100` boots a 300-miner site. Large fleets are supported;
-  on macOS raise the file-descriptor limit first (see below).
-
-<details>
-  <summary>Running large fleets on macOS: raise the file-descriptor limit</summary>
-  <div>
-
-  Large fleets open many sockets at once: `--miners 100` (300 miners) uses roughly
-  900+ file descriptors simultaneously (300 mock TCP/HTTP sockets, Kernel/corestore,
-  Worker connections), and macOS GUI sessions apply a soft limit of 256 FDs
-  regardless of what `ulimit -n` reports in the shell.
-
-  Before running a large fleet, raise the limit in the same terminal session:
-
-  ```bash
-  ulimit -n 4096
-  ```
-
-  If you see `EMFILE: too many open files`, raise the limit as above and retry. The
-  default run (30 miners) stays within the standard limit and needs no change.
-
-  </div>
-</details>
+  be up first). In [`start.js`](./start.js) this is handled automatically via `afterBoot`.
 
 ## MCP server
 
@@ -319,7 +304,8 @@ kernel exited (ERR_PROC_EXITED: kernel (code 1, signal null))
 Error: Invalid device file, was moved unsafely
 ```
 
-**Cause**: The `.mdk-data` directory contains RocksDB files with embedded path metadata from a previous location. This happens when the repo is moved, copied, cloned to a new location, or when switching between multiple clones of the same repo.
+**Cause**: The `.mdk-data` directory contains RocksDB files with embedded path metadata from a previous location. This happens when the repo is moved, 
+copied, cloned to a new location, or when switching between multiple clones of the same repo.
 
 **Fix**: Remove the persisted state directory:
 
@@ -340,7 +326,9 @@ lsof -nP -iTCP:3007   # Gateway
 lsof -nP -iTCP:3040   # UI
 ```
 
-Mock device ports are listed in [Ports used by the mock devices](#ports-used-by-the-mock-devices). If another example (e.g., `examples/mvp-site`) or a previous run left processes running, stop them first or use the env vars to move this example to different ports:
+Mock device ports are listed in [Ports used by the mock devices](#ports-used-by-the-mock-devices). If another example
+(e.g., [`examples/mvp-site`](../mvp-site/README.md)) or a previous run left processes running, stop them first or use
+the env vars to move this example to different ports:
 
 **Fix**: Stop them manually or use the CLI:
 
@@ -354,6 +342,22 @@ mdk> exit
 
 ```bash
 MDK_HTTP_PORT=3008 MDK_UI_PORT=3041 node start.js
+```
+
+### `EMFILE: too many open files`
+
+**Symptom**: `up`/[`start.js`](./start.js) fails (or a large fleet won't boot) with `EMFILE: too many open files`.
+
+**Cause**: Large fleets open many sockets at once — `--miners 100` (300 miners) uses roughly
+900+ file descriptors simultaneously (300 mock TCP/HTTP sockets, Kernel/corestore, Worker
+connections). macOS GUI sessions apply a soft limit of 256 FDs regardless of what `ulimit -n`
+reports in the shell. The default run (30 miners) stays within the standard limit and isn't
+affected.
+
+**Fix**: Raise the limit in the same terminal session before running a large fleet, then retry:
+
+```bash
+ulimit -n 4096
 ```
 
 ### Stale processes after CLI crash or forced exit
@@ -379,6 +383,15 @@ If processes don't respond to `down`, kill them directly:
 ```bash
 pkill -f "node.*backend/proc"
 ```
+
+## Next steps
+
+- **Scale the fleet.** The default run is 10 miners per family (30 total), sized to
+  start fast and stay within the standard file-descriptor limit. To run a larger
+  site, pass `--miners N` for `N` miners per family (`3N` total) — e.g.
+  `node start.js --miners 100` boots a 300-miner site. Large fleets are supported;
+  on macOS raise the file-descriptor limit first — see
+  [`EMFILE: too many open files`](#emfile-too-many-open-files).
 
 ## Links
 

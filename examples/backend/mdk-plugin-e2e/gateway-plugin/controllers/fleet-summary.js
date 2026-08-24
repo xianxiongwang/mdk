@@ -1,11 +1,10 @@
 'use strict'
 
+const mdkClient = require('../lib/client')
+
 // The only place aggregation happens: fan out per-device telemetry pulls via
 // mdk-client and combine. Workers are structurally single-device.
-module.exports = async function fleetSummary (req, services) {
-  const { mdkClient } = services
-  if (!mdkClient) throw new Error('ERR_MDK_CLIENT_UNAVAILABLE')
-
+module.exports = async function fleetSummary (req) {
   const workersResp = await mdkClient.listWorkers()
   const deviceIds = (workersResp?.workers || []).flatMap(w => w.deviceIds || [])
 

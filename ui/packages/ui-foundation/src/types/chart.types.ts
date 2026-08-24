@@ -11,8 +11,9 @@
  */
 
 /**
- * A single (x, y) sample. `x` is a Unix timestamp in **seconds**
- * (lightweight-charts convention); `y` is `null` to render gaps.
+ * A single (x, y) sample. `x` is a Unix timestamp in **milliseconds** — the
+ * `LineChart` primitive divides it by 1000 to derive the lightweight-charts
+ * `UTCTimestamp`. `y` is `null` to render gaps.
  *
  * @category dashboard
  */

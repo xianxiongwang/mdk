@@ -24,7 +24,7 @@ const deploy = require(path.join(exampleDir, 'config', 'site.deploy.json'))
 
 const ROOT = path.join(exampleDir, deploy.root)
 const PLUGIN_DIRS = deploy.gateway.pluginDirs.map((p) => path.join(exampleDir, p))
-const MCP_PLUGIN_DIRS = deploy.mcp.pluginDirs.map((p) => path.join(exampleDir, p))
+const MCP_PLUGIN_DIRS = (deploy.mcp.agentTools?.pluginDirs || []).map((p) => path.join(exampleDir, p))
 const STATIC_ROOT_PATH = path.join(exampleDir, deploy.gateway.staticRootPath)
 
 const HOST = deploy.host
@@ -32,7 +32,9 @@ const MOCK_PORT_BASE = deploy.mocks.portBase
 const SATEC_MOCK_PORT_BASE = deploy.satec.mocks.portBase
 const GATEWAY_PORT = deploy.gateway.port
 const GATEWAY_HOST = deploy.gateway.host
+const AUTO_GENERATE_MCP = deploy.gateway.autoGenerateMcp === true
 const MCP_PORT = deploy.mcp.port
+const MCP_AGENT_TOOLS_PORT = deploy.mcp.agentTools?.port
 const DISCOVERY = deploy.discovery
 const WORKER_ID = deploy.worker.id
 const OCEAN_WORKER_ID = deploy.ocean.worker.id
@@ -76,12 +78,21 @@ const startMocks = (miners) => {
   })))
 }
 
-const startSatecMocks = (powermeters) => {
+// Typical draw of one modern hydro/immersion ASIC (the m56s the mocks.type
+// default seeds). Sizes the powermeter reading off the actual seeded miner
+// fleet (config/devices.json) instead of a flat number that doesn't track it.
+const AVG_MINER_POWER_W = 3400
+
+const startSatecMocks = (powermeters, minerCount) => {
+  const count = powermeters.length || 1
+  const powerW = deploy.satec.mocks.powerW != null
+    ? deploy.satec.mocks.powerW
+    : (minerCount * AVG_MINER_POWER_W) / count
   return mockHandles(powermeters.map((d) => satecMock.createServer({
     port: d.opts.port,
     host: HOST,
     type: deploy.satec.worker.model,
-    powerW: deploy.satec.mocks.powerW
+    powerW
   })))
 }
 
@@ -176,7 +187,17 @@ const bootOceanWorker = async ({ kernel, kernelTopic, root, mode = DISCOVERY }) 
   })
 
   await registerWorker(handle, OCEAN_WORKER_ID, { kernel, root, mode })
-  drivePool(handle.pool, deploy.ocean.worker.tickMs)
+  const poolTimer = drivePool(handle.pool, deploy.ocean.worker.tickMs)
+  // registerWorker's SIGINT/kernel._cleanup paths both call handle.stop() by a
+  // fresh property lookup each time, so wrapping it here — after
+  // registerWorker already wired its own caller — still takes effect. Clear
+  // the pacer before the underlying stop logic runs, so a tick already
+  // mid-flight isn't the only thing racing whatever handle.stop() tears down.
+  const stopWorker = handle.stop.bind(handle)
+  handle.stop = async (...args) => {
+    clearInterval(poolTimer)
+    return stopWorker(...args)
+  }
   return handle
 }
 
@@ -206,7 +227,9 @@ module.exports = {
   SATEC_MOCK_PORT_BASE,
   GATEWAY_PORT,
   GATEWAY_HOST,
+  AUTO_GENERATE_MCP,
   MCP_PORT,
+  MCP_AGENT_TOOLS_PORT,
   PLUGIN_DIRS,
   MCP_PLUGIN_DIRS,
   STATIC_ROOT_PATH,

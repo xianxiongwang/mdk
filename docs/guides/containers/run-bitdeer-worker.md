@@ -53,7 +53,7 @@ Use [the Bitdeer README][bitdeer-readme] to confirm the `model` value for your D
 Add this code to the Node.js service or script that runs the MDK Worker in your deployment. The snippet shows the minimum boot call seeding one D40 container, replace the example container ID with your container's value:
 
 ```js
-const { getKernel } = require('@tetherto/mdk')
+const { getKernel } = require('@tetherto/mdk/backend/core/mdk')
 const { startBitdeerWorker } = require('@tetherto/mdk-worker-bitdeer')
 
 const kernel = await getKernel()
@@ -81,7 +81,7 @@ To add a container to an already-running fleet, send the `registerThing` command
 ```js
 const { createMdkClient } = require('@tetherto/mdk/backend/core/client')
 
-const client = createMdkClient({ hrpc: { key: kernel.getPublicKey() } })
+const client = createMdkClient({ kernelKey: kernel.getPublicKey() })
 await client.connect()
 await client.sendWorkerCommand('bitdeer-rack-1', null, 'registerThing', {
   id: 'D40-M56-002',
@@ -103,7 +103,7 @@ For the full `seedDevices` and `registerThing` option reference, the telemetry a
 
 ## Troubleshooting
 
-The development example on this page is `examples/backend/containers/bitdeer/index.js`. A working run prints the Kernel HRPC key and the registered device ID, then stays running until Ctrl+C.
+The development example on this page is [`examples/backend/containers/bitdeer/index.js`](../../../examples/backend/containers/bitdeer/index.js). A working run prints the Kernel HRPC key and the registered device ID, then stays running until Ctrl+C.
 
 If it does not print those values, or if the broker port is already in use, the network and port checks in [miner troubleshooting][miner-troubleshooting] apply here too, the underlying HRPC and DHT requirements are the same across every Worker.
 
@@ -126,8 +126,8 @@ If it does not print those values, or if the broker port is already in use, the 
 [install-pattern]: ../../../backend/workers/docs/install-pattern.md
 <!-- docs@tether.io: install-pattern → https://github.com/tetherto/mdk/blob/main/backend/workers/docs/install-pattern.md -->
 
-[deployment-topologies]: ../../concepts/deployment-topologies.md
-<!-- docs@tether.io: deployment-topologies → concepts/deployment-topologies -->
+[deployment-topologies]: ../deployment/index.md
+<!-- docs@tether.io: deployment-topologies → guides/deployment -->
 
 [miner-troubleshooting]: ../miners/troubleshooting.md
 <!-- docs@tether.io: miner-troubleshooting → guides/miners/troubleshooting -->

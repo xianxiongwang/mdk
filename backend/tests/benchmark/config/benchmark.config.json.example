@@ -1,0 +1,41 @@
+{
+  "_comment": "Single input file for the capacity/metrics benchmark harness. Edit values here to size a run — see ../README.md and docs/guides/deployment/capacity-metrics-template.md for what each field feeds.",
+
+  "hardware": {
+    "referenceTier": "custom",
+    "cpuModel": "_",
+    "cpuCoresPhysical": "_",
+    "cpuCoresLogical": "_",
+    "ramGiB": "_",
+    "diskType": "_",
+    "diskSizeGiB": "_",
+    "os": "_",
+    "nodeVersion": "_",
+    "mdkVersion": "_",
+    "networkPath": "simulated-in-process",
+    "notes": "Fill in before publishing a profile — the harness cannot detect vendor/tier from the host alone."
+  },
+
+  "workers": [
+    {
+      "type": "mdk-worker-whatsminer",
+      "model": "m56s",
+      "simulateMocks": true,
+      "ceiling": { 
+        "startDeviceCount": 10, 
+        "stepDeviceCount": 10, 
+        "maxDeviceCount": 30 
+      }
+    },
+    {
+      "type": "mdk-worker-antminer",
+      "model": "s19xp",
+      "simulateMocks": true,
+      "ceiling": { 
+        "startDeviceCount": 5, 
+        "stepDeviceCount": 5, 
+        "maxDeviceCount": 5 
+      }
+    }
+  ]
+}

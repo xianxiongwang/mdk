@@ -21,4 +21,4 @@ with mining-specific data shaping.
 
 ## Data contracts
 
-`PowerModeTimelineEntry` lives in `power-mode-timeline-chart.helper.ts`.
+`PowerModeTimelineEntry` lives in [`power-mode-timeline-chart.helper.ts`](./power-mode-timeline-chart.helper.ts).

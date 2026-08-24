@@ -5,22 +5,17 @@
  * React-aware utilities live in `@tetherto/mdk-react-adapter`; UI-coupled
  * helpers (JSX renderers, devkit-core consumers) live in
  * `@tetherto/mdk-react-devkit`.
+ *
+ * The mining query dialect used to live here too — the `t-*` tags, `*_aggr`
+ * field names and Mongo selector composers. It now sits under
+ * `../presets/mining/dialect`, so this directory holds only helpers that are
+ * genuinely backend-agnostic.
  */
 
-export * from './alert-mappers'
-export * from './alert-queries'
 export * from './auth-utils'
-export * from './container-sockets'
-export * from './container-tabs'
-export * from './container-widgets-derive'
-export * from './dashboard-mappers'
-export * from './dashboard-queries'
 export * from './device-actions'
-export * from './device-tags'
 export * from './historical-log-chunks'
 export * from './latest-sample'
-export * from './op-centre-queries'
-export * from './query-utils'
 export * from './settings-utils'
 export * from './token-utils'
 export * from './url-utils'

@@ -8,7 +8,7 @@
 > [!NOTE]
 > Incompatible from 0.6.0: this plan's tooling references (`apps/mdk-ui-shell`,
 > `templates/mdk-ui-shell/`, `generate:shell`) were removed. The shell is now
-> `examples/mdk-ui-shell-template`; pages are added via `mdk-ui add page`, not regeneration.
+> [`examples/mdk-ui-shell-template`](../../../../examples/mdk-ui-shell-template/README.md); pages are added via `mdk-ui add page`, not regeneration.
 
 ---
 
@@ -16,7 +16,7 @@
 
 Add two fully working **Operational Centre** pages to the MDK so that a generated
 `mdk-shell-ui` app can ship them (alongside Dashboard, Alerts, Pool Manager),
-backed by **real MiningOS backend calls**, including **write/control operations
+backed by **real reference app backend calls**, including **write/control operations
 through the voting/approval workflow**. Make both pages **add-able / removable via
 the CLI** like any other page.
 
@@ -60,18 +60,18 @@ This is **not greenfield**, but the reusable surface is thinner than it was for 
 Manager. The gaps are: vendor widget boxes, the entire Explorer detail-tab matrix,
 DCS/PDU/heatmap data wiring, container-control writes, and page/CLI assembly.
 
-### Already in the MDK (`ui/packages/react-devkit`)
+### Already in the MDK ([`ui/packages/react-devkit`](../../../../ui/packages/react-devkit/README.md))
 
-- **`foundation/components/pool-manager/`** — `sites-overview` (status-card grid),
+- **[`foundation/components/pool-manager/`](../../../../ui/packages/react-devkit/src/domain/components/pool-manager/index.ts)** — `sites-overview` (status-card grid),
   `site-overview-details` (drilldown w/ grid-unit + miner-info-card), `miner-explorer`
   (toolbar + table). **Pool-specific** today — reusable as *templates* for the generic
   site-overview / explorer, but carry pool summaries / assign-pool seams to generalize.
-- **`foundation/components/device-explorer/`** — presentational miner/device table,
+- **[`foundation/components/device-explorer/`](../../../../ui/packages/react-devkit/src/domain/components/device-explorer/USAGE.md)** — presentational miner/device table,
   unwired. Closest existing analog to the Explorer **list** view.
-- **`foundation/components/container/`** — `container-charts`, `container-controls-box`.
-- **`foundation/components/widget-top-row/`**, **`info-container/`** — header stat
+- **[`foundation/components/container/`](../../../../ui/packages/react-devkit/src/domain/components/container/index.ts)** — `container-charts`, `container-controls-box`.
+- **[`foundation/components/widget-top-row/`](../../../../ui/packages/react-devkit/src/domain/components/widget-top-row/USAGE.md)**, **[`info-container/`](../../../../ui/packages/react-devkit/src/domain/components/info-container/USAGE.md)** — header stat
   blocks / info cards usable in the widget grid.
-- **`foundation/features/pool-manager/`** — feature-level assemblies + internal routing
+- **[`foundation/features/pool-manager/`](../../../../ui/packages/react-devkit/src/domain/features/pool-manager/index.ts)** — feature-level assemblies + internal routing
   (the `PoolManager` composite) — the pattern to mirror for an `Explorer` composite.
 
 ### Already in `react-adapter`
@@ -88,12 +88,12 @@ DCS/PDU/heatmap data wiring, container-control writes, and page/CLI assembly.
 - Query factories/keys for `listThings`, `miners`, `siteStatusLive`,
   `containerPoolStats`, pool reads. Voting mutation infra from the Pool Manager work.
 
-### Already in the CLI (`ui/packages/cli`)
+### Already in the CLI ([`ui/packages/cli`](../../../../ui/packages/cli/README.md))
 
-- `add-page.ts` / `remove-page.ts` (driven by `// mdk:routes-end`, `// mdk:nav-*`
-  markers), and `managed-pages.ts` (pre-wired pages: `PoolManager`, `Alerts`).
+- [`add-page.ts`](../../../../ui/packages/cli/src/commands/add-page.ts) / [`remove-page.ts`](../../../../ui/packages/cli/src/commands/remove-page.ts) (driven by `// mdk:routes-end`, `// mdk:nav-*`
+  markers), and [`managed-pages.ts`](../../../../ui/packages/cli/src/managed-pages.ts) (pre-wired pages: `PoolManager`, `Alerts`).
 - Template `templates/mdk-ui-shell/src/pages/` has `Dashboard`, `Alerts`,
-  `PoolManager`, `SignIn`, `NotFound`. `PoolManager.tsx` is the canonical
+  `PoolManager`, `SignIn`, `NotFound`. [`PoolManager.tsx`](../../../../examples/mdk-ui-shell-template/_managed/pages/PoolManager.tsx) is the canonical
   pre-wired-page example (~60 lines: hooks in, composite feature out).
 
 ### Already in registry / blueprints
@@ -124,7 +124,7 @@ DCS/PDU/heatmap data wiring, container-control writes, and page/CLI assembly.
 
 ---
 
-## 3. Backend contract (MiningOS, port 3000 — the reference app's surface)
+## 3. Backend contract (port 3000 — the reference app's surface)
 
 Per the scope decision, the MDK targets **the reference app's existing API calls**. All authed via
 `Authorization: Bearer <token>`. Reads use server-side LRU caching; `?overwriteCache=true`
@@ -279,7 +279,7 @@ Translation work per surface:
   `apps/mdk-ui-shell` for dev/QA. Sidebar entries, routes, nav icons.
 
 ### WS-J — CLI: make both pages add/remove-able
-- Add `managed-pages.ts` entries (`SiteOverview`, `Explorer`) with route/nav/templatePage
+- Add [`managed-pages.ts`](../../../../ui/packages/cli/src/managed-pages.ts) entries (`SiteOverview`, `Explorer`) with route/nav/templatePage
   metadata. Ensure `mdk-ui add page SiteOverview` / `Explorer` + `remove page` scaffold
   correctly (component resolution, routes/nav markers). CLI tests.
 
@@ -290,11 +290,11 @@ Translation work per surface:
   variations). USAGE docs; regenerate registry/blueprints/hooks/stores manifests.
 
 ### WS-L — Catalog demos
-- Catalog routes/pages for the new components & features (per `apps/catalog` conventions:
+- Catalog routes/pages for the new components & features (per [`apps/catalog`](../../../../ui/apps/catalog/README.md) conventions:
   `DemoPageHeader`, `DemoBlock`, store seeding), so each surface is demoable in isolation.
 
 ### WS-M — Real-BE verification & QA
-- Run against the local MiningOS BE (`node worker.js --wtype wrk-node-http --env
+- Run against the local reference app BE (`node worker.js --wtype wrk-node-http --env
   production --port 3000`) with a real token. Smoke every view, every tab × model, and
   every write path (each control action creates a pending voting action; vote/cancel
   works). Error/permission/empty/polling states.
@@ -357,7 +357,7 @@ Translation work per surface:
 
 > Suggested project/section: **MDK — Operational Centre pages (Site Overview + Explorer)**
 
-1. **Spike: Operational Centre BE contracts & tab matrix** *(do first)* — Verify, against the running MiningOS BE, the response shapes for list-things (per tag), tail-log/multi, list-racks, pdu-layout, site, global/data (container settings), thing/global/feature-config; confirm the per-model container-tab matrix and the exact voting payloads per device action; resolve the API-divergence and primitives open questions in §8.
+1. **Spike: Operational Centre BE contracts & tab matrix** *(do first)* — Verify, against the running reference app BE, the response shapes for list-things (per tag), tail-log/multi, list-racks, pdu-layout, site, global/data (container settings), thing/global/feature-config; confirm the per-model container-tab matrix and the exact voting payloads per device action; resolve the API-divergence and primitives open questions in §8.
 2. **Operational Centre read data layer in ui-foundation** — Add read query factories + param builders + types (list-things by tag, tail-log + multi, racks, pdu-layout, site, container settings, thing/global/feature config) and the per-model container-tab matrix module, with unit tests.
 3. **Device-action / voting mutation factory in ui-foundation** — Add device-action mutations (single + batch), vote, cancel, and thing-comment factories with payload types and action-type→endpoint mapping, with tests.
 4. **Operational Centre read hooks in react-adapter** — useContainerWidgets, useContainerActivity, useCoolingSystem/useDcsData, useContainerCharts, useExplorerList(tab), useThingDetail, usePduLayout, useContainerSettings, useRackLayout, useCabinetGroups, useFeatureFlags, with polling + tests (reuse useSitesOverview/useMinerDevices where applicable).
@@ -377,7 +377,7 @@ Translation work per surface:
 18. **Make Site Overview & Explorer add-able/removable via CLI** — Add managed-pages entries and ensure `mdk-ui add page SiteOverview` / `Explorer` + `remove page` scaffold correctly (component resolution, routes/nav markers); CLI tests.
 19. **Registry + blueprints + docs for Operational Centre** — Add registry.json entries and two blueprints (mdk-ui-shell-site-overview, mdk-ui-shell-explorer); update USAGE docs; regenerate registry/blueprints/hooks/stores manifests.
 20. **Catalog demos for Operational Centre components** — Add catalog routes/pages (DemoPageHeader/DemoBlock, store seeding) for the new widget, explorer, and tab components.
-21. **Real-BE integration & QA pass** — Verify every view and tab × container model and every write path against the local MiningOS backend with a real token; confirm writes create pending voting actions, vote/cancel work, and error/permission/empty/polling states behave.
+21. **Real-BE integration & QA pass** — Verify every view and tab × container model and every write path against the local reference app backend with a real token; confirm writes create pending voting actions, vote/cancel work, and error/permission/empty/polling states behave.
 
 ---
 

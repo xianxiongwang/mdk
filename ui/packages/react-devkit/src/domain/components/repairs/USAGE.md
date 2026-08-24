@@ -33,10 +33,10 @@ export const Example = () => {
 
 ## Data contracts
 
-- `RepairBatchAction` — `foundation/components/repairs/types.ts`. The component
+- `RepairBatchAction` — [`foundation/components/repairs/types.ts`](./types.ts). The component
   reads `params[].params[0]` for each action's `comment`, `id`, `rackId`, and
   `info.parentDeviceId`.
-- `RepairDevice` — `foundation/components/repairs/types.ts`. Only `id`, `rack`,
+- `RepairDevice` — [`foundation/components/repairs/types.ts`](./types.ts). Only `id`, `rack`,
   `info.serialNum`, and `info.macAddress` are read.
 
 ## Notes

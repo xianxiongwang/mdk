@@ -105,19 +105,21 @@ module.exports = function (fastify) {
       if (checkError(req, res)) return
 
       const { username } = req.params
-      sendResult(res, generateUserHashrate(username))
+      sendResult(res, generateUserHashrate(username, req.ctx.workerCount))
     } catch (e) {
       res.code(500).send({ error: e.message })
     }
   })
 
+  // Reuse the state seeded at boot (sized off ctx.workerCount, see
+  // initial_states/default.js) instead of calling generateMockWorkers fresh
+  // per request — that ignored workerCount entirely and handed back an
+  // unrelated random 5-15 workers on every poll.
   fastify.get('/v1/user_hashrate_full/:username', (req, res) => {
     try {
       if (checkError(req, res)) return
 
-      const { username } = req.params
-      const { generateMockWorkers } = require('../initial_states/utils')
-      sendResult(res, generateMockWorkers(username))
+      sendResult(res, req.state.workers)
     } catch (e) {
       res.code(500).send({ error: e.message })
     }

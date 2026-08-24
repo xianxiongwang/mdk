@@ -3,24 +3,25 @@
 const os = require('os')
 const path = require('path')
 const fs = require('fs')
-const WorkerRuntime = require('@tetherto/mdk-worker/lib/worker-runtime')
-const { plugin, openDb } = require('@tetherto/mdk-worker-demo')
+const WorkerRuntimeV2 = require('@tetherto/mdk-worker/lib/worker-runtime-v2')
 const demoMock = require('@tetherto/mdk-worker-demo/mock/server')
 
-// This is the "caller": the demo-worker package ships only a Worker Plugin
-// ({ contract, dir, connect }) and its own SQLite helper — it never touches
-// WorkerRuntime. Hosting the plugin (constructing WorkerRuntime, owning its
-// lifecycle, and running the sampler loop against the live runtime) is
-// entirely this caller's job. The worker keeps its own SQLite file under
-// storeDir and this sampler loop writes a telemetry row per device on a
-// fixed cadence (served back via the `history` channel).
+const WORKER_DIR = path.dirname(require.resolve('@tetherto/mdk-worker-demo/package.json'))
+
+// This is the "caller": the demo-worker package is a directory-loaded Worker
+// Plugin (mdk-contract.json + src/ handlers) — it never touches WorkerRuntime
+// itself. Hosting it (pointing WorkerRuntimeV2 at the package directory,
+// owning process lifecycle) is entirely this caller's job. WorkerRuntimeV2
+// builds one plugin instance per device itself, so the caller's only
+// remaining job is process lifecycle: booting the firmware mocks, starting
+// the runtime, and polling telemetry via runtime.handleRequest — no sampler
+// loop, no SQLite handle, no plugin module of its own.
 //
 // seedDevices uses the same { id, opts } shape as the other worker seeds;
 // opts is this plugin's own config ({ host, port }).
-async function startDemoWorker ({ workerId, storeDir, kernelTopic, seedDevices, sampleItvMs }) {
+async function startDemoWorker ({ workerId, storeDir, kernelTopic, seedDevices }) {
   fs.mkdirSync(storeDir, { recursive: true })
   const dbPath = path.join(storeDir, 'demo-worker.db')
-  const db = openDb(dbPath)
 
   const devices = (seedDevices || []).map((d) => ({
     deviceId: d.id,
@@ -28,52 +29,31 @@ async function startDemoWorker ({ workerId, storeDir, kernelTopic, seedDevices, 
   }))
   const deviceIds = devices.map((d) => d.deviceId)
 
-  const runtime = new WorkerRuntime(plugin, {
+  const runtime = new WorkerRuntimeV2(WORKER_DIR, {
     workerId,
     kernelTopic: kernelTopic || null,
-    devices
+    devices,
+    storeDir,
+    env: { DEVICE_TOKEN: process.env.WM_V3_TOKEN || '' }
   })
   await runtime.start()
 
-  let sampling = false
-  const sample = async () => {
-    if (sampling) return
-    sampling = true
-    try {
-      for (const deviceId of deviceIds) {
-        const ctx = runtime.getDeviceContext(deviceId)
-        if (!ctx) continue
-        db.recordSample(deviceId, await ctx.device.getSummary())
-      }
-    } catch (err) {
-      console.error(`[demo-worker-caller] sample error: ${err.message}`)
-    } finally {
-      sampling = false
-    }
-  }
-  const sampler = setInterval(sample, sampleItvMs || 5000)
-  sampler.unref()
-
   return {
     runtime,
-    db,
     dbPath,
     deviceIds,
     seeded: 0,
     async stop () {
-      clearInterval(sampler)
       await runtime.stop()
-      db.close()
     }
   }
 }
 
 // Manual runner: boots real firmware v3 mocks, hosts the demo-worker plugin
-// on WorkerRuntime against them (via startDemoWorker above), and polls
+// on WorkerRuntimeV2 against them (via startDemoWorker above), and polls
 // telemetry on an interval.
 
 const READ_ITV_MS = 3000
-const SAMPLE_ITV_MS = 1000
 const MOCKS = [
   { id: 'v3-0', port: 18080, serial: 'WM3-DEMO-0', hashrateThs: 200, powerW: 3500 },
   { id: 'v3-1', port: 18081, serial: 'WM3-DEMO-1', hashrateThs: 180, powerW: 3300 }
@@ -116,12 +96,11 @@ async function main () {
   const handle = await startDemoWorker({
     workerId: 'demo-worker-run',
     storeDir: path.join(root, 'store'),
-    seedDevices: MOCKS.map((d) => ({ id: d.id, opts: { host: '127.0.0.1', port: d.port } })),
-    sampleItvMs: SAMPLE_ITV_MS
+    seedDevices: MOCKS.map((d) => ({ id: d.id, opts: { host: '127.0.0.1', port: d.port } }))
   })
 
   console.log(`demo-worker running (workerId=demo-worker-run, devices=${handle.deviceIds.join(', ')})`)
-  console.log(`sampling every ${SAMPLE_ITV_MS}ms, reading every ${READ_ITV_MS}ms — Ctrl+C to stop\n`)
+  console.log(`reading every ${READ_ITV_MS}ms — Ctrl+C to stop\n`)
 
   const reader = setInterval(() => {
     for (const deviceId of handle.deviceIds) {

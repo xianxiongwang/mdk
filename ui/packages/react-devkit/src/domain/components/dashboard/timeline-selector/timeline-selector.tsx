@@ -1,6 +1,6 @@
 import { cn, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@primitives'
-import type { TimelineOption } from '@tetherto/mdk-ui-foundation'
-import { getTimelineOptions } from '@tetherto/mdk-ui-foundation'
+import type { TimelineOption } from '@tetherto/mdk-ui-foundation/presets/mining'
+import { getTimelineOptions } from '@tetherto/mdk-ui-foundation/presets/mining'
 import type { JSX } from 'react'
 
 export type TimelineSelectorProps = {

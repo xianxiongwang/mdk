@@ -1,0 +1,2606 @@
+{
+  "threads": [
+    {
+      "id": "handover-01",
+      "persona": "morning shift operator taking over",
+      "turns": [
+        "How is the site doing?",
+        "Which ones are offline?",
+        "What is that container reporting?",
+        "Anything else I should know before I sign off on the handover?"
+      ]
+    },
+    {
+      "id": "handover-02",
+      "persona": "day shift lead starting rounds",
+      "turns": [
+        "Give me the overall status.",
+        "Break that down by family for me.",
+        "OK and the miners specifically — how many are actually online?",
+        "List them."
+      ]
+    },
+    {
+      "id": "handover-03",
+      "persona": "night operator handing off",
+      "turns": [
+        "Site summary please.",
+        "You said something is offline — which one?",
+        "Show me its state."
+      ]
+    },
+    {
+      "id": "handover-04",
+      "persona": "terse shift lead",
+      "turns": [
+        "status",
+        "how many devices",
+        "of those how many miners",
+        "and offline?"
+      ]
+    },
+    {
+      "id": "handover-05",
+      "persona": "operator new to this site",
+      "turns": [
+        "I just came on shift, what am I looking at here?",
+        "How many workers is that across?",
+        "Are all the workers ready?",
+        "Which one isn't?"
+      ]
+    },
+    {
+      "id": "handover-06",
+      "persona": "careful handover operator",
+      "turns": [
+        "Walk me through the current site state.",
+        "Anything in an error state?",
+        "What about containers?",
+        "And that offline one — what's its telemetry look like?"
+      ]
+    },
+    {
+      "id": "handover-07",
+      "persona": "swing shift operator",
+      "turns": [
+        "Morning. What's up with the site?",
+        "How many rigs are hashing right now?",
+        "Any of them struggling?",
+        "Show me the worst one."
+      ]
+    },
+    {
+      "id": "handover-08",
+      "persona": "operator doing a quick sweep",
+      "turns": [
+        "quick status",
+        "anything down",
+        "which",
+        "reboot it"
+      ]
+    },
+    {
+      "id": "handover-09",
+      "persona": "shift supervisor",
+      "turns": [
+        "Overall health check please.",
+        "Now just the infrastructure side — containers, meters, sensors.",
+        "Which of those is offline?"
+      ]
+    },
+    {
+      "id": "handover-10",
+      "persona": "operator with a checklist",
+      "turns": [
+        "First thing: site summary.",
+        "Second: how many miners online.",
+        "Third: name the offline ones.",
+        "Last: is anything in error?"
+      ]
+    },
+    {
+      "id": "handover-11",
+      "persona": "relaxed morning operator",
+      "turns": [
+        "How'd the site do overnight?",
+        "Anything offline right now?",
+        "That one — what family is it?",
+        "Can you show me what it's reporting?"
+      ]
+    },
+    {
+      "id": "handover-12",
+      "persona": "operator handing over to maintenance",
+      "turns": [
+        "Site status.",
+        "I need to hand maintenance a list — which devices are offline?",
+        "Just the miners out of that.",
+        "And the containers?"
+      ]
+    },
+    {
+      "id": "handover-13",
+      "persona": "terse operator, typos",
+      "turns": [
+        "stauts of site",
+        "how many mienrs",
+        "onlien only",
+        "ok list em"
+      ]
+    },
+    {
+      "id": "handover-14",
+      "persona": "operator confirming a rumour",
+      "turns": [
+        "I heard half the site is down, is that right?",
+        "So what is actually offline?",
+        "Only that one?",
+        "What's its state say?"
+      ]
+    },
+    {
+      "id": "handover-15",
+      "persona": "methodical operator",
+      "turns": [
+        "Summarize the site.",
+        "How many devices does that include?",
+        "And how many of those are miners?"
+      ]
+    },
+    {
+      "id": "handover-16",
+      "persona": "operator taking over mid-incident",
+      "turns": [
+        "What's the site look like?",
+        "Previous shift said there was a problem — what's still down?",
+        "Give me everything you have on it.",
+        "Has it got a reboot capability?"
+      ]
+    },
+    {
+      "id": "handover-17",
+      "persona": "polite handover operator",
+      "turns": [
+        "Good morning — could you give me a site overview please?",
+        "Thank you. How many of the workers are ready?",
+        "And the one that isn't ready, what's on it?",
+        "Appreciate it. Anything offline besides that?"
+      ]
+    },
+    {
+      "id": "handover-18",
+      "persona": "operator scanning for surprises",
+      "turns": [
+        "Anything unusual on site right now?",
+        "Show me the full summary anyway.",
+        "One offline you said — which?",
+        "Its telemetry please."
+      ]
+    },
+    {
+      "id": "handover-19",
+      "persona": "handover with pool check",
+      "turns": [
+        "Site status first.",
+        "How many pools do we have?",
+        "Are they both up?",
+        "And the sensors?"
+      ]
+    },
+    {
+      "id": "handover-20",
+      "persona": "operator writing the log entry",
+      "turns": [
+        "Site summary for the shift log.",
+        "How many online devices exactly?",
+        "And offline?",
+        "Name the offline one so I can log it."
+      ]
+    },
+    {
+      "id": "handover-21",
+      "persona": "blunt operator",
+      "turns": [
+        "everything ok?",
+        "prove it - summary",
+        "hm what about that offline thing"
+      ]
+    },
+    {
+      "id": "handover-22",
+      "persona": "operator checking each family",
+      "turns": [
+        "Give me the site rollup.",
+        "Miners first — count online.",
+        "Now containers.",
+        "Now powermeters. Same question."
+      ]
+    },
+    {
+      "id": "handover-23",
+      "persona": "operator with limited time",
+      "turns": [
+        "30 second version: how's the site?",
+        "Just tell me what's broken.",
+        "OK that one — reboot needed?",
+        "Do it."
+      ]
+    },
+    {
+      "id": "handover-24",
+      "persona": "shift handover, vocabulary confused",
+      "turns": [
+        "How many miners do we have on site?",
+        "Sorry I meant workers — how many of those?",
+        "Right, and devices total?",
+        "Which of those three numbers includes the containers?"
+      ]
+    },
+    {
+      "id": "handover-25",
+      "persona": "operator verifying overnight fix",
+      "turns": [
+        "Site status.",
+        "Is anything still offline?",
+        "That's the same one from last night. What does its state say now?",
+        "Try rebooting it."
+      ]
+    },
+    {
+      "id": "handover-26",
+      "persona": "operator doing morning walkthrough",
+      "turns": [
+        "Start me off with the summary.",
+        "Any devices in error?",
+        "Offline then?",
+        "What is that thing and what's it reporting?"
+      ]
+    },
+    {
+      "id": "handover-27",
+      "persona": "chatty operator",
+      "turns": [
+        "Alright, big picture — how are we looking today?",
+        "Nice. And the hashing side of the house?",
+        "Any of the ASICs down?"
+      ]
+    },
+    {
+      "id": "handover-28",
+      "persona": "operator handing to me from vendor call",
+      "turns": [
+        "Site overview.",
+        "Vendor asked how many antminers we run — can you tell?",
+        "Are they all online?",
+        "List them for me."
+      ]
+    },
+    {
+      "id": "handover-29",
+      "persona": "operator checking readiness",
+      "turns": [
+        "How many workers are ready?",
+        "And the total worker count?",
+        "So one isn't ready — do you know which devices sit on it?",
+        "What's the site-wide device count again?"
+      ]
+    },
+    {
+      "id": "handover-30",
+      "persona": "operator, minimal words",
+      "turns": [
+        "site",
+        "offline?",
+        "that one, state",
+        "ok reboot"
+      ]
+    },
+    {
+      "id": "handover-31",
+      "persona": "operator prepping standup",
+      "turns": [
+        "I need numbers for standup — give me the site summary.",
+        "How many devices online vs offline?",
+        "The offline one, what family?",
+        "And how many containers total?"
+      ]
+    },
+    {
+      "id": "handover-32",
+      "persona": "operator suspicious of dashboard",
+      "turns": [
+        "Dashboard says everything is green, can you confirm?",
+        "Really nothing offline?",
+        "Show me the offline list then.",
+        "What's that one's state?"
+      ]
+    },
+    {
+      "id": "handover-33",
+      "persona": "handover to weekend cover",
+      "turns": [
+        "Weekend cover here — what's the state of the site?",
+        "What's the one thing most likely to page me?",
+        "Show me its details."
+      ]
+    },
+    {
+      "id": "fault-01",
+      "persona": "operator chasing an alarm",
+      "turns": [
+        "Something just alarmed — what's offline?",
+        "container-1? What's it reporting?",
+        "Is it in an error state or just offline?",
+        "Reboot it."
+      ]
+    },
+    {
+      "id": "fault-02",
+      "persona": "urgent operator",
+      "turns": [
+        "We've lost a container I think. Confirm?",
+        "Which one?",
+        "Give me everything on it.",
+        "Can you power cycle it right now?"
+      ]
+    },
+    {
+      "id": "fault-03",
+      "persona": "operator drilling into miner fault",
+      "turns": [
+        "Are any miners down?",
+        "Are you sure? Check offline miners specifically.",
+        "OK then what about error state miners?",
+        "Fine — which miner is running hottest instead?"
+      ]
+    },
+    {
+      "id": "fault-04",
+      "persona": "operator with false premise",
+      "turns": [
+        "Why are all 40 miners down?",
+        "How many miners do we actually have?",
+        "And how many are offline?",
+        "So where did I get 40 from... how many devices total then?"
+      ]
+    },
+    {
+      "id": "fault-05",
+      "persona": "operator following a page",
+      "turns": [
+        "Got paged. What's broken?",
+        "That one — capabilities?",
+        "Does it support reboot?",
+        "Then reboot it please."
+      ]
+    },
+    {
+      "id": "fault-06",
+      "persona": "terse fault chaser",
+      "turns": [
+        "something down?",
+        "which",
+        "state"
+      ]
+    },
+    {
+      "id": "fault-07",
+      "persona": "operator ruling out families",
+      "turns": [
+        "Any powermeters offline?",
+        "Any sensors?",
+        "Any pools?",
+        "So what IS offline?"
+      ]
+    },
+    {
+      "id": "fault-08",
+      "persona": "operator escalating",
+      "turns": [
+        "We have an outage. Where?",
+        "How long — actually, just show me its telemetry.",
+        "Is anything else affected?",
+        "Count the offline devices for me."
+      ]
+    },
+    {
+      "id": "fault-09",
+      "persona": "operator with vague report",
+      "turns": [
+        "Someone said a rig died. True?",
+        "Check the miners.",
+        "None offline? Then check errors.",
+        "OK so nothing miner-side. What is offline?"
+      ]
+    },
+    {
+      "id": "fault-10",
+      "persona": "operator, panicked typing",
+      "turns": [
+        "whats down rn",
+        "conatiner? which one",
+        "show me it",
+        "reboot that thing"
+      ]
+    },
+    {
+      "id": "fault-11",
+      "persona": "operator isolating a bad unit",
+      "turns": [
+        "Show me offline devices.",
+        "Just that one? What's its state?",
+        "What's it capable of?",
+        "Set it to a lower power mode."
+      ]
+    },
+    {
+      "id": "fault-12",
+      "persona": "operator checking blast radius",
+      "turns": [
+        "container-1 is down — what else is affected?",
+        "How many devices are offline in total?",
+        "Any miners among them?"
+      ]
+    },
+    {
+      "id": "fault-13",
+      "persona": "operator second-guessing",
+      "turns": [
+        "Is container-2 offline?",
+        "Which container is offline then?",
+        "Show me container-1.",
+        "Reboot it."
+      ]
+    },
+    {
+      "id": "fault-14",
+      "persona": "operator following a temperature alarm",
+      "turns": [
+        "Got a temp alarm. Rank miners by temperature.",
+        "The top one — what's its telemetry?",
+        "Is it in error?",
+        "Drop it to a lower power mode."
+      ]
+    },
+    {
+      "id": "fault-15",
+      "persona": "operator hunting an underperformer",
+      "turns": [
+        "One of the rigs is barely hashing. Which is lowest?",
+        "Show me that one.",
+        "Is it online?",
+        "Reboot it then."
+      ]
+    },
+    {
+      "id": "fault-16",
+      "persona": "operator with a stale ticket",
+      "turns": [
+        "Ticket says avalon-3 is offline. Is it?",
+        "How many miners are offline?",
+        "So the ticket is wrong. What actually is offline?",
+        "Show me that instead."
+      ]
+    },
+    {
+      "id": "fault-17",
+      "persona": "operator checking after a reboot",
+      "turns": [
+        "Did container-1 come back?",
+        "What's its state?",
+        "Still offline? Try again.",
+        "Anything else offline now?"
+      ]
+    },
+    {
+      "id": "fault-18",
+      "persona": "operator triaging quietly",
+      "turns": [
+        "Anything in error state across the site?",
+        "Nothing? Offline then.",
+        "Details on it."
+      ]
+    },
+    {
+      "id": "fault-19",
+      "persona": "operator verbose and worried",
+      "turns": [
+        "I'm seeing gaps in the data and I want to make sure we haven't lost anything important — can you check the site status?",
+        "Right, so one device is offline. Which family does it belong to?",
+        "And what exactly is it reporting, if anything?",
+        "Is there anything I can do about it from here?"
+      ]
+    },
+    {
+      "id": "fault-20",
+      "persona": "operator confusing worker with device",
+      "turns": [
+        "A worker went down, which one?",
+        "So 11 of 12 ready — is that the same as the offline device?",
+        "How many devices are offline?",
+        "Right, so they're different things. Show me the offline device."
+      ]
+    },
+    {
+      "id": "fault-21",
+      "persona": "operator checking pools during fault",
+      "turns": [
+        "Are the pools still connected?",
+        "Both of them?",
+        "And is anything else offline?",
+        "Show me that one."
+      ]
+    },
+    {
+      "id": "fault-22",
+      "persona": "operator chasing power",
+      "turns": [
+        "Are the powermeters all reporting?",
+        "Give me one of them, whichever.",
+        "Its telemetry.",
+        "Now what's offline site-wide?"
+      ]
+    },
+    {
+      "id": "fault-23",
+      "persona": "operator, one-word probes",
+      "turns": [
+        "problems?",
+        "offline",
+        "that",
+        "fix it"
+      ]
+    },
+    {
+      "id": "fault-24",
+      "persona": "operator after a storm",
+      "turns": [
+        "We had a power blip. What's still down?",
+        "Just container-1?",
+        "Check the miners too."
+      ]
+    },
+    {
+      "id": "fault-25",
+      "persona": "operator with a hunch",
+      "turns": [
+        "I think whatsminer-2 is sick. Show me it.",
+        "How does it compare — rank miners by hashrate.",
+        "Where does it sit in that?",
+        "Reboot it anyway."
+      ]
+    },
+    {
+      "id": "fault-26",
+      "persona": "operator handling repeat offender",
+      "turns": [
+        "What's offline?",
+        "This is the third time today. What's its state?",
+        "Its capabilities?",
+        "Reboot it and tell me if that's even supported."
+      ]
+    },
+    {
+      "id": "fault-27",
+      "persona": "operator with false premise on containers",
+      "turns": [
+        "All three containers are offline, right?",
+        "How many are offline?",
+        "Which one?",
+        "What's it reporting?"
+      ]
+    },
+    {
+      "id": "fault-28",
+      "persona": "operator narrowing by family",
+      "turns": [
+        "Count offline devices.",
+        "Break that down by family.",
+        "So it's a container. Which?",
+        "Details please."
+      ]
+    },
+    {
+      "id": "fault-29",
+      "persona": "operator with sensor concern",
+      "turns": [
+        "Are the sensors alive?",
+        "All three?",
+        "Pick one and show me its telemetry.",
+        "Anything offline anywhere else?"
+      ]
+    },
+    {
+      "id": "fault-30",
+      "persona": "operator, urgent shorthand",
+      "turns": [
+        "down?",
+        "cont-1?",
+        "tele"
+      ]
+    },
+    {
+      "id": "fault-31",
+      "persona": "operator cross-checking",
+      "turns": [
+        "List offline devices.",
+        "Now count them.",
+        "Do those two agree?",
+        "Show me the one you listed."
+      ]
+    },
+    {
+      "id": "fault-32",
+      "persona": "operator chasing efficiency drop",
+      "turns": [
+        "Rank the miners by efficiency, worst first.",
+        "That bottom one — telemetry.",
+        "Is it online?",
+        "Set it to eco mode."
+      ]
+    },
+    {
+      "id": "fault-33",
+      "persona": "operator closing out an incident",
+      "turns": [
+        "What's the current offline count?",
+        "Same one as before?",
+        "Reboot it one more time.",
+        "Now give me a site summary so I can close the ticket."
+      ]
+    },
+    {
+      "id": "perf-01",
+      "persona": "performance analyst operator",
+      "turns": [
+        "Rank the miners by hashrate.",
+        "Who's at the bottom?",
+        "Show me that one's telemetry.",
+        "How does its power draw compare to the top one?"
+      ]
+    },
+    {
+      "id": "perf-02",
+      "persona": "efficiency-focused operator",
+      "turns": [
+        "Which rigs have the best J/TH?",
+        "And the worst?",
+        "Give me details on the worst.",
+        "Can I change its power mode?"
+      ]
+    },
+    {
+      "id": "perf-03",
+      "persona": "operator comparing families",
+      "turns": [
+        "Rank all miners by power draw.",
+        "Are the antminers or the avalons pulling more?",
+        "List the whatsminers."
+      ]
+    },
+    {
+      "id": "perf-04",
+      "persona": "terse perf review",
+      "turns": [
+        "top 5 by hashrate",
+        "bottom 3",
+        "that last one - telemetry",
+        "power modes?"
+      ]
+    },
+    {
+      "id": "perf-05",
+      "persona": "operator reviewing uptime",
+      "turns": [
+        "Rank miners by uptime.",
+        "Which has been up longest?",
+        "And the shortest?",
+        "Why might that one be low — what's its state?"
+      ]
+    },
+    {
+      "id": "perf-06",
+      "persona": "operator hunting hot spots",
+      "turns": [
+        "Sort the miners by temperature, hottest first.",
+        "Top three?",
+        "Show me number one.",
+        "Turn it down to eco."
+      ]
+    },
+    {
+      "id": "perf-07",
+      "persona": "operator doing weekly review",
+      "turns": [
+        "Give me the top performers by hashrate.",
+        "Now efficiency ranking.",
+        "Is the same rig top of both?",
+        "Show me the one that's top on efficiency."
+      ]
+    },
+    {
+      "id": "perf-08",
+      "persona": "operator with outlier suspicion",
+      "turns": [
+        "Any miner clearly out of line on power?",
+        "Rank by power then, descending.",
+        "That top one — is that normal for its family?",
+        "Show me its capabilities."
+      ]
+    },
+    {
+      "id": "perf-09",
+      "persona": "jargon-heavy operator",
+      "turns": [
+        "What's the fleet hashing at — rank the ASICs.",
+        "Which box is the laggard?",
+        "Pull its telemetry."
+      ]
+    },
+    {
+      "id": "perf-10",
+      "persona": "operator comparing two units",
+      "turns": [
+        "Show me antminer-0.",
+        "Now avalon-0.",
+        "Which of those two is hashing better?",
+        "Rank all miners by hashrate so I can see where they both sit."
+      ]
+    },
+    {
+      "id": "perf-11",
+      "persona": "operator, sloppy typing",
+      "turns": [
+        "rank minres by hashrate",
+        "lowest one?",
+        "tele for it",
+        "is it onlnie"
+      ]
+    },
+    {
+      "id": "perf-12",
+      "persona": "operator checking for throttling",
+      "turns": [
+        "Rank miners by hashrate, lowest first.",
+        "The bottom two — are they online?",
+        "Show the first one's power mode.",
+        "Bump it to high performance."
+      ]
+    },
+    {
+      "id": "perf-13",
+      "persona": "operator reviewing after a change",
+      "turns": [
+        "I set one to eco earlier. Rank by power, lowest first.",
+        "Is that the one I changed?",
+        "Show me its telemetry.",
+        "Put it back to normal."
+      ]
+    },
+    {
+      "id": "perf-14",
+      "persona": "operator with a false premise",
+      "turns": [
+        "Our worst miner is doing 200 J/TH, right?",
+        "Rank by efficiency, worst first.",
+        "So what's the actual worst?",
+        "Show me that one."
+      ]
+    },
+    {
+      "id": "perf-15",
+      "persona": "operator ranking a subset",
+      "turns": [
+        "Rank only the antminers by hashrate.",
+        "Now the avalons.",
+        "Which family looks stronger?"
+      ]
+    },
+    {
+      "id": "perf-16",
+      "persona": "operator checking container performance",
+      "turns": [
+        "Rank the containers by temperature.",
+        "Is the offline one in that list?",
+        "Show me the hottest one.",
+        "And its state?"
+      ]
+    },
+    {
+      "id": "perf-17",
+      "persona": "operator interested in power meters",
+      "turns": [
+        "Rank the powermeters by power.",
+        "Highest one — telemetry.",
+        "Does that line up with the miner power ranking?",
+        "Rank the miners by power then."
+      ]
+    },
+    {
+      "id": "perf-18",
+      "persona": "operator doing spot checks",
+      "turns": [
+        "Top miner by hashrate?",
+        "Bottom miner by hashrate?",
+        "Difference between them, roughly?",
+        "Show me both telemetries, start with the top."
+      ]
+    },
+    {
+      "id": "perf-19",
+      "persona": "polite analyst",
+      "turns": [
+        "Could you rank the miners by efficiency please?",
+        "Thank you — what about by hashrate?",
+        "Do the rankings agree at the top?",
+        "Please show me the details of the top efficiency unit."
+      ]
+    },
+    {
+      "id": "perf-20",
+      "persona": "operator focused on uptime stability",
+      "turns": [
+        "Which miners have the lowest uptime?",
+        "Are any of them offline?",
+        "Show the lowest one.",
+        "Has it got reboot capability?"
+      ]
+    },
+    {
+      "id": "perf-21",
+      "persona": "operator checking sensors against miners",
+      "turns": [
+        "Rank sensors by temperature.",
+        "Now rank miners by temperature.",
+        "Do the hottest miner and hottest sensor line up?"
+      ]
+    },
+    {
+      "id": "perf-22",
+      "persona": "terse ranking chain",
+      "turns": [
+        "hashrate rank",
+        "eco candidates?",
+        "bottom 3 by efficiency",
+        "set the worst to eco"
+      ]
+    },
+    {
+      "id": "perf-23",
+      "persona": "operator wanting only top 3",
+      "turns": [
+        "Give me the top 3 miners by hashrate.",
+        "Now the top 3 by power.",
+        "Any overlap?",
+        "Show me the one that's in both lists."
+      ]
+    },
+    {
+      "id": "perf-24",
+      "persona": "operator reviewing whatsminers",
+      "turns": [
+        "List the whatsminers.",
+        "Rank just those by hashrate.",
+        "Best one — telemetry.",
+        "Worst one — is it online?"
+      ]
+    },
+    {
+      "id": "perf-25",
+      "persona": "operator with efficiency target",
+      "turns": [
+        "Anything above 30 J/TH?",
+        "Rank by efficiency then, worst first.",
+        "Top of that list — show me.",
+        "Change its power mode to eco."
+      ]
+    },
+    {
+      "id": "perf-26",
+      "persona": "operator checking temperature spread",
+      "turns": [
+        "Rank miners by temperature.",
+        "Coldest first this time.",
+        "Is the coldest one actually hashing?",
+        "Show me its telemetry."
+      ]
+    },
+    {
+      "id": "perf-27",
+      "persona": "operator comparing to yesterday",
+      "turns": [
+        "Rank the miners by hashrate.",
+        "Same as yesterday's order?",
+        "Fine — just show me today's top one."
+      ]
+    },
+    {
+      "id": "perf-28",
+      "persona": "operator doing capacity math",
+      "turns": [
+        "How many miners are online?",
+        "Rank them all by hashrate.",
+        "What's the top unit doing?",
+        "And the bottom?"
+      ]
+    },
+    {
+      "id": "perf-29",
+      "persona": "operator focused on one family",
+      "turns": [
+        "Rank the antminers by power.",
+        "Which draws the most?",
+        "Its telemetry.",
+        "Set it to eco and confirm."
+      ]
+    },
+    {
+      "id": "perf-30",
+      "persona": "operator with mixed vocabulary",
+      "turns": [
+        "Rank the workers by hashrate.",
+        "Sorry, I mean the miners.",
+        "Bottom of that list?",
+        "Show me it."
+      ]
+    },
+    {
+      "id": "perf-31",
+      "persona": "operator reviewing pools",
+      "turns": [
+        "What pools are configured?",
+        "Show me the first one.",
+        "Rank the miners by hashrate.",
+        "Is the top one on the same pool?"
+      ]
+    },
+    {
+      "id": "perf-32",
+      "persona": "operator hunting inconsistency",
+      "turns": [
+        "Rank miners by hashrate descending.",
+        "Now ascending.",
+        "Are those exact mirrors of each other?",
+        "Show me the middle-ranked unit."
+      ]
+    },
+    {
+      "id": "perf-33",
+      "persona": "operator wrapping up a review",
+      "turns": [
+        "Top 5 by efficiency.",
+        "Bottom 5 by efficiency.",
+        "Anything in the bottom 5 that's offline?"
+      ]
+    },
+    {
+      "id": "maint-01",
+      "persona": "maintenance tech",
+      "turns": [
+        "Show me antminer-2.",
+        "What power modes does it support?",
+        "Put it in eco.",
+        "Confirm it took."
+      ]
+    },
+    {
+      "id": "maint-02",
+      "persona": "tech doing scheduled reboots",
+      "turns": [
+        "List the avalons.",
+        "Show me avalon-1's state.",
+        "Reboot it.",
+        "Now do avalon-2."
+      ]
+    },
+    {
+      "id": "maint-03",
+      "persona": "terse maintenance",
+      "turns": [
+        "whatsminer-0 state",
+        "caps",
+        "reboot",
+        "done?"
+      ]
+    },
+    {
+      "id": "maint-04",
+      "persona": "tech reducing load",
+      "turns": [
+        "Which miner is drawing the most power?",
+        "Show me it.",
+        "What modes has it got?",
+        "Drop it to the lowest one."
+      ]
+    },
+    {
+      "id": "maint-05",
+      "persona": "careful tech",
+      "turns": [
+        "Before I touch anything — is antminer-4 online?",
+        "What's its telemetry?",
+        "Does it support reboot?",
+        "OK, reboot it."
+      ]
+    },
+    {
+      "id": "maint-06",
+      "persona": "tech following a runbook",
+      "turns": [
+        "Show me the hottest miner.",
+        "Its power modes.",
+        "Set it to eco."
+      ]
+    },
+    {
+      "id": "maint-07",
+      "persona": "tech working through a family",
+      "turns": [
+        "List all antminers.",
+        "Show the first one's state.",
+        "Reboot it.",
+        "Move on — show me the next one."
+      ]
+    },
+    {
+      "id": "maint-08",
+      "persona": "tech doing a firmware prep",
+      "turns": [
+        "Is avalon-3 online?",
+        "Capabilities?",
+        "Set it to eco before I touch it.",
+        "Then reboot it."
+      ]
+    },
+    {
+      "id": "maint-09",
+      "persona": "tech with a work order",
+      "turns": [
+        "Work order is for whatsminer-3. Show me it.",
+        "Is it hashing?",
+        "Reboot it.",
+        "Anything else in that family I should check?"
+      ]
+    },
+    {
+      "id": "maint-10",
+      "persona": "tech, casual",
+      "turns": [
+        "what's antminer-1 up to",
+        "looks hot? show telemetry",
+        "turn it down",
+        "cheers - and its state now?"
+      ]
+    },
+    {
+      "id": "maint-11",
+      "persona": "tech acting on rank output",
+      "turns": [
+        "Rank miners by temperature.",
+        "Reboot the hottest one.",
+        "Now show me it.",
+        "Still hot? Set it to eco."
+      ]
+    },
+    {
+      "id": "maint-12",
+      "persona": "tech on the container",
+      "turns": [
+        "Show me container-1.",
+        "Is it offline?",
+        "Reboot it."
+      ]
+    },
+    {
+      "id": "maint-13",
+      "persona": "tech checking before power change",
+      "turns": [
+        "avalon-0 power modes?",
+        "What mode is it in now?",
+        "Switch it to high performance.",
+        "And its power draw after that?"
+      ]
+    },
+    {
+      "id": "maint-14",
+      "persona": "tech being asked to remember",
+      "turns": [
+        "Show me whatsminer-4.",
+        "Reboot it.",
+        "What was the device I just asked you to reboot?",
+        "Show me its state again."
+      ]
+    },
+    {
+      "id": "maint-15",
+      "persona": "tech batching eco changes",
+      "turns": [
+        "Rank miners by power, highest first.",
+        "Set the top one to eco.",
+        "Now the second one.",
+        "Re-rank by power."
+      ]
+    },
+    {
+      "id": "maint-16",
+      "persona": "tech with a typo-heavy style",
+      "turns": [
+        "antmienr-3 status",
+        "reboto it",
+        "did it work",
+        "tele plz"
+      ]
+    },
+    {
+      "id": "maint-17",
+      "persona": "tech double checking approval",
+      "turns": [
+        "I want to reboot avalon-4. Is it online?",
+        "Go ahead and reboot it.",
+        "Confirm that happened.",
+        "Anything else offline now?"
+      ]
+    },
+    {
+      "id": "maint-18",
+      "persona": "tech on lowest performer",
+      "turns": [
+        "Which miner has the worst hashrate?",
+        "Show me it.",
+        "Reboot it."
+      ]
+    },
+    {
+      "id": "maint-19",
+      "persona": "tech checking capability first",
+      "turns": [
+        "What can container-2 do?",
+        "Can I reboot it?",
+        "Do it.",
+        "And container-3 — same capabilities?"
+      ]
+    },
+    {
+      "id": "maint-20",
+      "persona": "tech reducing site power",
+      "turns": [
+        "We need to shed load. Rank miners by power.",
+        "Set the top three to eco — start with the first.",
+        "Next one.",
+        "And the third."
+      ]
+    },
+    {
+      "id": "maint-21",
+      "persona": "tech polite and verbose",
+      "turns": [
+        "Could you please show me the current state of antminer-0?",
+        "That looks fine. What power modes are available on it?",
+        "Please put it into eco mode for now.",
+        "And could you confirm what mode it is in afterwards?"
+      ]
+    },
+    {
+      "id": "maint-22",
+      "persona": "tech switching targets mid-thread",
+      "turns": [
+        "Show me avalon-2.",
+        "Actually, show me avalon-3 instead.",
+        "Reboot that one.",
+        "Now go back to the first one I asked about and show its telemetry."
+      ]
+    },
+    {
+      "id": "maint-23",
+      "persona": "tech doing post-maintenance check",
+      "turns": [
+        "I rebooted a few units. How many miners are online?",
+        "Any in error?",
+        "Rank by uptime — the lowest should be the ones I touched.",
+        "Show me the lowest."
+      ]
+    },
+    {
+      "id": "maint-24",
+      "persona": "terse power-mode chain",
+      "turns": [
+        "antminer-2 modes",
+        "eco it",
+        "state"
+      ]
+    },
+    {
+      "id": "maint-25",
+      "persona": "tech verifying before acting",
+      "turns": [
+        "Is whatsminer-1 online?",
+        "Telemetry.",
+        "Doesn't look right — reboot it.",
+        "Check it again."
+      ]
+    },
+    {
+      "id": "maint-26",
+      "persona": "tech with vocabulary mixup",
+      "turns": [
+        "Reboot the worker running antminer-0.",
+        "Ah — can you only act on devices? Then reboot antminer-0.",
+        "How many workers are there again?",
+        "And devices?"
+      ]
+    },
+    {
+      "id": "maint-27",
+      "persona": "tech handling the offline container",
+      "turns": [
+        "What's offline?",
+        "Reboot it.",
+        "Still offline?",
+        "What are its capabilities — maybe reboot isn't supported."
+      ]
+    },
+    {
+      "id": "maint-28",
+      "persona": "tech on efficiency tuning",
+      "turns": [
+        "Worst miner by efficiency?",
+        "Show me its power modes.",
+        "Set it to eco.",
+        "Now re-check its efficiency."
+      ]
+    },
+    {
+      "id": "maint-29",
+      "persona": "tech doing rolling reboots",
+      "turns": [
+        "List the miners.",
+        "Reboot antminer-0.",
+        "Reboot antminer-1.",
+        "How many are online now?"
+      ]
+    },
+    {
+      "id": "maint-30",
+      "persona": "tech unsure of the ref",
+      "turns": [
+        "Show me the miner called antminer-9.",
+        "Doesn't exist? List the miners then.",
+        "Fine, show me antminer-4."
+      ]
+    },
+    {
+      "id": "maint-31",
+      "persona": "tech checking sensors before work",
+      "turns": [
+        "Show me a sensor's telemetry.",
+        "Is it too warm in there?",
+        "Rank the miners by temperature.",
+        "Set the hottest one to eco."
+      ]
+    },
+    {
+      "id": "maint-32",
+      "persona": "tech confirming state change",
+      "turns": [
+        "avalon-1 current power mode?",
+        "Change it to eco.",
+        "Read it back to me.",
+        "Now put it back to normal."
+      ]
+    },
+    {
+      "id": "maint-33",
+      "persona": "tech closing out work",
+      "turns": [
+        "Show me container-1.",
+        "Reboot it one more time.",
+        "Site summary now.",
+        "Is the offline count any different?"
+      ]
+    },
+    {
+      "id": "inv-01",
+      "persona": "operator doing inventory",
+      "turns": [
+        "How many devices are on site?",
+        "How many of those are miners?",
+        "What are the other families?",
+        "How many containers?"
+      ]
+    },
+    {
+      "id": "inv-02",
+      "persona": "asset auditor",
+      "turns": [
+        "List every miner.",
+        "How many is that?",
+        "Any duplicates in there?",
+        "Now list the containers."
+      ]
+    },
+    {
+      "id": "inv-03",
+      "persona": "terse inventory",
+      "turns": [
+        "device count",
+        "miners?",
+        "containers?"
+      ]
+    },
+    {
+      "id": "inv-04",
+      "persona": "operator building a spreadsheet",
+      "turns": [
+        "Give me the full device count by family.",
+        "List the powermeters.",
+        "List the sensors.",
+        "And the pools."
+      ]
+    },
+    {
+      "id": "inv-05",
+      "persona": "operator checking vendor mix",
+      "turns": [
+        "How many antminers?",
+        "How many avalons?",
+        "How many whatsminers?",
+        "So that's the whole miner fleet?"
+      ]
+    },
+    {
+      "id": "inv-06",
+      "persona": "operator new to the site",
+      "turns": [
+        "What kinds of devices exist here?",
+        "How many of each?",
+        "Which family is biggest?",
+        "List that one."
+      ]
+    },
+    {
+      "id": "inv-07",
+      "persona": "operator with capacity question",
+      "turns": [
+        "How many miners could be online at once?",
+        "How many are online right now?",
+        "So none are down?",
+        "And the total device count?"
+      ]
+    },
+    {
+      "id": "inv-08",
+      "persona": "operator confusing counts",
+      "turns": [
+        "We have 12 miners right?",
+        "How many workers then?",
+        "And devices?",
+        "So which number was 12?"
+      ]
+    },
+    {
+      "id": "inv-09",
+      "persona": "procurement-minded operator",
+      "turns": [
+        "How many powermeters do we have?",
+        "Is three enough for the container count?",
+        "How many containers?"
+      ]
+    },
+    {
+      "id": "inv-10",
+      "persona": "operator listing everything",
+      "turns": [
+        "List all devices.",
+        "That's a lot — just the miners.",
+        "Just the online ones.",
+        "And the offline ones across all families?"
+      ]
+    },
+    {
+      "id": "inv-11",
+      "persona": "operator, sloppy",
+      "turns": [
+        "how mny devices",
+        "miner cout",
+        "list em",
+        "which fam has fewest"
+      ]
+    },
+    {
+      "id": "inv-12",
+      "persona": "operator checking worker distribution",
+      "turns": [
+        "How many workers do we have?",
+        "How many are ready?",
+        "And how many devices sit across them?",
+        "So roughly two devices per worker?"
+      ]
+    },
+    {
+      "id": "inv-13",
+      "persona": "operator verifying a claim",
+      "turns": [
+        "Someone said we have 30 devices. Right?",
+        "What's the actual count?",
+        "How many miners of that?",
+        "And the rest?"
+      ]
+    },
+    {
+      "id": "inv-14",
+      "persona": "operator building a naming map",
+      "turns": [
+        "List the miners.",
+        "Are they all named by vendor?",
+        "List the containers — same convention?",
+        "And the sensors?"
+      ]
+    },
+    {
+      "id": "inv-15",
+      "persona": "operator checking pools inventory",
+      "turns": [
+        "How many pools?",
+        "Name them.",
+        "Are both online?"
+      ]
+    },
+    {
+      "id": "inv-16",
+      "persona": "operator counting by state",
+      "turns": [
+        "Count all online devices.",
+        "Count offline.",
+        "Count error.",
+        "Do those add up to the total?"
+      ]
+    },
+    {
+      "id": "inv-17",
+      "persona": "operator with a growth question",
+      "turns": [
+        "Current device count?",
+        "Miner share of that?",
+        "If we added five miners, what's the miner count?",
+        "How many are online today?"
+      ]
+    },
+    {
+      "id": "inv-18",
+      "persona": "operator checking sensor coverage",
+      "turns": [
+        "How many sensors?",
+        "List them.",
+        "One per container?",
+        "How many containers again?"
+      ]
+    },
+    {
+      "id": "inv-19",
+      "persona": "polite inventory",
+      "turns": [
+        "Could you tell me how many devices are on site?",
+        "And how many are miners, please?",
+        "Would you list those miners?",
+        "Thank you — how many containers do we run?"
+      ]
+    },
+    {
+      "id": "inv-20",
+      "persona": "operator with mixed families",
+      "turns": [
+        "Count miners and containers.",
+        "Sorry — miners first.",
+        "Now containers.",
+        "Add those two together for me."
+      ]
+    },
+    {
+      "id": "inv-21",
+      "persona": "operator scoping a rollout",
+      "turns": [
+        "How many miners are online?",
+        "List them.",
+        "Any offline miners to exclude?"
+      ]
+    },
+    {
+      "id": "inv-22",
+      "persona": "terse family sweep",
+      "turns": [
+        "all families?",
+        "counts",
+        "biggest",
+        "list it"
+      ]
+    },
+    {
+      "id": "inv-23",
+      "persona": "operator on infra inventory",
+      "turns": [
+        "What non-miner devices do we have?",
+        "Count each.",
+        "Which of those is offline?",
+        "Show it."
+      ]
+    },
+    {
+      "id": "inv-24",
+      "persona": "operator checking readiness ratio",
+      "turns": [
+        "Workers total?",
+        "Ready workers?",
+        "Devices total?",
+        "Online devices?"
+      ]
+    },
+    {
+      "id": "inv-25",
+      "persona": "operator asking for recall",
+      "turns": [
+        "How many miners do we have?",
+        "And containers?",
+        "What was the miner number again?",
+        "Now the total device count."
+      ]
+    },
+    {
+      "id": "inv-26",
+      "persona": "operator scoping spares",
+      "turns": [
+        "List the avalons.",
+        "How many of those are online?",
+        "Any offline?",
+        "And how many miners total across all vendors?"
+      ]
+    },
+    {
+      "id": "inv-27",
+      "persona": "operator with a false premise",
+      "turns": [
+        "Why do we only have one container?",
+        "How many containers are there?",
+        "Are they all online?"
+      ]
+    },
+    {
+      "id": "inv-28",
+      "persona": "operator doing a family-by-family list",
+      "turns": [
+        "List miners.",
+        "List containers.",
+        "List powermeters.",
+        "List sensors."
+      ]
+    },
+    {
+      "id": "inv-29",
+      "persona": "operator checking online ratio",
+      "turns": [
+        "What fraction of devices are online?",
+        "Give me the raw counts.",
+        "How many miners of the online set?",
+        "And offline?"
+      ]
+    },
+    {
+      "id": "inv-30",
+      "persona": "operator planning cabling",
+      "turns": [
+        "How many powermeters?",
+        "And containers?",
+        "Do the numbers match?",
+        "List the powermeters."
+      ]
+    },
+    {
+      "id": "inv-31",
+      "persona": "operator scoping monitoring",
+      "turns": [
+        "How many devices report telemetry — well, how many devices are there?",
+        "How many are online?",
+        "Show me one sensor's telemetry.",
+        "And one powermeter's."
+      ]
+    },
+    {
+      "id": "inv-32",
+      "persona": "operator, one word at a time",
+      "turns": [
+        "devices",
+        "miners",
+        "online",
+        "offline"
+      ]
+    },
+    {
+      "id": "inv-33",
+      "persona": "operator finishing an audit",
+      "turns": [
+        "Full site summary.",
+        "Miner count.",
+        "Container count."
+      ]
+    },
+    {
+      "id": "lazy-01",
+      "persona": "terse operator",
+      "turns": [
+        "miners?",
+        "online",
+        "that one",
+        "reboot"
+      ]
+    },
+    {
+      "id": "lazy-02",
+      "persona": "half-asleep operator",
+      "turns": [
+        "status",
+        "hm",
+        "offline ones",
+        "ok"
+      ]
+    },
+    {
+      "id": "lazy-03",
+      "persona": "operator typing badly",
+      "turns": [
+        "hw many mienrs",
+        "onlnie?",
+        "lst them",
+        "hotest one"
+      ]
+    },
+    {
+      "id": "lazy-04",
+      "persona": "operator with fragments",
+      "turns": [
+        "site",
+        "containers",
+        "the offline one",
+        "telemetry"
+      ]
+    },
+    {
+      "id": "lazy-05",
+      "persona": "operator using pronouns only",
+      "turns": [
+        "What's the hottest miner?",
+        "that one",
+        "its power modes",
+        "set it lower"
+      ]
+    },
+    {
+      "id": "lazy-06",
+      "persona": "one-word operator",
+      "turns": [
+        "summary",
+        "errors",
+        "offline"
+      ]
+    },
+    {
+      "id": "lazy-07",
+      "persona": "operator not finishing sentences",
+      "turns": [
+        "how many of the",
+        "miners I mean",
+        "and how many are",
+        "offline"
+      ]
+    },
+    {
+      "id": "lazy-08",
+      "persona": "operator with shorthand refs",
+      "turns": [
+        "am-0 state",
+        "av-0 too",
+        "which is hotter",
+        "reboot that"
+      ]
+    },
+    {
+      "id": "lazy-09",
+      "persona": "operator mumbling",
+      "turns": [
+        "anything wrong",
+        "no? check offline",
+        "fine show it",
+        "and the others?"
+      ]
+    },
+    {
+      "id": "lazy-10",
+      "persona": "terse ranker",
+      "turns": [
+        "rank hashrate",
+        "bottom",
+        "state",
+        "reboot"
+      ]
+    },
+    {
+      "id": "lazy-11",
+      "persona": "operator using slang",
+      "turns": [
+        "rigs up?",
+        "how many boxes hashing",
+        "any dead",
+        "which"
+      ]
+    },
+    {
+      "id": "lazy-12",
+      "persona": "operator with mixed caps and typos",
+      "turns": [
+        "SITE STATUS",
+        "how many DEVICES",
+        "miners onlyy"
+      ]
+    },
+    {
+      "id": "lazy-13",
+      "persona": "operator asking follow-ups only",
+      "turns": [
+        "What's offline?",
+        "and?",
+        "anything else?",
+        "details on it"
+      ]
+    },
+    {
+      "id": "lazy-14",
+      "persona": "operator with vague deixis",
+      "turns": [
+        "Rank the miners by power.",
+        "the big one",
+        "what's it doing",
+        "turn it down"
+      ]
+    },
+    {
+      "id": "lazy-15",
+      "persona": "operator abbreviating",
+      "turns": [
+        "dev count",
+        "mnr count",
+        "cont count",
+        "offline cnt"
+      ]
+    },
+    {
+      "id": "lazy-16",
+      "persona": "operator with a trailing question",
+      "turns": [
+        "everything up?",
+        "containers too?",
+        "really",
+        "show me"
+      ]
+    },
+    {
+      "id": "lazy-17",
+      "persona": "operator half-specifying",
+      "turns": [
+        "show me a miner",
+        "any of them",
+        "its telemetry",
+        "another one"
+      ]
+    },
+    {
+      "id": "lazy-18",
+      "persona": "operator with autocorrect damage",
+      "turns": [
+        "how many miners are on lien",
+        "sorry online",
+        "list thsoe"
+      ]
+    },
+    {
+      "id": "lazy-19",
+      "persona": "operator, telegraphic",
+      "turns": [
+        "miners 15?",
+        "online how many",
+        "offline",
+        "ok containers"
+      ]
+    },
+    {
+      "id": "lazy-20",
+      "persona": "operator repeating themselves",
+      "turns": [
+        "status?",
+        "status of what — the site",
+        "yes the site",
+        "now the miners"
+      ]
+    },
+    {
+      "id": "lazy-21",
+      "persona": "operator with bare nouns",
+      "turns": [
+        "pools",
+        "sensors",
+        "powermeters",
+        "offline"
+      ]
+    },
+    {
+      "id": "lazy-22",
+      "persona": "operator using it constantly",
+      "turns": [
+        "Which container is down?",
+        "what's it saying",
+        "can I reboot it",
+        "do it"
+      ]
+    },
+    {
+      "id": "lazy-23",
+      "persona": "operator lazy about family names",
+      "turns": [
+        "how many boxes total",
+        "the mining ones",
+        "the cooling ones",
+        "the meters"
+      ]
+    },
+    {
+      "id": "lazy-24",
+      "persona": "operator dropping verbs",
+      "turns": [
+        "site summary",
+        "miner count online",
+        "hottest miner"
+      ]
+    },
+    {
+      "id": "lazy-25",
+      "persona": "operator with two-word turns",
+      "turns": [
+        "anything down",
+        "which one",
+        "show it",
+        "reboot it"
+      ]
+    },
+    {
+      "id": "lazy-26",
+      "persona": "operator with question marks only",
+      "turns": [
+        "miners?",
+        "offline?",
+        "that one?",
+        "reboot?"
+      ]
+    },
+    {
+      "id": "lazy-27",
+      "persona": "operator garbling device names",
+      "turns": [
+        "show antminr 2",
+        "yeah that",
+        "tele",
+        "power modes"
+      ]
+    },
+    {
+      "id": "lazy-28",
+      "persona": "operator jumping around",
+      "turns": [
+        "containers",
+        "no wait, miners",
+        "how many online",
+        "fine, containers again"
+      ]
+    },
+    {
+      "id": "lazy-29",
+      "persona": "operator with implied subject",
+      "turns": [
+        "how many ready",
+        "of the workers yes",
+        "and devices",
+        "online?"
+      ]
+    },
+    {
+      "id": "lazy-30",
+      "persona": "operator terse about ranking",
+      "turns": [
+        "temps",
+        "hottest",
+        "show"
+      ]
+    },
+    {
+      "id": "lazy-31",
+      "persona": "operator using we",
+      "turns": [
+        "we good?",
+        "we got anything offline?",
+        "which",
+        "reboot it then"
+      ]
+    },
+    {
+      "id": "lazy-32",
+      "persona": "operator with numeric shorthand",
+      "turns": [
+        "12 workers?",
+        "26 devices?",
+        "15 miners?",
+        "how many offline"
+      ]
+    },
+    {
+      "id": "lazy-33",
+      "persona": "operator trailing off",
+      "turns": [
+        "so the site is...",
+        "and the miners...",
+        "offline ones...",
+        "that one, details"
+      ]
+    },
+    {
+      "id": "drift-01",
+      "persona": "operator drifting to cost",
+      "turns": [
+        "How is the site doing?",
+        "How many miners are online?",
+        "What did that cost us in power last night?",
+        "Fine — what's our current power draw ranking then?"
+      ]
+    },
+    {
+      "id": "drift-02",
+      "persona": "operator asking about history",
+      "turns": [
+        "What's offline right now?",
+        "How long has it been down?",
+        "When did it go offline?",
+        "OK, just show me its current state."
+      ]
+    },
+    {
+      "id": "drift-03",
+      "persona": "operator asking about on-call",
+      "turns": [
+        "Site summary please.",
+        "Anything down?",
+        "Who's on call tonight?",
+        "Can you at least tell me its capabilities?"
+      ]
+    },
+    {
+      "id": "drift-04",
+      "persona": "operator asking for predictions",
+      "turns": [
+        "Rank the miners by temperature.",
+        "Is the hottest one going to fail?",
+        "What's the chance it trips in the next hour?",
+        "Just show me its telemetry."
+      ]
+    },
+    {
+      "id": "drift-05",
+      "persona": "operator drifting to weather",
+      "turns": [
+        "How many sensors do we have?",
+        "What's the ambient reading?",
+        "Is it going to be hot tomorrow outside?",
+        "Never mind — rank the sensors by temperature."
+      ]
+    },
+    {
+      "id": "drift-06",
+      "persona": "operator asking about scheduling",
+      "turns": [
+        "List the miners.",
+        "Can you schedule a reboot of antminer-0 for 2am?",
+        "What about a recurring nightly reboot?",
+        "OK, just reboot it now instead."
+      ]
+    },
+    {
+      "id": "drift-07",
+      "persona": "operator asking about revenue",
+      "turns": [
+        "What's our total hashrate — rank the miners.",
+        "How much BTC is that earning?",
+        "What's the price of BTC right now?",
+        "Forget it. Which miner is top of that ranking?"
+      ]
+    },
+    {
+      "id": "drift-08",
+      "persona": "operator asking about trends",
+      "turns": [
+        "Show me container-1.",
+        "Has its temperature been trending up this week?",
+        "Give me the last 24 hours of data.",
+        "Fine, what's it reporting right now?"
+      ]
+    },
+    {
+      "id": "drift-09",
+      "persona": "operator asking about staffing",
+      "turns": [
+        "How many workers do we have?",
+        "How many people are on shift?",
+        "Who fixed this last time?",
+        "OK, how many workers are ready?"
+      ]
+    },
+    {
+      "id": "drift-10",
+      "persona": "operator asking for a ticket",
+      "turns": [
+        "What's offline?",
+        "Can you open a ticket for that?",
+        "Email the vendor about it?",
+        "Then just show me its state so I can file it myself."
+      ]
+    },
+    {
+      "id": "drift-11",
+      "persona": "operator asking about firmware",
+      "turns": [
+        "Show me avalon-2.",
+        "What firmware version is it on?",
+        "Can you update it?",
+        "OK, what are its capabilities then?"
+      ]
+    },
+    {
+      "id": "drift-12",
+      "persona": "operator asking about warranty",
+      "turns": [
+        "Which miner has the worst efficiency?",
+        "Is that one still in warranty?",
+        "When did we buy it?",
+        "Just show me its telemetry."
+      ]
+    },
+    {
+      "id": "drift-13",
+      "persona": "operator drifting to network",
+      "turns": [
+        "Is anything offline?",
+        "What's its IP address?",
+        "Can you ping it?",
+        "Alright, what state does it report?"
+      ]
+    },
+    {
+      "id": "drift-14",
+      "persona": "operator asking about the grid",
+      "turns": [
+        "Rank the powermeters by power.",
+        "What's our utility rate right now?",
+        "Are we in a curtailment window?",
+        "Just give me the top meter's telemetry."
+      ]
+    },
+    {
+      "id": "drift-15",
+      "persona": "operator asking for a report",
+      "turns": [
+        "Give me the site summary.",
+        "Can you export that to CSV?",
+        "Email it to my manager?",
+        "Fine — repeat the offline count for me."
+      ]
+    },
+    {
+      "id": "drift-16",
+      "persona": "operator asking about causes",
+      "turns": [
+        "What's offline?",
+        "Why did it go offline?",
+        "What was the root cause?",
+        "OK, can you reboot it?"
+      ]
+    },
+    {
+      "id": "drift-17",
+      "persona": "operator asking about other sites",
+      "turns": [
+        "How many miners here?",
+        "How does that compare to our other site?",
+        "What's the fleet total across all sites?",
+        "Fine, how many are online here?"
+      ]
+    },
+    {
+      "id": "drift-18",
+      "persona": "operator asking for advice on purchases",
+      "turns": [
+        "Rank miners by efficiency.",
+        "Should we replace the bottom ones?",
+        "What model would you buy instead?",
+        "Just show me the bottom one's details."
+      ]
+    },
+    {
+      "id": "drift-19",
+      "persona": "operator drifting to safety procedure",
+      "turns": [
+        "Show me container-1.",
+        "What's the lockout-tagout procedure for it?",
+        "Where's the manual?",
+        "OK, what are its capabilities?"
+      ]
+    },
+    {
+      "id": "drift-20",
+      "persona": "operator asking about alerts config",
+      "turns": [
+        "Anything in error state?",
+        "Can you set an alert threshold at 80 degrees?",
+        "Who gets notified?",
+        "Fine — rank the miners by temperature."
+      ]
+    },
+    {
+      "id": "drift-21",
+      "persona": "operator asking about uptime SLA",
+      "turns": [
+        "Rank miners by uptime.",
+        "Are we meeting our 99% SLA?",
+        "What was last month's uptime?",
+        "Just tell me the lowest uptime unit."
+      ]
+    },
+    {
+      "id": "drift-22",
+      "persona": "operator asking about physical location",
+      "turns": [
+        "What's offline?",
+        "Which rack is it in?",
+        "Is it near the door?",
+        "OK, just give me its state."
+      ]
+    },
+    {
+      "id": "drift-23",
+      "persona": "operator asking to change config",
+      "turns": [
+        "List the pools.",
+        "Can you switch the miners to the backup pool?",
+        "Change the pool URL?",
+        "Alright, are both pools online?"
+      ]
+    },
+    {
+      "id": "drift-24",
+      "persona": "operator asking about people again",
+      "turns": [
+        "Site status.",
+        "Did the previous shift log anything?",
+        "Can you read me their notes?",
+        "Fine — what's offline right now?"
+      ]
+    },
+    {
+      "id": "drift-25",
+      "persona": "operator asking for forecasting",
+      "turns": [
+        "How many miners are online?",
+        "How many will be online tomorrow?",
+        "Predict this week's downtime.",
+        "Never mind, list the online ones."
+      ]
+    },
+    {
+      "id": "drift-26",
+      "persona": "operator asking about billing",
+      "turns": [
+        "Rank powermeters by power.",
+        "What's the monthly bill going to be?",
+        "What's our demand charge?",
+        "OK — is any powermeter offline?"
+      ]
+    },
+    {
+      "id": "drift-27",
+      "persona": "operator drifting to HR",
+      "turns": [
+        "Anything offline?",
+        "Am I getting overtime for this?",
+        "Who approves that?",
+        "Whatever. Reboot the offline one."
+      ]
+    },
+    {
+      "id": "drift-28",
+      "persona": "operator asking about logs",
+      "turns": [
+        "Show me whatsminer-2.",
+        "Pull its error logs.",
+        "Show me the last crash dump.",
+        "Fine, just its current state."
+      ]
+    },
+    {
+      "id": "drift-29",
+      "persona": "operator asking about the agent",
+      "turns": [
+        "What's the site summary?",
+        "How often does your data refresh?",
+        "Where does the data come from?",
+        "OK — how many devices are offline?"
+      ]
+    },
+    {
+      "id": "drift-30",
+      "persona": "operator asking about contracts",
+      "turns": [
+        "How many containers do we have?",
+        "Who's the hosting provider?",
+        "When does the contract renew?",
+        "Just tell me which container is offline."
+      ]
+    },
+    {
+      "id": "drift-31",
+      "persona": "operator asking for a comparison over time",
+      "turns": [
+        "Rank miners by hashrate.",
+        "Is that better or worse than last week?",
+        "Chart it for me.",
+        "Fine — top three by hashrate."
+      ]
+    },
+    {
+      "id": "drift-32",
+      "persona": "operator asking for maintenance planning",
+      "turns": [
+        "Which miners have the lowest uptime?",
+        "When should I schedule maintenance on them?",
+        "Book it for Friday.",
+        "Just show me the lowest one instead."
+      ]
+    },
+    {
+      "id": "drift-33",
+      "persona": "operator drifting completely",
+      "turns": [
+        "How's the site?",
+        "Any offline devices?",
+        "What's the weather like at the site and will it affect cooling?",
+        "OK forget that — what's the offline device's telemetry?"
+      ]
+    },
+    {
+      "id": "vocab-01",
+      "persona": "operator mixing worker and device",
+      "turns": [
+        "How many workers do we have?",
+        "And how many devices?",
+        "So which of those numbers is the miners?",
+        "How many miners then?"
+      ]
+    },
+    {
+      "id": "vocab-02",
+      "persona": "operator assuming worker equals miner",
+      "turns": [
+        "We have 12 miners, one per worker, right?",
+        "How many miners are there actually?",
+        "And workers?",
+        "So they aren't the same. How many devices total?"
+      ]
+    },
+    {
+      "id": "vocab-03",
+      "persona": "operator using rigs for workers",
+      "turns": [
+        "How many rigs are ready?",
+        "I mean workers — how many are ready?",
+        "And how many rigs, meaning miners?",
+        "Are all the miners online?"
+      ]
+    },
+    {
+      "id": "vocab-04",
+      "persona": "operator asking about not-ready worker",
+      "turns": [
+        "Are all workers ready?",
+        "Which one isn't?",
+        "Is that the same as the offline device?",
+        "How many devices are offline?"
+      ]
+    },
+    {
+      "id": "vocab-05",
+      "persona": "operator conflating device and miner",
+      "turns": [
+        "How many devices are online?",
+        "Of those, how many are miners?",
+        "So the difference is what?",
+        "Count the containers, meters, sensors and pools for me."
+      ]
+    },
+    {
+      "id": "vocab-06",
+      "persona": "terse vocabulary trap",
+      "turns": [
+        "workers",
+        "devices",
+        "miners"
+      ]
+    },
+    {
+      "id": "vocab-07",
+      "persona": "operator asking to recall the three numbers",
+      "turns": [
+        "Give me worker count, device count and miner count.",
+        "Which was which again?",
+        "How many workers are ready?",
+        "And how many devices are online?"
+      ]
+    },
+    {
+      "id": "vocab-08",
+      "persona": "operator using node for worker",
+      "turns": [
+        "How many nodes do we have?",
+        "By nodes I mean workers.",
+        "And devices attached across them?",
+        "How many of those are ASICs?"
+      ]
+    },
+    {
+      "id": "vocab-09",
+      "persona": "operator conflating offline and not-ready",
+      "turns": [
+        "One worker isn't ready — is that device offline?",
+        "How many devices are offline?",
+        "And which one?",
+        "Is that on the not-ready worker?"
+      ]
+    },
+    {
+      "id": "vocab-10",
+      "persona": "operator using machine loosely",
+      "turns": [
+        "How many machines on site?",
+        "Machines meaning devices.",
+        "Now machines meaning miners.",
+        "And machines meaning workers."
+      ]
+    },
+    {
+      "id": "vocab-11",
+      "persona": "operator with unit confusion",
+      "turns": [
+        "How many boxes are hashing?",
+        "Miners, yes. How many online?",
+        "And how many workers back those?",
+        "Is every worker ready?"
+      ]
+    },
+    {
+      "id": "vocab-12",
+      "persona": "operator with vocab drift into container",
+      "turns": [
+        "How many workers?",
+        "How many containers?",
+        "Those aren't the same thing, right?"
+      ]
+    },
+    {
+      "id": "vocab-13",
+      "persona": "operator asking for reconciliation",
+      "turns": [
+        "Device count please.",
+        "Miner count.",
+        "Container plus powermeter plus sensor plus pool count.",
+        "Do those add to the device count?"
+      ]
+    },
+    {
+      "id": "vocab-14",
+      "persona": "operator sloppy with all three",
+      "turns": [
+        "how many worker devices",
+        "ugh - workers first",
+        "now devices",
+        "now miners"
+      ]
+    },
+    {
+      "id": "vocab-15",
+      "persona": "operator using host for worker",
+      "turns": [
+        "How many hosts?",
+        "Are they all ready?",
+        "How many devices do they carry?",
+        "And miners specifically?"
+      ]
+    },
+    {
+      "id": "vocab-16",
+      "persona": "operator asking which family a worker is",
+      "turns": [
+        "Is worker a device family?",
+        "What families are there?",
+        "How many workers then?",
+        "And how many devices?"
+      ]
+    },
+    {
+      "id": "vocab-17",
+      "persona": "operator with pool confusion",
+      "turns": [
+        "Are pools devices?",
+        "How many pools?",
+        "Do they count in the device total?",
+        "What's the device total?"
+      ]
+    },
+    {
+      "id": "vocab-18",
+      "persona": "operator with sensor confusion",
+      "turns": [
+        "Are the sensors part of the miner count?",
+        "How many miners?",
+        "How many sensors?"
+      ]
+    },
+    {
+      "id": "vocab-19",
+      "persona": "operator making a false equivalence",
+      "turns": [
+        "11 online devices, right? Since 11 workers are ready.",
+        "How many devices are online?",
+        "And how many workers are ready?",
+        "So they're different numbers. Explain the device one."
+      ]
+    },
+    {
+      "id": "vocab-20",
+      "persona": "operator with jargon soup",
+      "turns": [
+        "How many ASICs, hosts and boxes have we got?",
+        "Start with ASICs.",
+        "Now hosts, meaning workers.",
+        "Now everything, meaning devices."
+      ]
+    },
+    {
+      "id": "vocab-21",
+      "persona": "operator checking not-ready impact",
+      "turns": [
+        "Which worker isn't ready?",
+        "How many devices are offline?",
+        "Is the offline device a miner?",
+        "What is it then?"
+      ]
+    },
+    {
+      "id": "vocab-22",
+      "persona": "operator with terse trap",
+      "turns": [
+        "12?",
+        "that's workers - devices?",
+        "miners?",
+        "offline?"
+      ]
+    },
+    {
+      "id": "vocab-23",
+      "persona": "operator asking about per-worker devices",
+      "turns": [
+        "How many devices per worker on average?",
+        "What's the device count?",
+        "And the worker count?",
+        "Are all workers ready?"
+      ]
+    },
+    {
+      "id": "vocab-24",
+      "persona": "operator using fleet ambiguously",
+      "turns": [
+        "How big is the fleet?",
+        "Fleet meaning miners.",
+        "Now fleet meaning all devices."
+      ]
+    },
+    {
+      "id": "vocab-25",
+      "persona": "operator conflating error and not-ready",
+      "turns": [
+        "Are any devices in error?",
+        "But one worker isn't ready — isn't that an error?",
+        "How many devices are offline?",
+        "Which one?"
+      ]
+    },
+    {
+      "id": "vocab-26",
+      "persona": "operator with vendor-vs-family mixup",
+      "turns": [
+        "How many antminer families do we have?",
+        "I mean how many antminers.",
+        "Is antminer a family or a vendor?",
+        "What are the actual families?"
+      ]
+    },
+    {
+      "id": "vocab-27",
+      "persona": "operator recapping numbers",
+      "turns": [
+        "Site summary.",
+        "Repeat just the worker numbers.",
+        "Now just the device numbers.",
+        "How many of the devices are miners?"
+      ]
+    },
+    {
+      "id": "vocab-28",
+      "persona": "operator using unit",
+      "turns": [
+        "How many units on site?",
+        "Units meaning devices?",
+        "Then how many miner units?",
+        "And how many worker units?"
+      ]
+    },
+    {
+      "id": "vocab-29",
+      "persona": "operator checking whether containers are workers",
+      "turns": [
+        "Are containers workers?",
+        "How many containers?",
+        "How many workers?",
+        "And devices?"
+      ]
+    },
+    {
+      "id": "vocab-30",
+      "persona": "operator with lazy trap",
+      "turns": [
+        "worker count",
+        "device count",
+        "miner count"
+      ]
+    },
+    {
+      "id": "vocab-31",
+      "persona": "operator building a mental model",
+      "turns": [
+        "Explain what a worker is versus a device.",
+        "How many of each do we have?",
+        "Which miners are online?",
+        "And how many workers are ready?"
+      ]
+    },
+    {
+      "id": "vocab-32",
+      "persona": "operator with a false premise on workers",
+      "turns": [
+        "All 26 workers are ready, right?",
+        "How many workers are there?",
+        "What's 26 then?",
+        "And how many of those 26 are miners?"
+      ]
+    },
+    {
+      "id": "vocab-33",
+      "persona": "operator closing the loop",
+      "turns": [
+        "Give me all three counts: workers, devices, miners.",
+        "Which is offline-capable?",
+        "How many devices are offline?",
+        "And how many workers are not ready?"
+      ]
+    }
+  ]
+}

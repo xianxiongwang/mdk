@@ -27,9 +27,9 @@ npm run dev        # watch everything and start the catalog app
   - Vite for SCSS compilation in `@tetherto/mdk-react-devkit` and
     `@tetherto/mdk-fonts`
   - A small custom PostCSS plugin
-    (`packages/react-devkit/postcss-mdk-layer.mjs`) that wraps top-level
+    ([`packages/react-devkit/postcss-mdk-layer.mjs`](../packages/react-devkit/postcss-mdk-layer.mjs)) that wraps top-level
     rules in `@layer mdk` and prepends `@layer base, mdk, app;`
-  - `packages/react-devkit/scripts/strip-style-imports.mjs` — a small
+  - [`packages/react-devkit/scripts/strip-style-imports.mjs`](../packages/react-devkit/scripts/strip-style-imports.mjs) — a small
     post-`tsc` step that removes side-effect `.scss` / `.css` imports
     from the emitted JS (styles are in the Vite-built `dist/styles.css` and
     `dist/styles-domain.css`, not in the TS output)
@@ -40,7 +40,7 @@ npm run dev        # watch everything and start the catalog app
 - Intelligent caching — builds are reused across runs
 - Parallel execution of independent tasks
 - Automatic dependency-graph ordering
-- Simple configuration in a single `turbo.json`
+- Simple configuration in a single [`turbo.json`](../turbo.json)
 
 ## Build pipeline
 
@@ -62,11 +62,11 @@ When you run a full build, Turborepo will:
 2. Build `@tetherto/mdk-react-adapter` after the core (depends on it).
 3. Build `@tetherto/mdk-fonts` in parallel (no workspace deps).
 4. Build `@tetherto/mdk-react-devkit` after its workspace deps complete.
-5. Build `apps/catalog` last.
+5. Build [`apps/catalog`](../apps/catalog/README.md) last.
 
 Every TypeScript package ships a pre-built `dist/`. The devkit's SCSS is compiled into two layer-wrapped stylesheets: 
 `dist/styles.css` (design tokens + core primitives) and `dist/styles-domain.css` (mining-domain components). 
-The SCSS source files (`_mixins.scss`, `_colors.scss`) are also exposed as subpath exports for consumers authoring their own SCSS. 
+The SCSS source files ([`_mixins.scss`](../packages/react-devkit/src/primitives/styles/_mixins.scss), [`_colors.scss`](../packages/react-devkit/src/primitives/styles/_colors.scss)) are also exposed as subpath exports for consumers authoring their own SCSS. 
 
 > [!TIP]
 > See [`ARCHITECTURE.md`](ARCHITECTURE.md) for the package layering and [`STYLING.md`](STYLING.md) for 
@@ -74,25 +74,31 @@ The SCSS source files (`_mixins.scss`, `_colors.scss`) are also exposed as subpa
 
 ## Configuration files
 
-### Root: `turbo.json`
+### Root: [`turbo.json`](../turbo.json)
 
 Defines the task graph used by every workspace:
 
 ```json
 {
   "tasks": {
-    "build":         { "dependsOn": ["^build"],      "outputs": ["dist/**", ".next/**"] },
-    "build:ts":      { "dependsOn": ["^build:ts"],   "outputs": ["dist/**"] },
-    "build:scss":    { "dependsOn": ["^build:scss"], "outputs": ["dist/**"] },
-    "dev":           { "cache": false, "persistent": true },
-    "lint":          { "dependsOn": ["^build"] },
-    "typecheck":     { "dependsOn": ["^build"] },
-    "test":          { "dependsOn": ["^test"] },
-    "test:coverage": { "outputs": ["coverage/**"] },
-    "clean":         { "cache": false }
+    "build":                       { "dependsOn": ["^build"],      "outputs": ["dist/**", ".next/**"] },
+    "@tetherto/mdk-ui-cli#build":  { "dependsOn": ["^build"],      "outputs": ["dist/**"], "cache": false },
+    "build:ts":                    { "dependsOn": ["^build:ts"],   "outputs": ["dist/**"] },
+    "build:scss":                  { "dependsOn": ["^build:scss"], "outputs": ["dist/**"] },
+    "dev":                         { "cache": false, "persistent": true },
+    "lint":                        { "dependsOn": ["^build"] },
+    "typecheck":                   { "dependsOn": ["^build"] },
+    "test":                        { "dependsOn": ["^test"] },
+    "test:coverage":               { "outputs": ["coverage/**"] },
+    "clean":                       { "cache": false }
   }
 }
 ```
+
+`@tetherto/mdk-ui-cli#build` opts out of caching entirely: its [`copy-templates.mjs`](../packages/cli/scripts/copy-templates.mjs) step bundles
+`examples/mdk-ui-shell-template`, a sibling of the turbo root that no `inputs` glob in this file can reach, so
+turbo cannot tell when the bundled copy has gone stale. See the comment at the top of
+[`copy-templates.mjs`](../packages/cli/scripts/copy-templates.mjs) for the full reasoning.
 
 ### Per-package: `package.json` scripts
 
@@ -177,9 +183,9 @@ All root scripts proxy to Turborepo, which fans out across workspaces.
 | `npm run build`        | Build every workspace (`turbo build`)                   |
 | `npm run build:ts`     | TypeScript-only build (`turbo build:ts`)                |
 | `npm run build:scss`   | SCSS-only build (`turbo build:scss`)                    |
-| `npm run build:catalog`| Production build of `apps/catalog` with `/mdk` base path |
+| `npm run build:catalog`| Production build of [`apps/catalog`](../apps/catalog/README.md) with `/mdk` base path |
 | `npm run dev`          | Watch every workspace + start the catalog app           |
-| `npm run dev:catalog`  | Start `apps/catalog` only (HMR)                         |
+| `npm run dev:catalog`  | Start [`apps/catalog`](../apps/catalog/README.md) only (HMR)                         |
 | `npm run dev:packages` | Watch every workspace except the catalog app            |
 | `npm run watch`        | Alias for `dev`                                         |
 | `npm run watch:ts`     | Watch only TypeScript across workspaces                 |
@@ -194,13 +200,13 @@ All root scripts proxy to Turborepo, which fans out across workspaces.
 | `npm run test:coverage`| Vitest with coverage (writes to `coverage/`)            |
 | `npm run check`        | `turbo check` (lint + format + typecheck)               |
 | `npm run fullcheck`    | `build` + `lint` + `typecheck` + `format` + `check:agent-ready` + coverage (see [`AGENT_FIRST.md`](./AGENT_FIRST.md#gate-1-checkagent-ready)) |
-| `npm run size`         | Bundle-size report via `scripts/bundle-size.mjs`        |
-| `npm run size:consumer`| Tree-shake check — simulates a consumer bundle to catch accidental side-effect imports (`scripts/treeshake-check.mjs`) |
+| `npm run size`         | Bundle-size report via [`scripts/bundle-size.mjs`](../scripts/bundle-size.mjs)        |
+| `npm run size:consumer`| Tree-shake check — simulates a consumer bundle to catch accidental side-effect imports ([`scripts/treeshake-check.mjs`](../scripts/treeshake-check.mjs)) |
 | `npm run size:check`   | Full size audit: `build` + `size` + `size:consumer`     |
 | `npm run clean`        | Remove `dist/` and `node_modules/` across workspaces    |
 
 > **The `mdk-ui-shell` template is a runnable app.** It lives at
-> `examples/mdk-ui-shell-template/` and is both the CLI's scaffolding source and a real
+> [`examples/mdk-ui-shell-template/`](../../examples/mdk-ui-shell-template/README.md) and is both the CLI's scaffolding source and a real
 > Vite app you can run in place — no regeneration step:
 >
 > ```bash
@@ -210,7 +216,7 @@ All root scripts proxy to Turborepo, which fans out across workspaces.
 >
 > `mdk-ui create` reads that same directory and fills in the app-specific gaps
 > (package name, dependency protocol, `.gitignore`), so editing the example is
-> editing the template. The build step (`copy-templates.mjs`) copies it into the
+> editing the template. The build step ([`copy-templates.mjs`](../packages/cli/scripts/copy-templates.mjs)) copies it into the
 > published CLI's `dist/templates/`.
 
 ## Per-package scripts
@@ -243,8 +249,8 @@ npm run --workspace @tetherto/mdk-react-adapter test
 
 ### `@tetherto/mdk-react-devkit`
 
-Generic UI primitives (`src/primitives`) + mining-domain components
-(`src/domain`). Pre-built to ESM JS + `.d.ts` under `dist/` (with a
+Generic UI primitives ([`src/primitives`](../packages/react-devkit/src/primitives/)) + mining-domain components
+([`src/domain`](../packages/react-devkit/src/domain/)). Pre-built to ESM JS + `.d.ts` under `dist/` (with a
 post-`tsc` step that strips side-effect SCSS imports) plus two Vite-built
 stylesheets: `dist/styles.css` and `dist/styles-domain.css`.
 
@@ -267,7 +273,7 @@ npm run --workspace @tetherto/mdk-fonts build
 npm run --workspace @tetherto/mdk-fonts dev
 ```
 
-### `apps/catalog` (`@tetherto/mdk-catalog-ui`)
+### [`apps/catalog`](../apps/catalog/README.md) (`@tetherto/mdk-catalog-ui`)
 
 ```bash
 npm run --workspace @tetherto/mdk-catalog-ui dev        # Vite dev server
@@ -346,11 +352,12 @@ Outputs are cached between runs.
    only useful when isolating a failure.
 2. **Trust the cache**: Turborepo's cache is keyed off inputs. Never use
    `--force` unless you suspect cache corruption — the cache is normally
-   correct.
+   correct. The one task that never caches, by design, is
+   `@tetherto/mdk-ui-cli#build` — see the `turbo.json` section above.
 3. **Run `npm run build` before `npm run dev` on a fresh clone** — the
    pre-built packages (`mdk-ui-foundation`, `mdk-react-adapter`) need their
    `dist/` populated before the devkit consumes them.
-4. **Keep `turbo.json` simple**; per-package nuance belongs in that
+4. **Keep [`turbo.json`](../turbo.json) simple**; per-package nuance belongs in that
    package's own `package.json` scripts.
 5. **Keep script names consistent** across workspaces (`build`,
    `build:ts`, `build:scss`, `dev`, `dev:ts`, `dev:scss`, `lint`,

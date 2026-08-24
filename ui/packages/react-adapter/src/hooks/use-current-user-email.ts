@@ -1,4 +1,4 @@
-import { userInfoQuery } from '@tetherto/mdk-ui-foundation'
+import { userInfoQuery } from '@tetherto/mdk-ui-foundation/presets/mining'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { useAuthToken } from './use-auth-token'
@@ -8,12 +8,14 @@ import { useAuthToken } from './use-auth-token'
  * Used by `useLiveActions` to partition actions into "mine vs others".
  *
  * @remarks
- * **Prerequisite:** `/auth/userinfo` has no default Gateway provider; the
- * bundled `@tetherto/mdk-plugin-auth` ships unwired. Without a
+ * `/auth/userinfo` has no default Gateway provider. The bundled
+ * `@tetherto/mdk-plugin-auth` ships a controller for it, but mounting the
+ * plugin alone is not enough — see
+ * [the bundled auth plugin](https://github.com/tetherto/mdk/blob/main/backend/core/plugins/README.md#the-bundled-auth-plugin)
+ * for why. Bring your own
  * [Gateway plugin](https://docs.tether.io/mdk/guides/gateway/plugins) serving
- * that route, this hook resolves to `undefined`. See the
- * [full-site example](https://github.com/tetherto/mdk/tree/main/examples/full-site/plugins/site)
- * for a working reference.
+ * `/auth/userinfo` with a real identity layer, or this hook resolves to
+ * `undefined`.
  *
  * @category auth
  */

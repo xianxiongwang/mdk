@@ -1,0 +1,12 @@
+node_modules/
+dist/
+*.log
+coverage/
+
+# Scratch projects used to try the CLI out locally (see README, "Try it out").
+# Prefer /tmp; this covers the in-package habit.
+mdk-try/
+mdk-try-2/
+mdk-try-*/
+mdk.yaml
+.mdk/

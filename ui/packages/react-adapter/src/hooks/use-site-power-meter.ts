@@ -1,5 +1,7 @@
-import { type ListThingsDevice, listThingsQuery } from '@tetherto/mdk-ui-foundation'
+import type { ListThingsDevice } from '@tetherto/mdk-ui-foundation'
+import { flattenKernelEnvelope, listThingsQuery  } from '@tetherto/mdk-ui-foundation/presets/mining'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useAuthToken } from './use-auth-token'
 
 const SITE_QUERY = JSON.stringify({ 'info.pos': { $eq: 'site' } })
 const POWER_FIELDS = JSON.stringify({
@@ -10,13 +12,7 @@ const POWER_FIELDS = JSON.stringify({
 
 const W_PER_MW = 1_000_000
 
-const headOrEmpty = (value: ListThingsDevice[][] | undefined | null): ListThingsDevice[] => {
-  if (!Array.isArray(value)) return []
-  const first = value[0]
-  return Array.isArray(first) ? first : []
-}
-
-/* Mining OS filters by `device.tags` (an array of role strings — e.g.
+/* The reference app filters by `device.tags` (an array of role strings — e.g.
  * `['t-powermeter']`), not by `device.type`. Mirror that or the
  * lookup misses on the same backend payload. */
 const filterByTag = (devices: ListThingsDevice[], tag: string): ListThingsDevice[] =>
@@ -38,6 +34,8 @@ export type SitePowerMeter = {
 }
 
 export type UseSitePowerMeterOptions = {
+  /** Disable the query. Defaults to running whenever an auth token is present. */
+  enabled?: boolean
   /** Polling interval in ms. Defaults to 30s. Pass 0 to disable. */
   refetchInterval?: number
 }
@@ -46,17 +44,24 @@ export type UseSitePowerMeterOptions = {
  * Site-level power reading for the header's `<HeaderConsumptionBox />`. Reads
  * the freshest snapshot from a `t-powermeter`-tagged thing at `info.pos =
  * 'site'`; falls back to a `t-container`-tagged thing if no powermeter is
- * configured (matches Mining OS's `useHeaderStats` fallback chain).
+ * configured (matches the reference app's `useHeaderStats` fallback chain).
  *
  * Note this is **distinct** from {@link useSiteConsumption}, which sums the
  * per-miner aggregates from tail-log and is appropriate for the chart card's
  * time-series. The site power meter typically reads larger than the miner
  * sum (it includes cooling, ancillary load, etc.).
  *
+ * @remarks
+ * The `/auth/list-things` endpoint is illustrative. MDK does not ship a built-in
+ * endpoint for it — create your own via a
+ * [Gateway plugin](https://docs.tether.io/mdk/guides/gateway/plugins) matching
+ * your Worker/business logic.
+ *
  * @category dashboard
  */
 export const useSitePowerMeter = (options: UseSitePowerMeterOptions = {}): SitePowerMeter => {
   const queryClient = useQueryClient()
+  const token = useAuthToken()
   const factory = listThingsQuery(queryClient, {
     status: 1,
     query: SITE_QUERY,
@@ -66,12 +71,13 @@ export const useSitePowerMeter = (options: UseSitePowerMeterOptions = {}): SiteP
 
   const { data, isLoading } = useQuery({
     ...factory,
+    enabled: options.enabled ?? !!token,
     refetchInterval: options.refetchInterval ?? 30_000,
   })
 
-  const devices = headOrEmpty(data)
+  const devices = flattenKernelEnvelope(data)
   /* Prefer a dedicated powermeter; fall back to container readings only
-   * when no powermeter is configured (Mining OS's getDeviceDataByType chain).
+   * when no powermeter is configured (the reference app's getDeviceDataByType chain).
    * Sum across all matching devices to handle multi-meter sites. */
   const powermeters = filterByTag(devices, 't-powermeter')
   const fallbacks = powermeters.length > 0 ? powermeters : filterByTag(devices, 't-container')

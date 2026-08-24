@@ -20,7 +20,7 @@ you get title, legend, range selector, and loading / empty states for free.
 | `unit`             | `string`                              | no       | `""`    | Unit appended in tooltips.           |
 | `height`           | `number`                              | no       | `240`   | Pixel height.                        |
 
-See `types.ts` for the full prop set (20+ props).
+See [`types.ts`](./types.ts) for the full prop set (20+ props).
 
 ## Example
 

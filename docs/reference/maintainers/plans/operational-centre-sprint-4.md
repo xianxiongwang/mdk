@@ -5,7 +5,7 @@
 **Parent plan:** [`operational-centre-pages.md`](./operational-centre-pages.md)
 **Sprint goal:** Lock the BE contracts, land the **entire data/hook layer**, add the
 missing **visualization primitives**, and ship a **thin read-only end-to-end slice**
-of Container Widgets + Explorer against the real MiningOS BE.
+of Container Widgets + Explorer against the real reference app BE.
 
 > This is the de-risking sprint. It does **not** attempt the full Explorer tab matrix,
 > vendor boxes, or UI-wired writes — those depend on this foundation and are scheduled

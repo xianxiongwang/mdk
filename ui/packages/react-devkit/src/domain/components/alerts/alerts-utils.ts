@@ -1,7 +1,6 @@
 import _compact from 'lodash/compact'
 import _concat from 'lodash/concat'
 import _filter from 'lodash/filter'
-import _head from 'lodash/head'
 import _includes from 'lodash/includes'
 import _isEmpty from 'lodash/isEmpty'
 import _map from 'lodash/map'
@@ -240,13 +239,21 @@ export const getHistoricalAlertsData = (
   return withMatchHints(applyAlertsLocalFilters(allAlerts, filters), filterTags)
 }
 
+/**
+ * Derive alert rows from a flat device list.
+ *
+ * Took `Device[][]` and `_head`-ed it until now — the mining Gateway's
+ * per-Kernel envelope reached this far into the devkit, so a consumer on another
+ * backend had to wrap their rows in an array, and rows from every node after the
+ * first were silently dropped. Unwrapping belongs in the data layer, not here.
+ */
 export const getAlertsForDevices = (
-  data: Device[][],
+  data: Device[],
   localFilters: AlertLocalFilters,
   onAlertClick?: (id: string, uuid: string) => void,
 ): ParsedAlertEntry[] => {
   const allAlerts = _reduce(
-    _head(data),
+    data,
     (alerts: ParsedAlertEntry[], device: Device) => {
       const deviceAlerts = getDeviceAlertsData(device, onAlertClick)
       if (deviceAlerts) {
@@ -275,7 +282,7 @@ export const getAlertsThingsQuery = (
 }
 
 export const getCurrentAlerts = (
-  data: Device[][],
+  data: Device[],
   { filterTags, localFilters, onAlertClick, id }: GetCurrentAlertsArgs,
 ): ParsedAlertEntry[] => {
   const effectiveTags = id ? [] : filterTags

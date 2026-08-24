@@ -12,16 +12,16 @@ Gateway (backend/core/gateway, boot glue in backend/core/mdk)
     │  MDK envelopes over HRPC
 Kernel — a.k.a. ORK (backend/core/kernel)
     │  MDK envelopes over HRPC ('mdk' method), discovery via Hyperswarm DHT
-Workers — WorkerRuntime hosting a Worker Plugin (backend/core/mdk-worker + backend/workers/*)
+Workers — WorkerRuntime/WorkerRuntimeV2 hosting a Worker Plugin (backend/core/mdk-worker + backend/workers/*)
     │  vendor protocol: CGMiner TCP, HTTP JSON, Modbus TCP, MQTT…
 Devices (miners, power meters, sensors, containers)
 ```
 
 Historical note: the Kernel was previously called **ORK** (Orchestration
-Kernel). Older docs use ORK; the code lives in `backend/core/kernel` and the
+Kernel). Older docs use ORK; the code lives in [`backend/core/kernel`](../../../../../../backend/core/kernel/README.md) and the
 two terms are interchangeable.
 
-## Kernel modules (`backend/core/kernel/lib/modules/`)
+## Kernel modules ([`backend/core/kernel/lib/modules/`](../../../../../../backend/core/kernel/lib/modules/))
 
 Each module has one job and modules never cross-call — they interact through
 the interfaces they expose:
@@ -36,30 +36,48 @@ the interfaces they expose:
 | `scheduler` | Drives the periodic pull/ping cadences |
 | `action-manager` / `action-caller` | Write-action approval lifecycle (`action.push`, `action.vote`, …) between gateway and kernel |
 
-The protocol layer (`backend/core/kernel/lib/protocol/`) owns the envelope
-(`envelope.js`), the action set (`actions.js`) and per-action payload
-validators (`schemas.js`) — see `protocol.md`.
+The protocol layer ([`backend/core/kernel/lib/protocol/`](../../../../../../backend/core/kernel/lib/protocol/)) owns the envelope
+([`envelope.js`](../../../../../../backend/core/kernel/lib/protocol/envelope.js)), the action set ([`actions.js`](../../../../../../backend/core/kernel/lib/protocol/actions.js)) and per-action payload
+validators ([`schemas.js`](../../../../../../backend/core/kernel/lib/protocol/schemas.js)) — see [`protocol.md`](./protocol.md).
 
 ## Worker side
 
-A worker package ships a **Worker Plugin** — `plugin/index.js` exporting
-`{ contract, dir, connect, disconnect? }` — plus plain device-client code in
-`lib/`. It never subclasses anything and never depends on the runtime.
+Two Worker Plugin shapes exist side by side, hosted on two runtime classes
+that share the same envelope dispatch, DHT discovery, and Kernel-facing
+protocol. Details for both: [`../../mdk-worker-plugin/references/worker-base-api.md`](../../mdk-worker-plugin/references/worker-base-api.md).
 
-`WorkerRuntime` (`backend/core/mdk-worker/lib/worker-runtime.js`) is the
+A module-exporting worker package ships a **Worker Plugin** — `plugin/index.js`
+exporting `{ contract, dir, connect, disconnect? }` — plus plain device-client
+code in `lib/`. It never subclasses anything and never depends on the runtime.
+`WorkerRuntime` ([`backend/core/mdk-worker/lib/worker-runtime.js`](../../../../../../backend/core/mdk-worker/lib/worker-runtime.js)) is the
 generic host: it loads the plugin (eagerly requiring every handler declared in
 the contract), opens one frozen context `{ deviceId, device, config, services }`
 per device via `connect()`, answers the `'mdk'` HRPC method by dispatching
 envelopes to handlers, and announces itself on the Kernel's DHT topic. One
 runtime hosts N same-type devices; a device whose `connect()` fails is held
 `offline` (requests return `ERR_DEVICE_UNAVAILABLE`) without affecting
-siblings. Details: `../../mdk-device-worker/references/worker-base-api.md`.
+siblings. This is the shape every currently-shipped device family
+(`backend/workers/miners/*`, `power-meter/*`, `containers/*`, `minerpools/*`,
+`temperature/*`) still uses.
+
+A directory-loaded worker package ships no module of its own: just
+`mdk-contract.json` at its root plus the handler files it declares under
+`src/` — no `plugin/index.js`, no `connect()`/`disconnect()`. `WorkerRuntimeV2`
+([`backend/core/mdk-worker/lib/worker-runtime-v2.js`](../../../../../../backend/core/mdk-worker/lib/worker-runtime-v2.js))
+takes the package's directory in place of a plugin object, and handlers are
+plain `async (params) => result` functions that read their device from the
+ambient `@tetherto/mdk-worker/device` module instead of a `ctx` argument.
+There is no boot-time probe and no offline state: every device reports
+`online` immediately, and an unreachable one surfaces as an error inside the
+telemetry payload instead. This is the shape `mdk create worker` scaffolds
+today; `backend/workers/samples/demo-worker` is the only real reference
+implementation on it so far.
 
 ## Discovery and request flow
 
-1. A caller boots `WorkerRuntime` with a `kernelTopic`; the runtime joins that
-   Hyperswarm topic in server mode and writes its HRPC public key to every
-   incoming connection.
+1. A caller boots `WorkerRuntime` or `WorkerRuntimeV2` with a `kernelTopic`;
+   the runtime joins that Hyperswarm topic in server mode and writes its HRPC
+   public key to every incoming connection.
 2. The Kernel connects to topic peers, learns the worker's key, then sends
    `identity.request` and `capability.request`; the registry records the
    worker's devices and its published contract (handler paths stripped).
@@ -70,7 +88,7 @@ siblings. Details: `../../mdk-device-worker/references/worker-base-api.md`.
 
 ## Where things run
 
-`examples/full-site/start.js` boots the whole picture in one process tree:
+[`examples/full-site/start.js`](../../../../../../examples/full-site/start.js) boots the whole picture in one process tree:
 mock devices, Kernel, 11 real workers, gateway and UI. Worker-hosting caller
 for a single worker, in-process and no Kernel:
-`examples/backend/demo-worker-caller/index.js`.
+[`examples/backend/demo-worker-caller/index.js`](../../../../../../examples/backend/demo-worker-caller/index.js).

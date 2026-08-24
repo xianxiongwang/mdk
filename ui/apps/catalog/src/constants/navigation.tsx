@@ -44,6 +44,7 @@ export const COMPONENT_NAV: SidebarMenuItem[] = [
       { id: 'getting-started', label: 'Getting Started' },
       { id: 'hooks', label: 'Adapter Hooks' },
       { id: 'theming', label: 'Theming' },
+      { id: 'bring-your-own-backend', label: 'Bring Your Own Backend' },
     ],
   },
   {

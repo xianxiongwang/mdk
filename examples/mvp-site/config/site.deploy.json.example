@@ -46,19 +46,22 @@
       }
     },
     "mocks": {
-      "portBase": 15020,
-      "powerW": 17000
+      "portBase": 15020
     }
   },
   "gateway": {
     "port": 3000,
     "host": "0.0.0.0",
     "pluginDirs": ["backend/gateway-plugins/site"],
+    "autoGenerateMcp": true,
     "staticRootPath": "ui/dist"
   },
   "mcp": {
     "port": 3100,
-    "pluginDirs": ["backend/mcp-plugins/site"]
+    "agentTools": {
+      "port": 3101,
+      "pluginDirs": ["backend/mcp-plugins/site"]
+    }
   },
   "pm2": {
     "script": "deploy/run-process.js",

@@ -19,27 +19,30 @@ The Bitcoin mining industry has long been constrained by closed systems, proprie
 MDK delivers a modular mining stack that empowers operators and developers to build, monitor, control, and scale mining operations with full ownership: 
 from a single device to gigawatt-scale facilities — without architectural rewrites.
 
-MDK ships three packages:
+MDK ships three conceptual layers, each containing one or more packages:
 
 1. [Orchestration kernel (Kernel)][kernel-section].
 2. [Universal SDK][universal-sdk-section].
 3. [MDK App Toolkit][mdk-app-toolkit-section].
 
 All three communicate through the **MDK protocol**. Clients — browsers and [AI agents][ai-agents-section] alike — reach the kernel exclusively through 
-the Gateway, the secure entry point your team builds with the SDK. Tying everything together is a **single contract per device type**: the same 
-[`mdk-contract.json`][capability-contract] serves the UI (data labels), the orchestrator (validation rules), and AI agents (reasoning context). 
-One file, three audiences, no drift.
+the Gateway, the consumer-facing integration boundary your team builds with the SDK. MDK ships no authentication of its own at any tier: your team
+supplies it in the Gateway plugin controllers you write. Tying everything together is a **single contract per device type**: the same 
+[`mdk-contract.json`][capability-contract] is designed to serve the UI (data labels), the orchestrator (validation rules), and AI agents (reasoning
+context) — today, only the orchestrator's validation rules are actually wired to it; UI and agent tooling don't read it yet.
+One file, one intended source of truth for three audiences.lea
 
 ### The orchestration kernel
 
 [Kernel][kernel-concept], the Orchestration Kernel, is distributed as [`@tetherto/mdk-kernel`][architecture-kernel]. It's the central coordination engine of MDK 
 and serves as a controller: it knows which devices are online, routes commands to the right place, monitors health, and collects performance data.
 
-`@tetherto/mdk-kernel` communicates with devices through a standardized language called the **MDK Protocol**, a common set of messages that every device 
-in the system understands, regardless of manufacturer or model. Adding a new device type never impacts `@tetherto/mdk-kernel` thanks to the Worker, a 
+`@tetherto/mdk-kernel` communicates with Workers, never devices directly, through a standardized language called the **MDK Protocol**, a common set
+of messages every Worker in the system understands, regardless of the device manufacturer or model behind it. Adding a new device type never impacts
+`@tetherto/mdk-kernel` thanks to the Worker, a 
 device-specific translator that sits between the kernel and your hardware: it speaks the MDK Protocol upward, and the device's native API downward.
 
-The kernel is **pull-only**, **device-agnostic**, and **self-healing**.
+The Kernel is **pull-only**, **device-agnostic**, and **self-healing**.
 
 Learn more about the [internal modules, recovery flows, and protocol specs][kernel-modules] that back those guarantees.
 
@@ -48,11 +51,13 @@ Learn more about the [internal modules, recovery flows, and protocol specs][kern
 `@tetherto/mdk-client` is the universal SDK, a connection library that applications use to talk to `@tetherto/mdk-kernel`. It serves as a universal adapter: 
 handling all the connection details so developers can focus on building their application.
 
-- **Multi-language support**: available for Node.js, Python, Go, and more; use whatever language your team prefers
-- **Automatic connection handling**: manages reconnection, retries, and transport selection behind the scenes
-- **No lock-in**: developers bring their own stack and connect via the SDK. No framework requirements.
+- **Node.js today**: `@tetherto/mdk-client` ships as a Node.js package. The transport and protocol are designed to allow
+  future clients in other languages (Python, Go, and others) without changes to Kernel or the protocol itself
+- **Lazy connection handling**: connects on first use and reconnects on the next call after a failure, with bounded retries on
+  `getStatus()` and an optional connect warm-up. There is no background reconnect loop, and HRPC is the only transport
+- **No lock-in**: developers bring their own stack and connect via the SDK. No framework requirements
 
-### MDK App Toolkit
+### MDK App toolkit
 
 For teams that want to ship fast, the [**MDK App Toolkit**][app-toolkit] is the optional, batteries-included application 
 layer that sits on top of `@tetherto/mdk-kernel`. It ships in three parts:
@@ -60,9 +65,10 @@ layer that sits on top of `@tetherto/mdk-kernel`. It ships in three parts:
 - **Frontend tools**: a headless state brain ([`@tetherto/mdk-ui-foundation`][ui-foundation]), framework adapters 
 ([`@tetherto/mdk-react-adapter`][react-get-started] for React today), and a production-tested React UI Kit 
 ([`@tetherto/mdk-react-devkit`][react-get-started]) for dashboards.
-- **Backend tools**: a plug-and-play library that drops into Fastify or Express to handle command proxying and
- request-level caching, with hooks for custom routes and aggregations.
-- **Plugins**: drop-in modules that pair a frontend tools widget with a backend tools route, so third parties 
+- **Backend tools**: the Gateway itself, a Fastify-specific library handling command proxying and request-level
+  caching, with hooks for custom routes and aggregations. There is no Express adapter today.
+- **Plugins**: a Gateway plugin's `mdk-plugin.json` declares its own routes; pairing one with a specific frontend
+  tools widget is application code you write, not a manifest mechanism the Toolkit provides for you today. Third parties 
 can ship whole features without forking the Gateway.
 
 Using [`@tetherto/mdk-client`][mdk-client] without the Gateway is technically possible but not supported by this monorepo — most applications build on the Gateway.
@@ -77,24 +83,26 @@ hashrate, power usage, temperature alerts) across all your sites.
 [`mdk-contract.json`][capability-contract]. No involvement from MDK maintainers needed.
 - **Software developers**: build custom mining applications in any language, or leverage the 
 [MDK App Toolkit][app-toolkit]'s frontend and backend tools for rapid development.
-- **AI/Automation teams**: [connect intelligent agents][ai-agents-section] that can monitor, diagnose, 
-and act on device issues autonomously
+- **AI/Automation teams**: [connect intelligent agents][ai-agents-section] that can monitor and diagnose device
+issues autonomously, then act on them once an operator approves the write
 
 ## Architecture overview
 
 `@tetherto/mdk-kernel` is [the kernel][architecture-kernel]. [`@tetherto/mdk-client`][mdk-client] is the protocol connector every caller uses
 to reach it. Above those two layers, the supported development path builds in two levels:
 
-- **Gateway**: the [Gateway][gateway-concept] wraps `@tetherto/mdk-client` and adds fleet aggregation, request-level caching, and an
-  HTTP interface. Authenticating callers is left to the plugin controllers you write. AI agents can drive the fleet through the standalone [`@tetherto/mdk-mcp`][mcp-readme] package
+- **Gateway**: the [Gateway][gateway-concept] hosts plugins and adds request-level caching and an HTTP interface; each plugin
+  builds its own `@tetherto/mdk-client` and does its own fleet aggregation. Authenticating callers is left to the plugin
+  controllers you write. AI agents can drive the fleet over MCP — a standalone [`@tetherto/mdk-mcp`][mcp-readme] process, or one
+  the Gateway auto-generates in-process from a plugin's routes
 - **MDK App Toolkit**: sits on top of the Gateway. Adds a plugin system for declarative route extensions and frontend
   packages ([`@tetherto/mdk-ui-foundation`][ui-foundation], React adapter, React UI kit) for teams building operator dashboards
 
-Below the kernel, **devices are the source of truth**. The actual hardware state is reported by the Worker 
+Below the Kernel, **devices are the source of truth**. The actual hardware state is reported by the Worker 
 to `@tetherto/mdk-kernel`, which orchestrates a synchronized view across the fleet.
 
-For the full layer-by-layer view with transports and discovery flows, see the [MDK stack][mdk-stack] on the 
-Architecture page.
+Each layer names its canonical doc in [the MDK stack][mdk-stack]. The [round trip][round-trip] traces one command end to end, and the
+[Workers discovery model][discovery-model] covers how Kernel finds Workers across local, same-process, and DHT modes.
 
 ## AI-ready with unified intelligence
 
@@ -105,11 +113,13 @@ In addition to the technical schemas, every device's contract file ([`mdk-contra
 
 - **Safety rules**: for example, "Outlet temperature > 85°C requires immediate intervention"
 - **Operational constraints**: limits on command frequency, power thresholds, cooling requirements
-- **Troubleshooting guides**: if/then recovery steps that AI agents can follow autonomously
+- **Troubleshooting guides**: if/then recovery steps an AI agent can diagnose against autonomously; the recovery
+  action itself still waits for operator approval, the same as any other write
 
-This means an AI agent connecting to MDK doesn't need a separate knowledge base or custom prompts per device. 
-The intelligence travels with the device; the same contract that validates commands and generates dashboards also determines 
-how AI reasons about that hardware.
+The intent is that an AI agent connecting to MDK wouldn't need a separate knowledge base or custom prompts per device: the
+same contract that Kernel already validates commands against would also determine how AI reasons about that hardware. That
+wiring is not built yet: MCP tools today come from a separate, hand-authored manifest, not from a Worker's contract (see
+[Connecting intelligent agents][ai-agents-docs]).
 
 ## What you can build
 
@@ -117,7 +127,7 @@ how AI reasons about that hardware.
 - Multisite fleet management with centralized oversight
 - Alerts and notifications for critical device events
 - Overheating detection and automated remediation
-- AI-driven autonomous monitoring and control
+- AI-driven autonomous monitoring, with human-approved control actions
 - Custom analytics and reporting pipelines
 - White-labeled hosted mining platforms
 - Third-party device integrations and plugins
@@ -128,8 +138,8 @@ MDK [scales][scaling] naturally without architectural changes:
 
 - **More devices?** Add more Workers. Each Worker owns a specific set of devices, and `@tetherto/mdk-kernel` routes commands to 
 the right one automatically.
-- **More sites?** Each physical site runs its own `@tetherto/mdk-kernel` instance. A single Gateway connects to all of them, 
-giving you one view across your entire operation.
+- **More sites?** Each physical site runs its own `@tetherto/mdk-kernel` instance, each behind its own Gateway. No MDK component
+aggregates across sites: that view is your own application code calling each site's Gateway and merging the results.
 - **Site isolation**: `@tetherto/mdk-kernel` instances are fully independent. A problem at one site has zero impact on any other.
 
 ## Next steps
@@ -153,14 +163,14 @@ Learn more about:
 [mdk-client]: ../../backend/core/client/README.md
 <!-- docs@tether.io: mdk-client → https://github.com/tetherto/mdk/blob/main/backend/core/client/README.md -->
 
-[kernel-concept]: stack/kernel.md
-<!-- docs@tether.io: kernel-concept → concepts/stack/kernel -->
+[kernel-concept]: ../../backend/core/kernel/README.md
+<!-- docs@tether.io: kernel-concept → https://github.com/tetherto/mdk/blob/main/backend/core/kernel/README.md -->
 
-[gateway-concept]: stack/gateway.md
-<!-- docs@tether.io: gateway-concept → concepts/stack/gateway -->
+[gateway-concept]: ../../backend/core/gateway/README.md
+<!-- docs@tether.io: gateway-concept → https://github.com/tetherto/mdk/blob/main/backend/core/gateway/README.md -->
 
-[capability-contract]: stack/workers.md#capability-contract
-<!-- docs@tether.io: capability-contract → concepts/stack/workers#capability-contract -->
+[capability-contract]: ../../backend/workers/README.md#3-mdk-contractjson
+<!-- docs@tether.io: capability-contract → https://github.com/tetherto/mdk/blob/main/backend/workers/README.md#3-mdk-contractjson -->
 
 [architecture-kernel]: ../../backend/core/kernel/README.md
 <!-- docs@tether.io: architecture-kernel → https://github.com/tetherto/mdk/blob/main/backend/core/kernel/README.md -->
@@ -168,9 +178,8 @@ Learn more about:
 [kernel-modules]: ../../backend/core/kernel/README.md#architecture
 <!-- docs@tether.io: kernel-modules → https://github.com/tetherto/mdk/blob/main/backend/core/kernel/README.md#architecture -->
 
-[app-toolkit]: ../../ui/docs/ARCHITECTURE.md
-<!-- docs@tether.io: app-toolkit → concepts/stack/app-toolkit -->
-<!-- mdk-monorepo: temp — ARCHITECTURE.md is a stub until ui/ is populated -->
+[app-toolkit]: app-toolkit.md
+<!-- docs@tether.io: app-toolkit → https://github.com/tetherto/mdk/blob/main/docs/concepts/app-toolkit.md -->
 
 [ui-foundation]: ../../ui/packages/ui-foundation/README.md
 <!-- docs@tether.io: ui-foundation → reference/ui -->
@@ -179,17 +188,23 @@ Learn more about:
 <!-- docs@tether.io: mcp-readme → https://github.com/tetherto/mdk/blob/main/backend/core/mcp/README.md -->
 
 [react-get-started]: ../../ui/README.md
-<!-- docs@tether.io: no parity link -->
+<!-- docs@tether.io: react-get-started → https://github.com/tetherto/mdk/blob/main/ui/README.md -->
 <!-- mdk-monorepo: tutorials/ui/react parked on the docs site; restore the slug rewrite when it is unparked -->
 
-[mdk-stack]: architecture.md#mdk-stack
-<!-- docs@tether.io: mdk-stack → concepts/architecture#mdk-stack -->
+[mdk-stack]: architecture.md#the-stack
+<!-- docs@tether.io: mdk-stack → concepts/architecture#the-stack -->
 
-[ai-agents-docs]: architecture.md#ai-agents-and-the-mcp-server
-<!-- docs@tether.io: ai-agents-docs → concepts/architecture#ai-agents-and-the-mcp-server -->
+[round-trip]: architecture.md#the-round-trip
+<!-- docs@tether.io: round-trip → concepts/architecture#the-round-trip -->
 
-[scaling]: architecture.md#scaling
-<!-- docs@tether.io: scaling → concepts/architecture#scaling -->
+[discovery-model]: ../../backend/workers/docs/architecture.md#discovery-model
+<!-- docs@tether.io: discovery-model → https://github.com/tetherto/mdk/blob/main/backend/workers/docs/architecture.md#discovery-model -->
+
+[ai-agents-docs]: ../../backend/core/mcp/README.md
+<!-- docs@tether.io: ai-agents-docs → https://github.com/tetherto/mdk/blob/main/backend/core/mcp/README.md -->
+
+[scaling]: scalability.md
+<!-- docs@tether.io: scaling → concepts/scalability -->
 
 [architecture]: architecture.md
 <!-- docs@tether.io: architecture → concepts/architecture -->

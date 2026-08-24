@@ -1,15 +1,13 @@
-import {
-  buildSiteConsumptionTailLogParams,
-  type ChartCardData,
-  type DashboardQueryRange,
-  type TailLogEntry,
-  tailLogQuery,
-} from '@tetherto/mdk-ui-foundation'
+import type { ChartCardData, TailLogEntry } from '@tetherto/mdk-ui-foundation'
+import { tailLogQuery } from '@tetherto/mdk-ui-foundation/presets/mining'
+import { buildSiteConsumptionTailLogParams, type DashboardQueryRange } from '@tetherto/mdk-ui-foundation/presets/mining'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo } from 'react'
+import { buildAscDedupedPoints, computeMinMaxAvg, lastY } from './chart-points'
+import { headOrEmpty } from './list-things-utils'
+import { useAuthToken } from './use-auth-token'
 
 const W_PER_MW = 1_000_000
-const MS_PER_SECOND = 1000
 /* lightweight-charts parses concrete CSS colours only — `var(...)`
  * is rejected by its `colorStringToRgba`. Mirror the value of
  * `--mdk-color-primary` from `_colors.scss`. */
@@ -18,64 +16,9 @@ const DATASET_LABEL = 'Total Consumption'
 
 const formatMw = (value: number): string => `${value.toFixed(2)} MW`
 
-const headOrEmpty = <T>(value: T[][] | undefined | null): T[] => {
-  if (!Array.isArray(value)) return []
-  const first = value[0]
-  return Array.isArray(first) ? (first as T[]) : []
-}
-
-const lastY = (points: Array<{ x: number; y: number | null }>): number | null => {
-  for (let i = points.length - 1; i >= 0; i -= 1) {
-    const y = points[i]?.y
-    if (typeof y === 'number') return y
-  }
-  return null
-}
-
-const computeMinMaxAvg = (
-  points: Array<{ x: number; y: number | null }>,
-  format: (v: number) => string,
-): { min: string; max: string; avg: string } | undefined => {
-  let min = Number.POSITIVE_INFINITY
-  let max = Number.NEGATIVE_INFINITY
-  let sum = 0
-  let count = 0
-  for (const point of points) {
-    if (typeof point.y === 'number') {
-      if (point.y < min) min = point.y
-      if (point.y > max) max = point.y
-      sum += point.y
-      count += 1
-    }
-  }
-  if (count === 0) return undefined
-  return { min: format(min), max: format(max), avg: format(sum / count) }
-}
-
-/* `LineChartCard` / lightweight-charts expects `x` in **milliseconds**
- * (the chart wrapper divides by 1000 to derive UTCTimestamp seconds)
- * and rejects ties. Sort raw entries by ts, snap to the enclosing
- * second, dedupe consecutive same-bucket samples. */
-const buildAscDedupedPoints = <T extends { ts?: unknown }>(
-  entries: readonly T[],
-  toY: (entry: T) => number | null,
-): Array<{ x: number; y: number | null }> => {
-  const sorted = [...entries].sort((a, b) => Number(a.ts) - Number(b.ts))
-  const out: Array<{ x: number; y: number | null }> = []
-  for (const entry of sorted) {
-    const xMs = Math.floor(Number(entry.ts) / MS_PER_SECOND) * MS_PER_SECOND
-    const y = toY(entry)
-    const last = out[out.length - 1]
-    if (last && last.x === xMs) {
-      last.y = y
-    } else {
-      out.push({ x: xMs, y })
-    }
-  }
-  return out
-}
-
 export type UseSiteConsumptionChartDataParams = DashboardQueryRange & {
+  /** Disable the query. Defaults to running whenever an auth token is present. */
+  enabled?: boolean
   /** Polling interval in ms. Defaults to 60s. Pass 0 to disable. */
   refetchInterval?: number
 }
@@ -91,9 +34,15 @@ export type SiteConsumptionChartResult = {
  * `<LineChartCard />`. Reads `site_power_w` from the
  * `t-powermeter`-tagged tail-log (same source the header's
  * `useSitePowerMeter` snapshot uses), converts W → MW, and emits
- * `highlightedValue` + `minMaxAvg`. Mirrors Mining OS's `Power Consumption`
+ * `highlightedValue` + `minMaxAvg`. Mirrors the reference app's `Power Consumption`
  * card query verbatim: `type=powermeter, tag=t-powermeter,
  * aggrFields={site_power_w:1}`.
+ *
+ * @remarks
+ * The `/auth/tail-log` endpoint is illustrative. MDK does not ship a built-in
+ * endpoint for it — create your own via a
+ * [Gateway plugin](https://docs.tether.io/mdk/guides/gateway/plugins) matching
+ * your Worker/business logic.
  *
  * @category dashboard
  */
@@ -101,11 +50,14 @@ export const useSiteConsumptionChartData = (
   params: UseSiteConsumptionChartDataParams,
 ): SiteConsumptionChartResult => {
   const queryClient = useQueryClient()
+  const token = useAuthToken()
   const factory = tailLogQuery(queryClient, buildSiteConsumptionTailLogParams(params))
 
   const { data, isLoading } = useQuery({
     ...factory,
+    enabled: params.enabled ?? !!token,
     refetchInterval: params.refetchInterval ?? 60_000,
+    /* single-Kernel assumption: one node's series. See list-things-utils.ts. */
     select: (raw: TailLogEntry[][]) => headOrEmpty<TailLogEntry>(raw),
   })
 

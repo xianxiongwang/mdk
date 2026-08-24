@@ -1,7 +1,7 @@
 'use strict'
 
 // Shared helpers for the site plugin controllers. Every Kernel access goes through
-// the injected mdkClient (RPC listener) — controllers never reach further down.
+// the plugin's own mdkClient (lib/client.js) — controllers never reach further down.
 
 // Fallback when a config pull fails or omits deviceFamily — keyed by stable workerId.
 const WORKER_FAMILY = {

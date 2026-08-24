@@ -1,21 +1,29 @@
+import type { EndpointMap } from './runtime'
+
 /**
- * Centralised Gateway REST endpoint paths (HLD §5), the URL counterpart to
- * the query-key registry in `./keys`. Query/mutation factories build request
- * URLs from these constants via `buildUrl(getApiBaseUrl(client), …)` rather
- * than inlining path literals, so the API surface lives in one place.
+ * The mining Gateway's request paths (HLD §5) — one concrete
+ * {@link EndpointMap}, and the default one, but no longer the only possible one.
+ * A consumer pointing MDK at their own backend passes their own map to
+ * `createMdkQueryClient`; the factories resolve paths from whichever map the
+ * client carries.
  *
- * Static paths are listed here directly. Paths with a dynamic segment
- * (`/devices/:id`, `/auth/pools/:pool/balance-history`, the action-workflow
- * verbs) compose from the base constant at the call site with the id
- * `encodeURIComponent`-escaped.
+ * Paths are **templates**: a `:name` segment is substituted by `resolvePath`,
+ * which URL-encodes the value. Previously the dynamic paths were assembled by
+ * string concatenation at each call site, which meant the endpoint table alone
+ * did not describe the API surface — and a forgotten `encodeURIComponent` was a
+ * silent injection bug.
  *
  * @remarks
- * The `/auth/*` endpoints are illustrative. MDK does not ship built-in
- * endpoints — create your own via a
- * [Gateway plugin](https://docs.tether.io/mdk/guides/gateway/plugins) matching
- * your Worker/business logic. See the
- * [full-site example](https://github.com/tetherto/mdk/tree/main/examples/full-site/plugins/site)
- * for a working reference.
+ * Not every `/auth/*` path here is illustrative: `site` and `featureConfig` are served by the default
+ * `site-monitor` Gateway plugin. `tailLog`/`tailLogMulti` have no built-in plugin either, but the
+ * [full-site](https://github.com/tetherto/mdk/tree/main/examples/full-site/plugins/site) and
+ * [mvp-site](https://github.com/tetherto/mdk/tree/main/examples/mvp-site/backend/gateway-plugins/site) example
+ * plugins serve the same tail-log data under a different route (`/site/history`) — useful as a pattern
+ * reference, not a drop-in match. Every other path has no built-in or reference implementation anywhere in
+ * this repo — create your own via a
+ * [Gateway plugin](https://docs.tether.io/mdk/guides/gateway/plugins) matching your Worker/business logic. See
+ * the consuming hook's own JSDoc (`ui/packages/react-adapter/src/hooks/`) for the exact status of the endpoint
+ * it calls.
  *
  * @category query
  */
@@ -24,10 +32,6 @@ export const API_ENDPOINTS = {
   auth: '/auth',
   authToken: '/auth/token',
   userInfo: '/auth/userinfo',
-
-  // Devices / telemetry (base segments — the `:id` is appended by the factory)
-  devices: '/devices',
-  telemetry: '/telemetry',
 
   // Mining tail-log / listings
   tailLog: '/auth/tail-log',
@@ -49,16 +53,21 @@ export const API_ENDPOINTS = {
 
   // Pool Manager — reads
   poolConfigs: '/auth/configs/pool',
-  poolConfigForDevice: '/auth/pools/config',
+  poolConfigForDevice: '/auth/pools/config/:minerId',
   containerPoolStats: '/auth/pools/stats/containers',
   pools: '/auth/pools',
+  poolBalanceHistory: '/auth/pools/:pool/balance-history',
   miners: '/auth/miners',
 
-  // Pool Manager — action / voting workflow (base; verbs appended by factory)
+  // Pool Manager — action / voting workflow
   actions: '/auth/actions',
-} as const
+  submitAction: '/auth/actions/:type',
+  submitBatchAction: '/auth/actions/:type/batch',
+  voteAction: '/auth/actions/:type/:id/vote',
+  cancelActions: '/auth/actions/:type/cancel',
+} as const satisfies EndpointMap
 
-/** Union of the configured endpoint path strings. */
+/** Union of the configured endpoint path templates. */
 export type ApiEndpoint = (typeof API_ENDPOINTS)[keyof typeof API_ENDPOINTS]
 
 /**

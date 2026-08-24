@@ -5,7 +5,7 @@
 // payload fields and deviceId. Hermetic, via the { transport } injection seam.
 
 const test = require('brittle')
-const { createMdkClient } = require('../../index')
+const { createRawMdkClient } = require('../../index')
 const { ACTIONS, MESSAGE_TYPES } = require('../../../kernel/lib/protocol/actions')
 
 function captureTransport () {
@@ -21,7 +21,7 @@ function captureTransport () {
 
 async function sent (t, call) {
   const transport = captureTransport()
-  const client = createMdkClient({ transport })
+  const client = createRawMdkClient({ transport })
   await client.connect()
   await call(client)
   t.is(transport.requests.length, 1, 'issued exactly one request')

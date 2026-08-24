@@ -1,5 +1,6 @@
 import { ContainerDetail, ContainerDetailPlaceholder } from '@tetherto/mdk-react-devkit/domain'
-import { CONTAINER_TAB_LABEL, getSupportedContainerTabs } from '@tetherto/mdk-ui-foundation'
+import { CONTAINER_TAB_LABEL } from '@tetherto/mdk-ui-foundation'
+import { getSupportedContainerTabs } from '@tetherto/mdk-ui-foundation/presets/mining'
 import { type JSX, useState } from 'react'
 
 import { DemoBlock } from '../components/demo-block'

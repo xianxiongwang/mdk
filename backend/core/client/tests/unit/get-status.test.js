@@ -6,7 +6,7 @@
 // calls so we can assert retry/warmup behavior.
 
 const test = require('brittle')
-const { createMdkClient } = require('../../index')
+const { createRawMdkClient } = require('../../index')
 const { ACTIONS } = require('../../../kernel/lib/protocol/actions')
 
 function fakeTransport (respond) {
@@ -28,7 +28,7 @@ test('getStatus - shapes WORKER_LIST into { workers, totalDevices }', async (t) 
       { workerId: 'w2', deviceIds: ['d3'], state: 'READY', healthState: 'DEGRADED', rpcKey: 'bb' }
     ]
   }))
-  const client = createMdkClient({ transport })
+  const client = createRawMdkClient({ transport })
   await client.connect()
 
   const status = await client.getStatus()
@@ -47,7 +47,7 @@ test('getStatus - shapes WORKER_LIST into { workers, totalDevices }', async (t) 
 })
 
 test('getStatus - missing/empty workers yields zero totals', async (t) => {
-  const client = createMdkClient({ transport: fakeTransport(() => ({})) })
+  const client = createRawMdkClient({ transport: fakeTransport(() => ({})) })
   await client.connect()
   const status = await client.getStatus()
   t.alike(status, { workers: [], totalDevices: 0 })
@@ -58,7 +58,7 @@ test('getStatus - retries a transient CHANNEL_CLOSED then succeeds', async (t) =
     if (n === 1) throw new Error('CHANNEL_CLOSED: channel closed')
     return { workers: [{ workerId: 'w1', deviceIds: [], state: 'READY', healthState: 'HEALTHY' }] }
   })
-  const client = createMdkClient({ transport })
+  const client = createRawMdkClient({ transport })
   await client.connect()
 
   const status = await client.getStatus({ retryDelayMs: 1 })
@@ -68,7 +68,7 @@ test('getStatus - retries a transient CHANNEL_CLOSED then succeeds', async (t) =
 
 test('getStatus - rejects with ERR_MDK_STATUS_TIMEOUT when the request hangs', async (t) => {
   const transport = fakeTransport(() => new Promise(() => {})) // never resolves
-  const client = createMdkClient({ transport })
+  const client = createRawMdkClient({ transport })
   await client.connect()
 
   await t.exception(() => client.getStatus({ timeoutMs: 20, retries: 1 }), /ERR_MDK_STATUS_TIMEOUT/)
@@ -76,7 +76,7 @@ test('getStatus - rejects with ERR_MDK_STATUS_TIMEOUT when the request hangs', a
 
 test('getStatus - exhausts retries and throws the last error', async (t) => {
   const transport = fakeTransport(() => { throw new Error('ERR_HRPC_NOT_CONNECTED') })
-  const client = createMdkClient({ transport })
+  const client = createRawMdkClient({ transport })
   await client.connect()
 
   await t.exception(() => client.getStatus({ retries: 3, retryDelayMs: 1 }), /ERR_HRPC_NOT_CONNECTED/)
@@ -85,7 +85,7 @@ test('getStatus - exhausts retries and throws the last error', async (t) => {
 
 test('connect - no args does not warm up (no requests issued)', async (t) => {
   const transport = fakeTransport(() => ({ workers: [] }))
-  const client = createMdkClient({ transport })
+  const client = createRawMdkClient({ transport })
   await client.connect()
   t.is(transport.calls, 0, 'plain connect() issues no request — prior behavior')
 })
@@ -93,7 +93,7 @@ test('connect - no args does not warm up (no requests issued)', async (t) => {
 test('connect - warmup issues a best-effort listWorkers and swallows failure', async (t) => {
   let calls = 0
   const transport = fakeTransport(() => { calls++; throw new Error('CHANNEL_CLOSED') })
-  const client = createMdkClient({ transport })
+  const client = createRawMdkClient({ transport })
 
   await client.connect({ warmup: true, warmupRetries: 2, warmupDelayMs: 1 }) // must not throw
   t.is(calls, 2, 'warmup retried up to warmupRetries')

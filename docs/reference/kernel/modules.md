@@ -15,10 +15,10 @@ characteristics. It communicates with the others only through its declared inter
 
 ## Modules
 
-- [`WorkerRegistry`][worker-registry]: maps `deviceId` to `workerId` to RPC channel, and drives each Worker through its registration lifecycle
+- [`WorkerRegistry`][worker-registry]: holds two flat indexes, `deviceId` to its owning Worker and `workerId` to that Worker's record, and drives each Worker through its registration lifecycle
 - [`CommandDispatcher`][command-dispatcher]: validates an incoming command, resolves the target device or devices, and hands off to the Command State Machine
 - [`CommandStateMachine`][command-state-machine]: tracks every command's execution lifecycle in a write-ahead log
-- [`TelemetryCollector`][telemetry-collector]: a stateless proxy that routes telemetry queries to the Worker that owns the data
+- [`TelemetryCollector`][telemetry-collector]: a proxy that routes telemetry queries to the Worker that owns the data, persisting none of it
 - [`Scheduler`][scheduler-module]: the system metronome that fires the recurring telemetry, health, and state jobs
 - [`HealthMonitor`][health-monitor]: pings every registered Worker on a cadence and marks dead ones unroutable
 - [`ActionManager`][action-manager]: handles the write action approval lifecycle at the Kernel layer
@@ -35,8 +35,8 @@ characteristics. It communicates with the others only through its declared inter
 [kernel-package]: ../../../backend/core/kernel/index.js
 <!-- docs@tether.io: kernel-package → https://github.com/tetherto/mdk/blob/main/backend/core/kernel/index.js -->
 
-[kernel-concept]: ../../concepts/stack/kernel.md
-<!-- docs@tether.io: kernel-concept → concepts/stack/kernel -->
+[kernel-concept]: ../../../backend/core/kernel/README.md
+<!-- docs@tether.io: kernel-concept → https://github.com/tetherto/mdk/blob/main/backend/core/kernel/README.md -->
 
 [kernel-architecture]: ../../../backend/core/kernel/README.md#architecture
 <!-- docs@tether.io: kernel-architecture → https://github.com/tetherto/mdk/blob/main/backend/core/kernel/README.md#architecture -->
@@ -69,4 +69,4 @@ characteristics. It communicates with the others only through its declared inter
 <!-- docs@tether.io: protocol-messages → reference/protocol/messages -->
 
 [control-plane-writes]: ../../concepts/control-plane.md#approval-gated-writes
-<!-- docs@tether.io: control-plane-writes → concepts/control-plane -->
+<!-- docs@tether.io: control-plane-writes → https://github.com/tetherto/mdk/blob/main/docs/concepts/control-plane.md#approval-gated-writes -->

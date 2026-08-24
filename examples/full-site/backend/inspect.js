@@ -8,7 +8,7 @@
 
 const path = require('path')
 const fs = require('fs')
-const { createMdkClient } = require('../../../backend/core/client')
+const { createRawMdkClient } = require('../../../backend/core/client')
 const { keysDir } = require('../../../backend/core/mdk/lib/local-discovery')
 
 function kernelKeyPath (root) {
@@ -25,7 +25,7 @@ function readKernelKey (root) {
 // clientFactory is injectable for tests.
 async function fetchStatus (root, { clientFactory, ...opts } = {}) {
   const kernelKey = readKernelKey(root)
-  const make = clientFactory || ((key) => createMdkClient({ hrpc: { key } }))
+  const make = clientFactory || ((key) => createRawMdkClient({ hrpc: { key } }))
   const client = make(kernelKey)
   await client.connect()
   try {

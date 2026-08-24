@@ -1,18 +1,11 @@
-import {
-  buildHashrateTailLogParams,
-  buildMinerpoolStatsHistoryExtDataParams,
-  type ChartCardData,
-  type ChartDataset,
-  type DashboardQueryRange,
-  extDataQuery,
-  type HashRateLogEntry,
-  type MinerpoolStatsHistoryEntry,
-  readHashrateMhs,
-  type TailLogEntry,
-  tailLogQuery,
-} from '@tetherto/mdk-ui-foundation'
+import { type ChartCardData, type ChartDataset, type HashRateLogEntry, type MinerpoolStatsHistoryEntry, type TailLogEntry, WEBAPP_SHORT_NAME } from '@tetherto/mdk-ui-foundation'
+import { extDataQuery, tailLogQuery } from '@tetherto/mdk-ui-foundation/presets/mining'
+import { buildHashrateTailLogParams, buildMinerpoolStatsHistoryExtDataParams, type DashboardQueryRange, readHashrateMhs } from '@tetherto/mdk-ui-foundation/presets/mining'
 import { useQueries, useQueryClient } from '@tanstack/react-query'
 import { useMemo } from 'react'
+import { buildAscDedupedPoints, computeMinMaxAvg, lastY } from './chart-points'
+import { headOrEmpty } from './list-things-utils'
+import { useAuthToken } from './use-auth-token'
 
 /* Unit conventions:
  * - Tail-log (miner) emits hashrate in MH/s; 1 PH/s = 1e9 MH/s.
@@ -20,9 +13,9 @@ import { useMemo } from 'react'
 const MH_PER_PHS = 1_000_000_000
 const HS_PER_PHS = 1_000_000_000_000_000
 
-/* Colour palette mirrors Mining OS's hashrate chart legend so consumers
+/* Colour palette mirrors the reference app's hashrate chart legend so consumers
  * see the same lines in the same hues across both apps. */
-const MINING_OS_COLOR = '#f7931a'
+const APP_COLOR = '#f7931a'
 const AGGR_POOL_COLOR = '#22afff'
 const POOL_COLORS: Record<string, string> = {
   f2pool: '#8b5cf6',
@@ -30,69 +23,11 @@ const POOL_COLORS: Record<string, string> = {
 }
 const FALLBACK_POOL_COLORS = ['#34c759', '#ffd700', '#ff85a1', '#6ee7b7']
 
-const MINING_OS_LABEL = 'Mining OS Hash Rate'
+const APP_LABEL = `${WEBAPP_SHORT_NAME} Hash Rate`
 const AGGR_POOL_LABEL = 'Aggr Pool Hash Rate'
 const POOL_LABEL_SUFFIX = ' Hash Rate'
 
 const formatPhs = (value: number): string => `${value.toFixed(2)} PH/s`
-
-const headOrEmpty = <T>(value: T[][] | undefined | null): T[] => {
-  if (!Array.isArray(value)) return []
-  const first = value[0]
-  return Array.isArray(first) ? (first as T[]) : []
-}
-
-const lastY = (points: Array<{ x: number; y: number | null }>): number | null => {
-  for (let i = points.length - 1; i >= 0; i -= 1) {
-    const y = points[i]?.y
-    if (typeof y === 'number') return y
-  }
-  return null
-}
-
-const computeMinMaxAvg = (
-  points: Array<{ x: number; y: number | null }>,
-  format: (v: number) => string,
-): { min: string; max: string; avg: string } | undefined => {
-  let min = Number.POSITIVE_INFINITY
-  let max = Number.NEGATIVE_INFINITY
-  let sum = 0
-  let count = 0
-  for (const point of points) {
-    if (typeof point.y === 'number') {
-      if (point.y < min) min = point.y
-      if (point.y > max) max = point.y
-      sum += point.y
-      count += 1
-    }
-  }
-  if (count === 0) return undefined
-  return { min: format(min), max: format(max), avg: format(sum / count) }
-}
-
-/* lightweight-charts expects `x` in **ms epoch** (it divides by 1000
- * internally to derive UTCTimestamp seconds) and rejects ties. Sort
- * entries by ts, snap each one to its enclosing second (in ms), and
- * collapse consecutive same-bucket samples keeping the latest value. */
-const MS_PER_SECOND = 1000
-const buildAscDedupedPoints = <T extends { ts?: unknown }>(
-  entries: readonly T[],
-  toY: (entry: T) => number | null,
-): Array<{ x: number; y: number | null }> => {
-  const sorted = [...entries].sort((a, b) => Number(a.ts) - Number(b.ts))
-  const out: Array<{ x: number; y: number | null }> = []
-  for (const entry of sorted) {
-    const xMs = Math.floor(Number(entry.ts) / MS_PER_SECOND) * MS_PER_SECOND
-    const y = toY(entry)
-    const last = out[out.length - 1]
-    if (last && last.x === xMs) {
-      last.y = y
-    } else {
-      out.push({ x: xMs, y })
-    }
-  }
-  return out
-}
 
 const titleCasePool = (poolType: string): string => {
   if (poolType.length === 0) return poolType
@@ -153,6 +88,8 @@ const buildPerPoolDatasets = (entries: readonly MinerpoolStatsHistoryEntry[]): C
 }
 
 export type UseHashrateChartDataParams = DashboardQueryRange & {
+  /** Disable the query. Defaults to running whenever an auth token is present. */
+  enabled?: boolean
   /** Polling interval in ms. Defaults to 60s. Pass 0 to disable. */
   refetchInterval?: number
 }
@@ -164,19 +101,31 @@ export type HashrateChartResult = {
 }
 
 /**
- * Multi-series hashrate chart data — Mining OS (miner tail-log) plus
+ * Multi-series hashrate chart data — the app-side series (miner tail-log) plus
  * an `Aggr Pool` rollup and one line per individual pool (drawn from
  * the paginated `type=minerpool, key=stats-history` ext-data feed).
  *
  * Both upstream calls share the page's `{ timeline, start, end }`
  * inputs; results are merged into a single `ChartCardData` payload so
  * the dashboard page stays pure presentation. Each pool gets a
- * deterministic colour from the Mining OS-mirrored palette.
+ * deterministic colour from the reference-app-mirrored palette.
+ *
+ * @remarks
+ * The miner series' `/auth/tail-log` endpoint is illustrative — no built-in
+ * plugin mounts it over HTTP. No reference implementation ships in this
+ * repo. The pool series' `/auth/ext-data` route is also not served by the
+ * three built-in plugins (`telemetry`, `site-hashrate`, `site-monitor`); a
+ * generic route ships in `@tetherto/mdk-plugin-auth`, but see
+ * [the bundled auth plugin](https://github.com/tetherto/mdk/blob/main/backend/core/plugins/README.md#the-bundled-auth-plugin)
+ * for why it throws rather than runs. Bring your own
+ * [Gateway plugin](https://docs.tether.io/mdk/guides/gateway/plugins) for
+ * each.
  *
  * @category dashboard
  */
 export const useHashrateChartData = (params: UseHashrateChartDataParams): HashrateChartResult => {
   const queryClient = useQueryClient()
+  const token = useAuthToken()
   const minerFactory = tailLogQuery(queryClient, buildHashrateTailLogParams(params))
   const poolHistoryFactory = extDataQuery<MinerpoolStatsHistoryEntry>(
     queryClient,
@@ -187,13 +136,17 @@ export const useHashrateChartData = (params: UseHashrateChartDataParams): Hashra
     queries: [
       {
         ...minerFactory,
+        enabled: params.enabled ?? !!token,
         refetchInterval: params.refetchInterval ?? 60_000,
+        /* single-Kernel assumption: one node's series. See list-things-utils.ts. */
         select: (raw: HashRateLogEntry[][] | TailLogEntry[][]) =>
           headOrEmpty<HashRateLogEntry>(raw as HashRateLogEntry[][]),
       },
       {
         ...poolHistoryFactory,
+        enabled: params.enabled ?? !!token,
         refetchInterval: params.refetchInterval ?? 60_000,
+        /* single-Kernel assumption: one node's series. See list-things-utils.ts. */
         select: (raw: MinerpoolStatsHistoryEntry[][]) =>
           headOrEmpty<MinerpoolStatsHistoryEntry>(raw),
       },
@@ -210,15 +163,15 @@ export const useHashrateChartData = (params: UseHashrateChartDataParams): Hashra
 
     const datasets: ChartDataset[] = []
 
-    /* Mining OS — derived from the miner tail-log aggregate. */
-    const miningOsPoints = buildAscDedupedPoints(minerEntries ?? [], (entry) => {
+    /* App-side series — derived from the miner tail-log aggregate. */
+    const appPoints = buildAscDedupedPoints(minerEntries ?? [], (entry) => {
       const mhs = readHashrateMhs(entry as HashRateLogEntry)
       return mhs === undefined ? null : mhs / MH_PER_PHS
     })
     datasets.push({
-      label: MINING_OS_LABEL,
-      borderColor: MINING_OS_COLOR,
-      data: miningOsPoints,
+      label: APP_LABEL,
+      borderColor: APP_COLOR,
+      data: appPoints,
     })
 
     /* Aggr Pool — sum of every pool's hashrate at each timestamp. */
@@ -233,15 +186,15 @@ export const useHashrateChartData = (params: UseHashrateChartDataParams): Hashra
       datasets.push(...buildPerPoolDatasets(poolEntries))
     }
 
-    /* Mining OS drives the highlighted value + min/max/avg — it's
+    /* The app-side series drives the highlighted value + min/max/avg — it's
      * the canonical "site hashrate" figure. */
-    const latest = lastY(miningOsPoints)
+    const latest = lastY(appPoints)
     return {
       datasets,
       yTicksFormatter: formatPhs,
       priceFormatter: formatPhs,
       highlightedValue: latest == null ? undefined : { value: latest.toFixed(3), unit: 'PH/s' },
-      minMaxAvg: computeMinMaxAvg(miningOsPoints, formatPhs),
+      minMaxAvg: computeMinMaxAvg(appPoints, formatPhs),
     }
   }, [minerQuery.data, poolQuery.data])
 

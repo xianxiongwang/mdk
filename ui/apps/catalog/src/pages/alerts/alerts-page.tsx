@@ -6,12 +6,12 @@ import { Alerts } from '@tetherto/mdk-react-devkit/domain'
 
 import { DemoPageHeader } from '../../components/demo-page-header'
 
-import { DEMO_DEVICES_PAYLOAD, DEMO_HISTORICAL_ALERTS } from './alerts-page.fixtures'
+import { DEMO_DEVICES, DEMO_HISTORICAL_ALERTS } from './alerts-page.fixtures'
 
 import './alerts-page.scss'
 
 /**
- * Alerts demo. In production, replace `DEMO_DEVICES_PAYLOAD` with the
+ * Alerts demo. In production, replace `DEMO_DEVICES` with the
  * output of `useActiveIncidents()` from `@tetherto/mdk-react-adapter`
  * — see ./alerts-page.fixtures.ts for the fixture-vs-hook split.
  */
@@ -55,7 +55,7 @@ export const AlertsPageDemo = (): JSX.Element => {
       />
       <Alerts
         header={header}
-        devices={DEMO_DEVICES_PAYLOAD}
+        devices={DEMO_DEVICES}
         historicalAlerts={DEMO_HISTORICAL_ALERTS}
         isHistoricalAlertsEnabled={historicalEnabled}
         selectedAlertId={selectedAlertId}

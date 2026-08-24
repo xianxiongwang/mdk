@@ -38,8 +38,8 @@ It ships three TypeScript packages and one font package:
 - [`@tetherto/mdk-react-adapter`](../packages/react-adapter/README.md) — React
   bindings for the stores and TanStack Query.
 - [`@tetherto/mdk-react-devkit`](../packages/react-devkit/README.md) — the
-  component library: generic UI primitives in `src/primitives/`, mining-domain
-  components and hooks in `src/domain/`.
+  component library: generic UI primitives in [`src/primitives/`](../packages/react-devkit/src/primitives/), mining-domain
+  components and hooks in [`src/domain/`](../packages/react-devkit/src/domain/).
 
 Plus a CLI:
 
@@ -325,7 +325,7 @@ Runs three steps in order:
 
 1. **`build:registry`** — regenerates `dist/registry.json` and `dist/blueprints.json` from source
 2. **[`check-registry-completeness.mts`](../packages/react-devkit/scripts/check-registry-completeness.mts)** — scans source directly for `@tier agent-ready` declarations and fails if any are absent from the registry. This closes the source-vs-registry drift gap: the registry generator walks the public barrel and can silently skip an export it cannot resolve, so source and registry can diverge without anyone noticing. Deliberate exceptions live in [`scripts/registry-completeness-exceptions.json`](../packages/react-devkit/scripts/registry-completeness-exceptions.json) — every exemption is an explicit, reviewable entry in the PR diff
-3. **`check-agent-ready.mjs`** — the strict contract gate described below
+3. **[`check-agent-ready.mjs`](../packages/react-devkit/scripts/check-agent-ready.mjs)** — the strict contract gate described below
 
 The strict gate. Loads `dist/registry.json` and `dist/blueprints.json`,
 applies the agent-ready contract rules, and compares against
@@ -498,7 +498,7 @@ blueprints, docs) just makes it easier to navigate.
 End-to-end recipe for running the **MDK UI Shell** Operations Dashboard
 locally, against a local
 [`mdk-gateway`](../../backend/core/gateway/README.md)
-backend, which ships in this repo at `backend/core/gateway`.
+backend, which ships in this repo at [`backend/core/gateway`](../../backend/core/gateway/README.md).
 The frontend is scaffolded with one CLI command.
 
 There are two ways to run it, with or without authentication:
@@ -511,7 +511,7 @@ There are two ways to run it, with or without authentication:
 
 > **Audience:** community developers evaluating MDK, contributors writing
 > demos, LLM agents bootstrapping a similar dashboard. If you're already
-> deep inside Mining OS / production MOS, you don't need this section.
+> deep inside the production MDK system, you don't need this section.
 
 ## Shell setup — TL;DR
 
@@ -535,7 +535,7 @@ shell is built around a session it has no way to obtain yet. Pick
 [Run it without sign-in](#run-it-without-sign-in) or
 [Add Google sign-in](#add-google-sign-in).
 
-## Auth in v0.6 — what ships
+## Auth in this shell — what ships
 
 The Gateway is a plugin host with no API of its own, and no built-in auth or
 OAuth2 facilities. That has two consequences here:
@@ -544,36 +544,27 @@ OAuth2 facilities. That has two consequences here:
   `@tetherto/mdk-plugin-auth` is bundled but unwired, and it consumes a token
   rather than issuing one.
 - **The Gateway does not validate tokens.** Plugin routes can declare
-  `"auth": true`, but nothing enforces it — routes never receive a
-  `services.authLib`. An unauthenticated frontend talks to it fine, which is
-  what makes [running it without sign-in](#run-it-without-sign-in) work.
+  `"auth": true`, but nothing enforces it — a controller gets no injected
+  identity layer to check against. An unauthenticated frontend talks to it
+  fine, which is what makes [running it without sign-in](#run-it-without-sign-in) work.
 
-The frontend half is all present — `<SignInGoogleButton>`, `RequireAuth`,
-`useAuthToken`, `useTokenPolling`, `authStore`. It is waiting on a backend that
-completes the redirect contract described under
+The frontend half is all present — the auth seam (`AuthProvider`,
+`gatewayRedirectAuth`, `MdkProvider`'s `auth` prop), `<SignInGoogleButton>`,
+`RequireAuth`, `useAuthToken`, `useTokenPolling`, `authStore`. It is waiting
+on a backend that completes the redirect contract described under
 [add Google sign-in](#add-google-sign-in).
 
 ## Run it without sign-in
 
-`RequireAuth` renders its children only when `authStore` holds a token, so the
-shell needs one of two edits to run without one. Both are in files the template
-expects you to own:
+Set `VITE_AUTH_BYPASS=true` in `.env` (the template's `.env.example` ships it
+already set) and restart the dev server. [`router.tsx`](../../examples/mdk-ui-shell-template/src/router.tsx) then renders the app
+directly instead of behind `<RequireAuth>` (see its `AUTH_BYPASS` comment),
+and [`main.tsx`](../../examples/mdk-ui-shell-template/src/main.tsx) seeds `authStore` with a stub token so token-reading
+components render (see its "Dev-only auth bypass" comment). `useTokenPolling`'s
+refresh cadence is disabled for this stub session in [`App.tsx`](../../examples/mdk-ui-shell-template/src/App.tsx).
 
-1. `src/main.tsx` — seed the store. The template already writes the token it
-   captures from the URL:
-
-   ```ts
-   const urlToken = extractAuthTokenFromUrl(window.location.search)
-   if (urlToken !== null && urlToken !== '') { authStore.getState().setToken(urlToken) }
-   ```
-
-   For local evaluation you can call `authStore.getState().setToken('local-dev')`
-   unconditionally instead. Any non-empty value satisfies the guard, and the
-   Gateway does not check it. Do not carry this past local evaluation — the value
-   is sent as a real `Authorization` header.
-
-2. `src/router.tsx` — or drop the `<RequireAuth>` wrapper entirely, so the
-   routes render without a session at all.
+Never carry this past local evaluation: the stub token is sent as a real
+`Authorization` header, and the Gateway does not check it.
 
 The dashboard then loads against the Gateway. Write affordances (vote, submit,
 cancel, comment) may still be inert, since nothing has granted a permission set.
@@ -618,15 +609,17 @@ The frontend only requires that plugin to honour two ends of a redirect:
   `<SignInGoogleButton>` navigates to;
 - a **return redirect** to the frontend carrying the token as
   `?authToken=<jwt>` — `http://localhost:3030/?authToken=…` on the MDK UI
-  Shell default port. `useAuthToken` extracts it and `useTokenPolling`
-  refreshes it.
+  Shell default port. `gatewayRedirectAuth()`'s `bootstrap`, run by
+  `MdkProvider` on mount, captures it and scrubs it from the address bar;
+  `useTokenPolling` then refreshes it before it expires.
 
 Everything else — which provider, where the client id and secret live, who
 counts as an allowed user — is your plugin's business.
 
-Restart the Gateway with the plugin mounted. The template needs no change: it
-already captures the returned `?authToken=` into `authStore`, scrubs it from the
-address bar, and `useTokenPolling` refreshes it before expiry.
+Restart the Gateway with the plugin mounted. The template needs no change:
+`gatewayRedirectAuth()`'s `bootstrap` already captures the returned
+`?authToken=` into `authStore` and scrubs it from the address bar, and
+`useTokenPolling` refreshes it before expiry.
 
 > **No-CORS reality:** the backend has no CORS plugin. All API calls must
 > go through a same-origin proxy. The MDK UI Shell Vite config already
@@ -678,7 +671,7 @@ data" rather than synthesizing mock telemetry.
 If you need to exercise the charts:
 
 - Run the backend's integration test harness (see
-  `backend/core/gateway/tests/integration/`) — it stubs Kernel clusters with
+  [`backend/core/gateway/tests/integration/`](../../backend/core/gateway/tests/integration/)) — it stubs Kernel clusters with
   mock data.
 - Or write a small fixture loader that POSTs telemetry into the backend's
   SQLite DB.
@@ -690,7 +683,7 @@ Both are out of scope for this guide and for the MDK UI Shell template.
 ### Sign-in redirect lands at the wrong port
 
 The redirect your identity plugin sends the token to doesn't match the FE port.
-MDK UI Shell defaults to **3030** (see `vite.config.ts`). Change one side to
+MDK UI Shell's [`vite.config.ts`](../../examples/mdk-ui-shell-template/vite.config.ts) defaults to **3030**. Change one side to
 match the other.
 
 ### Every API request returns 401
@@ -710,8 +703,8 @@ Common causes:
 The Vite proxy isn't catching your requests. Don't call the backend
 directly (`fetch('http://localhost:3000/...')`); use the data hooks,
 which read base URL from the `<MdkProvider apiBaseUrl>` you set in
-`main.tsx`. If you've changed the FE port, make sure the proxy in
-`vite.config.ts` still covers all four paths (`/auth`, `/oauth`, `/api`,
+[`main.tsx`](../../examples/mdk-ui-shell-template/src/main.tsx). If you've changed the FE port, make sure the proxy in
+[`vite.config.ts`](../../examples/mdk-ui-shell-template/vite.config.ts) still covers all four paths (`/auth`, `/oauth`, `/api`,
 `/pub`).
 
 ### Charts are empty
@@ -744,4 +737,4 @@ your scaffolded app                     # What you cd into to run `npm run dev`
 
 For the architecture rules governing how the template composes packages
 (and what *not* to do when extending), read the template's own
-`USAGE.md` — it's the source-of-truth assembly contract.
+[`USAGE.md`](../../examples/mdk-ui-shell-template/USAGE.md) — it's the source-of-truth assembly contract.

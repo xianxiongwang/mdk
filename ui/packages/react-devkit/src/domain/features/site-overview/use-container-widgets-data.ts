@@ -5,14 +5,8 @@ import { formatValueUnit, UNITS } from '@primitives'
 
 import { useContainerSettings, useContainerWidgets } from '@tetherto/mdk-react-adapter'
 import type { UseContainerWidgetsOptions } from '@tetherto/mdk-react-adapter'
-import {
-  CONTAINER_STATUS,
-  deriveContainerActivity,
-  deriveContainerSummary,
-  deriveContainerTanks,
-  findMatchingContainer,
-  getWidgetAlarmState,
-} from '@tetherto/mdk-ui-foundation'
+import { CONTAINER_STATUS } from '@tetherto/mdk-ui-foundation'
+import { deriveContainerActivity, deriveContainerSummary, deriveContainerTanks, findMatchingContainer, getWidgetAlarmState } from '@tetherto/mdk-ui-foundation/presets/mining'
 import type { ListThingsDevice, TailLogEntry } from '@tetherto/mdk-ui-foundation'
 
 import { getContainerName } from '../../utils/container-utils'

@@ -31,16 +31,31 @@ describe('useHeaderControls', () => {
   it('loads preferences from localStorage on mount', () => {
     const stored = {
       poolMiners: false,
-      mosMiners: true,
+      appMiners: true,
       poolHashrate: true,
-      mosHashrate: false,
+      appHashrate: false,
       consumption: true,
       efficiency: false,
     }
     localStorage.setItem('headerControlsPreferences', JSON.stringify(stored))
     const { result } = renderHook(() => useHeaderControls())
     expect(result.current.preferences.poolMiners).toBe(false)
-    expect(result.current.preferences.mosMiners).toBe(true)
+    expect(result.current.preferences.appMiners).toBe(true)
+  })
+
+  it('merges stored entries missing newer keys over the defaults', () => {
+    // Simulates a stored entry written before the mos* -> app* key rename.
+    const stored = {
+      poolMiners: false,
+      poolHashrate: true,
+      consumption: true,
+      efficiency: false,
+    }
+    localStorage.setItem('headerControlsPreferences', JSON.stringify(stored))
+    const { result } = renderHook(() => useHeaderControls())
+    expect(result.current.preferences.appMiners).toBe(DEFAULT_HEADER_PREFERENCES.appMiners)
+    expect(result.current.preferences.appHashrate).toBe(DEFAULT_HEADER_PREFERENCES.appHashrate)
+    expect(result.current.preferences.poolMiners).toBe(false)
   })
 
   it('handleToggle updates a preference and saves to localStorage', () => {

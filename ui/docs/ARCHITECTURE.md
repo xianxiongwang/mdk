@@ -38,8 +38,9 @@ Pure TypeScript, no React:
 ### `@tetherto/mdk-react-adapter` — React bindings
 
 - `<MdkProvider>` — wraps `QueryClientProvider` from
-  `@tanstack/react-query` and exposes the resolved API base URL via
-  React context.
+  `@tanstack/react-query` and exposes the resolved API base URL and
+  `AuthProvider`-based auth context via React context. Full seam details in
+  the `@tetherto/mdk-react-adapter` package entry in `## Packages`.
 - One React hook per core store (`useAuth`, `useDevices`, …) built on
   `useStore(<vanillaStore>)` from `zustand`.
 - Op Centre read hooks (`useExplorerList`, `useContainerWidgets`,
@@ -51,9 +52,9 @@ Pure TypeScript, no React:
 
 ### `@tetherto/mdk-react-devkit` — React UI library
 
-- `src/primitives/` — ~60 generic UI primitives built on Radix UI: Button,
+- [`src/primitives/`](../packages/react-devkit/src/primitives/) — ~60 generic UI primitives built on Radix UI: Button,
   Dialog, Switch, Select, Data Table, Charts, …
-- `src/domain/` — mining-domain components, custom hooks, a TanStack
+- [`src/domain/`](../packages/react-devkit/src/domain/) — mining-domain components, custom hooks, a TanStack
   Query API stub (real endpoints live in the consuming applications).
 
 ## Dependency graph
@@ -109,7 +110,7 @@ mdk-ui/
 │   └── fonts/            # @tetherto/mdk-fonts            — JetBrains Mono assets
 ├── apps/
 │   └── catalog/          # @tetherto/mdk-catalog-ui          — Vite/React showcase
-├── api/                  # TypeDoc config and public-surface schema for API docs generation
+├── api-surface/          # TypeDoc config and public-surface schema for API docs generation
 ├── docs/                 # Architecture, agent-first, build, styling, contributing
 └── scripts/              # Bundle-size and other repo helpers
 ```
@@ -118,7 +119,7 @@ mdk-ui/
 
 - **npm workspaces** with centralized root `overrides` for security and version governance
 - **Turborepo** for task orchestration and caching
-- **TypeScript** strict mode across all packages; shared `tsconfig.base.json`
+- **TypeScript** strict mode across all packages; shared [`tsconfig.base.json`](../tsconfig.base.json)
 - **ESLint** flat config via `@antfu/eslint-config`
 
 ## Packages
@@ -127,7 +128,7 @@ mdk-ui/
 
 **Purpose**: Framework-agnostic headless package. Plain TypeScript, no React.
 
-**Location**: `packages/ui-foundation`
+**Location**: [`packages/ui-foundation`](../packages/ui-foundation/README.md)
 
 **Surface**:
 
@@ -141,13 +142,13 @@ mdk-ui/
   `thingConfig`, `globalConfig`), Pool Manager reads/mutations, and
   thing-comment mutations (`addThingComment`, `editThingComment`,
   `deleteThingComment`)
-- Query factories (`factories.ts`): `{ queryKey, queryFn }` objects for
+- Query factories ([`factories.ts`](../packages/ui-foundation/src/presets/mining/factories.ts)): `{ queryKey, queryFn }` objects for
   mining read endpoints; **Thing-comment mutation factories**
   (`addThingCommentMutation`, `editThingCommentMutation`,
   `deleteThingCommentMutation`) sharing one `thingCommentMutationFn`
-  implementation; pool factories in `pool-factories.ts` (no GET factory for
+  implementation; pool factories in [`pool-factories.ts`](../packages/ui-foundation/src/presets/mining/pool-factories.ts) (no GET factory for
   comments — they are embedded in the Thing record and returned via `listThingsQuery`)
-- **Device-action submission builders** (`device-actions.ts`):
+- **Device-action submission builders** ([`device-actions.ts`](../packages/ui-foundation/src/utils/device-actions.ts)):
   `DEVICE_ACTION`, `DEVICE_BATCH_ACTION`, and `POWER_MODE` constants;
   `DeviceActionSubmission` / `DeviceActionCrossThing` types;
   `buildDeviceActionSubmission` with the extras-spread-first override
@@ -190,12 +191,21 @@ actionsStore.getState().setAddPendingSubmissionAction({ action: "noop" });
 
 **Purpose**: React bindings for `@tetherto/mdk-ui-foundation`.
 
-**Location**: `packages/react-adapter`
+**Location**: [`packages/react-adapter`](../packages/react-adapter/README.md)
 
 **Surface**:
 
 - `<MdkProvider>` — wraps `QueryClientProvider` and supplies API
-  base-URL context. Required at the app root for the devkit to work
+  base-URL and auth context. Required at the app root for the devkit to work.
+  Its `auth` prop takes an `AuthProvider` (from `@tetherto/mdk-ui-foundation`)
+  — `bearerTokenAuth()` (the default `createMdkQueryClient` applies when used
+  without a provider) or `noAuth()` for an open API, and `gatewayRedirectAuth()`
+  from the mining preset for the bundled Gateway's OAuth-redirect flow, which
+  is `MdkProvider`'s own default. The seam itself is complete, but
+  `gatewayRedirectAuth()`'s refresh needs the bundled Gateway `auth` plugin,
+  which ships unwired, and its sign-in redirect needs an OAuth endpoint the
+  Gateway does not ship — see
+  [`@tetherto/mdk-react-adapter`'s Authentication section](../packages/react-adapter/README.md#authentication)
 - Store hooks (one per core store): `useAuth`, `useDevices`,
   `useNotifications`, `useTimezone`, `useActions`. Implemented via
   `useStore(<store>)` from `zustand`
@@ -209,7 +219,7 @@ actionsStore.getState().setAddPendingSubmissionAction({ action: "noop" });
 - Write-action hooks: `useSubmitPendingActions`, `useSubmitSingleAction`,
   `useVoteOnAction`, `useCancelAction`, `usePendingActions`,
   `useLiveActions` — connect UI to the Gateway `/auth/actions*`
-  voting/approval pipeline; `toVotingPayload` (in `action-write-utils.ts`)
+  voting/approval pipeline; `toVotingPayload` (in [`action-write-utils.ts`](../packages/react-adapter/src/hooks/action-write-utils.ts))
   derives targeting solely from `query` (built from `tags`), stripping
   `tags` / `crossThing` and every other client-only field
 - Op Centre read hooks (`@category op-centre`): `useExplorerList`,
@@ -239,24 +249,24 @@ import { MdkProvider, useAuth, useDevices } from "@tetherto/mdk-react-adapter";
 
 **Purpose**: React UI library that powers MDK-based applications.
 
-**Location**: `packages/react-devkit`
+**Location**: [`packages/react-devkit`](../packages/react-devkit/README.md)
 
 **Internal layout**:
 
-- `src/primitives/`: generic UI primitives built on Radix UI (Button, Dialog,
+- [`src/primitives/`](../packages/react-devkit/src/primitives/): generic UI primitives built on Radix UI (Button, Dialog,
   Switch, Table, Charts, …). BEM class names, SCSS design tokens, CSS
   custom property theming. Many folders ship co-located `USAGE.md` and
   `*.example.tsx` for `agent-ready` exports
-- `src/domain/`: mining-domain layer:
-  - `components/`: domain components
-  - `features/`: full-page compositions
-  - `hooks/`, `api/` (placeholder), `utils/`, `types/`, … — all reached via
+- [`src/domain/`](../packages/react-devkit/src/domain/): mining-domain layer:
+  - [`components/`](../packages/react-devkit/src/domain/components/index.ts): domain components
+  - [`features/`](../packages/react-devkit/src/domain/features/index.ts): full-page compositions
+  - `hooks/`, `api/` (placeholder), [`utils/`](../packages/react-devkit/src/domain/utils/), [`types/`](../packages/react-devkit/src/domain/types/index.ts), … — all reached via
     the `./domain` barrel or the top-level barrel (no separate `./components`
     / `./features` / `./hooks` / `./api` export subpaths today)
-- `blueprints/`: curated intent → component recipes (source for
+- [`blueprints/`](../packages/react-devkit/blueprints/README.md): curated intent → component recipes (source for
   `dist/blueprints.json`)
-- `scripts/`: `generate-registry.mts`, `check-agent-ready.mjs`,
-  `agent-ready-baseline.json`
+- [`scripts/`](../packages/react-devkit/scripts/): [`generate-registry.mts`](../packages/react-devkit/scripts/generate-registry.mts), [`check-agent-ready.mjs`](../packages/react-devkit/scripts/check-agent-ready.mjs),
+  [`agent-ready-baseline.json`](../packages/react-devkit/scripts/agent-ready-baseline.json)
 - [`AGENT_READY.md`](../packages/react-devkit/AGENT_READY.md): strict
   export contract (tiers, JSDoc, `USAGE.md`, examples)
 
@@ -270,8 +280,8 @@ import { MdkProvider, useAuth, useDevices } from "@tetherto/mdk-react-adapter";
 | `./registry.json` | Machine-readable component + hook registry |
 | `./blueprints.json` | Machine-readable blueprint index |
 | `./styles.css` | Compiled stylesheet (Vite) |
-| `./styles` | `src/primitives/styles/_mixins.scss` |
-| `./tokens.scss` | `src/primitives/styles/_colors.scss` |
+| `./styles` | [`src/primitives/styles/_mixins.scss`](../packages/react-devkit/src/primitives/styles/_mixins.scss) |
+| [`./tokens.scss`](../packages/react-devkit/src/primitives/components/dropdown-menu/tokens.scss) | [`src/primitives/styles/_colors.scss`](../packages/react-devkit/src/primitives/styles/_colors.scss) |
 
 **Agent manifests**: `dist/registry.json`, `dist/blueprints.json`.
 Built by `npm run build:registry` (part of `build`). Validated by
@@ -291,7 +301,7 @@ import "@tetherto/mdk-react-devkit/styles-domain.css"; // only if using domain (
 **Purpose**: Agent-first CLI for registry discovery, co-located docs/examples,
 page scaffolding, and targeted typecheck. Binary: `mdk-ui`.
 
-**Location**: `packages/cli`
+**Location**: [`packages/cli`](../packages/cli/README.md)
 
 **Surface**:
 
@@ -313,7 +323,7 @@ and core installed. Repo contributors run it via the workspace after
 
 **Purpose**: Font assets for the toolkit.
 
-**Location**: `packages/fonts`
+**Location**: [`packages/fonts`](../packages/fonts/README.md)
 
 **Exports**: JetBrains Mono `@font-face` declarations and files.
 
@@ -363,7 +373,7 @@ lives in [`CLAUDE.md`](../CLAUDE.md#separation-of-concerns-load-bearing-rule).
 ## Styling
 
 SCSS source compiled by Vite. Public design tokens (CSS custom properties)
-live in `packages/react-devkit/src/primitives/styles/_colors.scss`, re-exported as
+live in [`packages/react-devkit/src/primitives/styles/_colors.scss`](../packages/react-devkit/src/primitives/styles/_colors.scss), re-exported as
 `@tetherto/mdk-react-devkit/tokens.scss`; mixins are re-exported as
 `@tetherto/mdk-react-devkit/styles`. The compiled stylesheet declares
 `@layer base, mdk, app;`, so consumer styles win against devkit component

@@ -21,7 +21,7 @@
   }
 }
 
-/* Current + Historical sections render as bordered cards (Mining OS look):
+/* Current + Historical sections render as bordered cards (the reference app look):
  * title, filters, and the table all live inside one panel.
  *
  * Kept as a plain block (not flex): the inner DataTable owns its own
@@ -44,7 +44,7 @@
     overflow-x: auto;
   }
 
-  /* Orange scrollbar to match the Mining OS look. */
+  /* Orange scrollbar to match the reference app look. */
   .mdk-table__content-section {
     &::-webkit-scrollbar-thumb {
       background-color: var(--mdk-color-primary);

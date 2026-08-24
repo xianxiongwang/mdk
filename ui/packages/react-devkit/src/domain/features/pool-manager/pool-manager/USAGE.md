@@ -3,7 +3,7 @@
 Composite Pool Manager surface. Owns internal, state-based view switching across
 the dashboard and the four feature views (Pools, Miner Explorer, Sites Overview,
 Site Detail), so the whole experience resolves to a single route. The global
-`ActionsSidebar` (mounted in `App.tsx`) handles writes staged from any sub-view
+`ActionsSidebar` (mounted in [`App.tsx`](../../../../../../../../examples/mdk-ui-shell-template/src/App.tsx)) handles writes staged from any sub-view
 (create/edit pool, assign miners) so they can be submitted to the voting workflow.
 
 All data is supplied via props — the shell page is thin glue that reads the
@@ -83,5 +83,5 @@ straight through.
 Site Detail is a transient view opened by clicking a Sites Overview card. Capture
 the selected unit id via `onSiteSelect`, then pass `siteDetailDataOptions`
 (e.g. the miners assigned to that container) and `isSiteDetailLoading` so the
-view shows live data. See `examples/mdk-ui-shell-template/_managed/pages/PoolManager.tsx` for
+view shows live data. See [`examples/mdk-ui-shell-template/_managed/pages/PoolManager.tsx`](../../../../../../../../examples/mdk-ui-shell-template/_managed/pages/PoolManager.tsx) for
 a complete example.

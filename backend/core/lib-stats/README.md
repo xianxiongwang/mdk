@@ -60,20 +60,20 @@ Array of `[label, cronExpression]` pairs for the standard time buckets:
 
 | Op name | File | Description |
 |---------|------|-------------|
-| `cnt` | `ops/cnt.js` | Count entries |
-| `sum` | `ops/sum.js` | Numeric sum |
-| `avg` | `ops/avg.js` | Running average |
-| `group` | `ops/group.js` | Group entries by a field |
-| `group_sum` | `ops/group_sum.js` | Sum within groups |
-| `group_avg` | `ops/group_avg.js` | Average within groups |
-| `group_cnt` | `ops/group_cnt.js` | Count within groups |
-| `group_max` | `ops/group_max.js` | Max within groups |
-| `group_multiple_stats` | `ops/group_multiple_stats.js` | Multiple aggregations per group |
-| `arr_concat` | `ops/arr_concat.js` | Concatenate arrays across entries |
-| `obj_concat` | `ops/obj_concat.js` | Merge objects across entries |
-| `nested_obj_concat` | `ops/nested_obj_concat.js` | Deep-merge nested objects |
-| `array_obj_calc` | `ops/array_obj_calc.js` | Compute over arrays of objects |
-| `alerts_aggr` | `ops/alerts_aggr.js` | Aggregate alert states |
-| `alerts_group_cnt` | `ops/alerts_group_cnt.js` | Count alerts by group |
+| `cnt` | [`ops/cnt.js`](./ops/cnt.js) | Count entries |
+| `sum` | [`ops/sum.js`](./ops/sum.js) | Numeric sum |
+| `avg` | [`ops/avg.js`](./ops/avg.js) | Running average |
+| `group` | [`ops/group.js`](./ops/group.js) | Group entries by a field |
+| `group_sum` | [`ops/group_sum.js`](./ops/group_sum.js) | Sum within groups |
+| `group_avg` | [`ops/group_avg.js`](./ops/group_avg.js) | Average within groups |
+| `group_cnt` | [`ops/group_cnt.js`](./ops/group_cnt.js) | Count within groups |
+| `group_max` | [`ops/group_max.js`](./ops/group_max.js) | Max within groups |
+| `group_multiple_stats` | [`ops/group_multiple_stats.js`](./ops/group_multiple_stats.js) | Multiple aggregations per group |
+| `arr_concat` | [`ops/arr_concat.js`](./ops/arr_concat.js) | Concatenate arrays across entries |
+| `obj_concat` | [`ops/obj_concat.js`](./ops/obj_concat.js) | Merge objects across entries |
+| `nested_obj_concat` | [`ops/nested_obj_concat.js`](./ops/nested_obj_concat.js) | Deep-merge nested objects |
+| `array_obj_calc` | [`ops/array_obj_calc.js`](./ops/array_obj_calc.js) | Compute over arrays of objects |
+| `alerts_aggr` | [`ops/alerts_aggr.js`](./ops/alerts_aggr.js) | Aggregate alert states |
+| `alerts_group_cnt` | [`ops/alerts_group_cnt.js`](./ops/alerts_group_cnt.js) | Count alerts by group |
 
 Each operation module exports `{ calc, tally }`. `calc` is called per entry; `tally` is called once to finalize.

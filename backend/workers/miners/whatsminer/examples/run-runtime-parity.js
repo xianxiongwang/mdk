@@ -17,7 +17,7 @@ const os = require('os')
 const crypto = require('crypto')
 
 const { getKernel, waitForDiscovery, shutdown } = require('../../../../core/mdk')
-const { createMdkClient } = require('../../../../core/client')
+const { createRawMdkClient } = require('../../../../core/client')
 const wmMock = require('../mock/server')
 const { startWhatsminerWorker } = require('../plugin/boot')
 
@@ -100,7 +100,7 @@ async function main () {
   console.log('kernel discovered:', kernel.registry.listWorkers()
     .map((w) => `${w.workerId} [${w.state}] devices=${(w.deviceIds || []).join(',')}`).join('; '))
 
-  const client = createMdkClient({ hrpc: { key: kernel.getPublicKey() } })
+  const client = createRawMdkClient({ hrpc: { key: kernel.getPublicKey() } })
   await client.connect({ warmup: true })
 
   // 1. metrics pull ---------------------------------------------------------

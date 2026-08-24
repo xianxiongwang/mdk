@@ -1,9 +1,4 @@
-import {
-  buildHashrateTailLogParams,
-  buildMinerpoolStatsHistoryExtDataParams,
-  buildSiteConsumptionTailLogParams,
-  queryKeys,
-} from '@tetherto/mdk-ui-foundation'
+import { buildHashrateTailLogParams, buildMinerpoolStatsHistoryExtDataParams, buildSiteConsumptionTailLogParams, queryKeys  } from '@tetherto/mdk-ui-foundation/presets/mining'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderHook } from '@testing-library/react'
 import type { ReactNode } from 'react'

@@ -1,5 +1,6 @@
 'use strict'
 
+const dataProxy = require('../lib/site-data')
 const {
   WORKER_TYPES,
   AGGR_FIELDS,
@@ -67,8 +68,8 @@ function calculateEfficiencySummary (log) {
   }
 }
 
-module.exports = async function (req, services) {
-  return getEfficiency(services, req)
+module.exports = async function (req) {
+  return getEfficiency({ dataProxy }, req)
 }
 
 module.exports.getEfficiency = getEfficiency

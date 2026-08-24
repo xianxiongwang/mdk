@@ -1,20 +1,19 @@
 'use strict'
 
+const mdkClient = require('../lib/client')
+
 const ONE_DAY_MS = 24 * 60 * 60 * 1000
 
-module.exports = async function hashrateHistory (req, services) {
-  const { mdkClient } = services
-
-  if (!mdkClient) throw new Error('ERR_MDK_CLIENT_UNAVAILABLE')
-
+module.exports = async function hashrateHistory (req) {
   const now = Date.now()
   const start = Number(req.query.start) || (now - 7 * ONE_DAY_MS)
   const end = Number(req.query.end) || now
 
   if (start >= end) throw new Error('ERR_INVALID_DATE_RANGE')
 
+  // mdk-client request helpers resolve with the bare payload — no envelope.
   const workersResp = await mdkClient.listWorkers()
-  const workerList = workersResp?.payload?.workers || []
+  const workerList = workersResp?.workers || []
 
   const deviceIds = workerList.flatMap(w => w.deviceIds || [])
 
@@ -30,7 +29,7 @@ module.exports = async function hashrateHistory (req, services) {
 
   for (const result of results) {
     if (result.status !== 'fulfilled') continue
-    const history = result.value?.payload?.history
+    const history = result.value?.history
     if (!Array.isArray(history)) continue
 
     for (const point of history) {

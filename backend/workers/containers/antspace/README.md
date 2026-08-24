@@ -28,7 +28,7 @@ const worker = await startAntspaceWorker({
   model: 'hk3',
   storeDir: './store/antspace-rack-1',
   seedDevices: [{
-    info: { serialNum: 'HK3-A', container: 'container-A', location: 'site-texas-01.container' },
+    info: { serialNum: 'HK3-A', container: 'container-A', location: 'site-a-01.container' },
     opts: { address: '192.168.1.100', port: 18001 }
   }]
 })

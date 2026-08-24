@@ -27,7 +27,7 @@ full-width layout. Forwards refs and all native `<button>` attributes.
 
 ## Data contracts
 
-`ButtonVariant` and `ComponentSize` are exported from `core/types`.
+`ButtonVariant` and `ComponentSize` are exported from [`core/types`](../../types/index.ts).
 
 ## Notes
 

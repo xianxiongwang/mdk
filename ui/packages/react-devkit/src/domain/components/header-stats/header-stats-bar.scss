@@ -10,7 +10,7 @@
     /* Cells carry tabular data and don't truncate gracefully — when the
      * viewport is narrower than the natural width of the strip, scroll
      * horizontally instead of letting cells overlap their dividers.
-     * Scrollbar is hidden to match the original Mining OS header
+     * Scrollbar is hidden to match the original reference app header
      * (StatsWrapper: overflow auto hidden + scrollbar-width none). */
     overflow: auto hidden;
     scrollbar-width: none;

@@ -6,6 +6,11 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
     },
+    "@tetherto/mdk-ui-cli#build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"],
+      "cache": false
+    },
     "build:ts": {
       "dependsOn": ["^build:ts"],
       "outputs": ["dist/**"]

@@ -18,8 +18,8 @@ The CLI automates page creation and routing:
 npx mdk-ui add page Hashrate --component LineChartCard
 ```
 
-This generates `src/pages/Hashrate.tsx` and appends a route entry to
-`src/routes.ts`. The sidebar updates automatically because it reads from
+This generates a page such as `src/pages/Hashrate.tsx` and appends a route entry to
+[`src/routes.ts`](./src/routes.ts). The sidebar updates automatically because it reads from
 the same `ROUTES` array.
 
 To remove a generated page:

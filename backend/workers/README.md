@@ -40,7 +40,7 @@ Physical Hardware
 ```
 
 Workers never initiate communication to Kernel. Kernel obtains each Worker's RPC public key through [DHT, local-directory,
-or same-process discovery][deployment-topology], then initiates all MDK Protocol calls to the Worker over HRPC.
+or same-process discovery][discovery-model], then initiates all MDK Protocol calls to the Worker over HRPC.
 
 ## Worker architecture
 
@@ -98,6 +98,15 @@ Each Worker package ships an [`mdk-contract.json`][contract-schema] that declare
 - **capabilities.health** — supported states, alert types, troubleshooting rules
 - **capabilities.errors** — error code → description mapping
 
+The contract is the source of truth for a Worker's programmatic capabilities **and** its AI context. MDK deliberately merges formal validation
+and semantic guidance into one file rather than splitting them across a schema and a prose document that drift apart. Three fields carry that
+double load:
+
+- `description` is both the human-readable UI label and the rule an AI agent reasons about, so it states edge cases rather than just naming the
+field — *"Outlet temperature > 85C requires intervention"*, not *"Outlet temperature"*
+- `constraints` governs orchestration limits, publishing the bounds a caller is expected to respect
+- `troubleshooting` pairs if/then recovery behaviours with the payload they evaluate
+
 Kernel fetches this contract once via `capability.request` and caches it. The Gateway and AI agents use it to derive available operations dynamically.
 
 ## Start a Worker
@@ -126,14 +135,22 @@ await kernel.registerWorker(worker.runtime.getPublicKey())
 `seedDevices` only seeds a fresh, empty `storeDir`; add a device to an already-running Worker with the
 `registerThing` command instead (see each package's own `USAGE.md`, e.g. [`miners/whatsminer/USAGE.md`][whatsminer-usage]).
 
+The `registerWorker()` call above is the same-process shape. Separate processes on one machine, or Workers on other
+hosts, publish the key to a shared directory or join a DHT topic instead: the [discovery model][discovery-model]
+compares the three, and [Test a new Worker][test-a-worker] has a runnable host script for each.
+
 ## Implement a new Worker
 
-1. Read the [full build walkthrough][build-a-worker] — it covers the plugin shape, handlers, mock, tests, and hosting `WorkerRuntime` end to end
-2. Look at an existing Worker of the same family as a template (e.g. `miners/whatsminer/` for a new miner)
-3. Author `mdk-contract.json` following [`mdk-contract.schema.json`][contract-schema]
-4. Implement the hardware translation layer (the plugin's `connect`/`disconnect` and per-field/command handlers)
-5. The Worker instance boots, connects to devices, and publishes or registers its RPC public key through the selected discovery mode 
-— Kernel handles the rest
+1. Read the [full build walkthrough][build-a-worker] — it covers the current model: a package directory of
+   [`mdk-contract.json`][contract-schema] + handler files hosted by [`WorkerRuntimeV2`][worker-runtime-v2].
+2. Use [`demo-worker`][demo-worker] as the package-directory template.
+3. Author `mdk-contract.json` following [`mdk-contract.schema.json`][contract-schema].
+4. The Worker instance boots, connects to devices, and publishes or registers its RPC public key through the selected discovery mode — Kernel handles the rest.
+
+> [!WARNING]
+> The miner Workers in [Worker architecture](#worker-architecture) (Whatsminer, Antminer, Avalon) are v1 examples, not
+> recommended templates for a new plugin; they still construct `WorkerRuntime` v1 directly via the
+> `{ contract, dir, connect, disconnect? }` shape, which remains supported. `WorkerRuntimeV2` is the model for new hardware.
 
 ## Testing
 
@@ -191,6 +208,9 @@ also run just its own mock on its default port, e.g. `cd miners/whatsminer && np
 [build-a-worker]: ../../docs/guides/workers/build-a-worker.md
 <!-- docs@tether.io: build-a-worker → guides/workers/build-a-worker -->
 
+[test-a-worker]: ../../docs/guides/workers/test-a-worker.md
+<!-- docs@tether.io: test-a-worker → guides/workers/test-a-worker -->
+
 [antminer-plugin-index]: ./miners/antminer/plugin/index.js
 <!-- docs@tether.io: antminer-plugin-index → https://github.com/tetherto/mdk/blob/main/backend/workers/miners/antminer/plugin/index.js -->
 
@@ -200,14 +220,20 @@ also run just its own mock on its default port, e.g. `cd miners/whatsminer && np
 [mdk-e2e-server]: ./miners/antminer/mock/server.js
 <!-- docs@tether.io: mdk-e2e-server → https://github.com/tetherto/mdk/blob/main/backend/workers/miners/antminer/mock/server.js -->
 
+[worker-runtime-v2]: ../core/mdk-worker/lib/worker-runtime-v2.js
+<!-- docs@tether.io: worker-runtime-v2 → https://github.com/tetherto/mdk/blob/main/backend/core/mdk-worker/lib/worker-runtime-v2.js -->
+
+[demo-worker]: ./samples/demo-worker/package.json
+<!-- docs@tether.io: demo-worker → https://github.com/tetherto/mdk/blob/main/backend/workers/samples/demo-worker/package.json -->
+
 [mdk-worker-runtime]: ../core/mdk-worker/lib/worker-runtime.js
 <!-- docs@tether.io: mdk-worker-runtime → https://github.com/tetherto/mdk/blob/main/backend/core/mdk-worker/lib/worker-runtime.js -->
 
 [contract-schema]: ../core/mdk-worker/mdk-contract.schema.json
 <!-- docs@tether.io: contract-schema → https://github.com/tetherto/mdk/blob/main/backend/core/mdk-worker/mdk-contract.schema.json -->
 
-[deployment-topology]: ../../docs/concepts/deployment-topologies.md
-<!-- docs@tether.io: deployment-topologies → concepts/deployment-topologies -->
+[discovery-model]: docs/architecture.md#discovery-model
+<!-- docs@tether.io: discovery-model → https://github.com/tetherto/mdk/blob/main/backend/workers/docs/architecture.md#discovery-model -->
 
 [worker-runtime-legacy-services]: ../../docs/reference/maintainers/worker-runtime-legacy-services.md
 <!-- docs@tether.io: worker-runtime-legacy-services → https://github.com/tetherto/mdk/blob/main/docs/reference/maintainers/worker-runtime-legacy-services.md -->

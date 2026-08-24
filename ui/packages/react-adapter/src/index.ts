@@ -20,8 +20,6 @@
  */
 
 export * from './hooks/index.js'
-export type { NominalConfig } from './hooks/use-nominal-config'
-export { useNominalConfig } from './hooks/use-nominal-config'
 export * from './provider/index.js'
 export * from './utils/index.js'
 

@@ -1,5 +1,6 @@
 'use strict'
 
+const dataProxy = require('../lib/site-data')
 const {
   WORKER_TYPES,
   AGGR_FIELDS,
@@ -196,12 +197,12 @@ function processPowerModeTimelineData (results, containerFilter) {
   return log
 }
 
-module.exports = async function (req, services) {
-  return getPowerMode(services, req)
+module.exports = async function (req) {
+  return getPowerMode({ dataProxy }, req)
 }
 
-module.exports.timeline = async function (req, services) {
-  return getPowerModeTimeline(services, req)
+module.exports.timeline = async function (req) {
+  return getPowerModeTimeline({ dataProxy }, req)
 }
 
 module.exports.getPowerMode = getPowerMode

@@ -1,5 +1,8 @@
-import { type MinerpoolExtDataEntry, minerpoolStatsQuery } from '@tetherto/mdk-ui-foundation'
+import type { MinerpoolExtDataEntry } from '@tetherto/mdk-ui-foundation'
+import { minerpoolStatsQuery } from '@tetherto/mdk-ui-foundation/presets/mining'
 import { useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query'
+import { headOrEmpty } from './list-things-utils'
+import { useAuthToken } from './use-auth-token'
 
 /* Pool API reports hashrate in raw H/s (hashes per second), not the MH/s
  * convention used by the site tail-log aggregates. 1 PH/s = 1e15 H/s. */
@@ -20,14 +23,10 @@ export type PoolStats = {
 }
 
 export type UsePoolStatsOptions = {
-  /** Polling interval in ms. Defaults to 120s (Mining OS's POLLING_2m). Pass 0 to disable. */
+  /** Disable the query. Defaults to running whenever an auth token is present. */
+  enabled?: boolean
+  /** Polling interval in ms. Defaults to 120s (the reference app's POLLING_2m). Pass 0 to disable. */
   refetchInterval?: number
-}
-
-const headOrEmpty = <T>(value: T[][] | undefined | null): T[] => {
-  if (!Array.isArray(value)) return []
-  const first = value[0]
-  return Array.isArray(first) ? (first as T[]) : []
 }
 
 /**
@@ -41,21 +40,24 @@ const headOrEmpty = <T>(value: T[][] | undefined | null): T[] => {
  * separate provider and polls at a slower cadence (2 min) by default.
  *
  * @remarks
- * The `/auth/ext-data` endpoint is illustrative. MDK does not ship built-in
- * endpoints — create your own via a
- * [Gateway plugin](https://docs.tether.io/mdk/guides/gateway/plugins) matching
- * your Worker/business logic. See the
- * [full-site example](https://github.com/tetherto/mdk/tree/main/examples/full-site/plugins/site)
- * for a working reference.
+ * **Not wired by default.** `/auth/ext-data` is not served by the three
+ * built-in plugins (`telemetry`, `site-hashrate`, `site-monitor`). A generic
+ * `/auth/ext-data` route ships in `@tetherto/mdk-plugin-auth`, but see
+ * [the bundled auth plugin](https://github.com/tetherto/mdk/blob/main/backend/core/plugins/README.md#the-bundled-auth-plugin)
+ * for why it throws rather than runs. Bring your own
+ * [Gateway plugin](https://docs.tether.io/mdk/guides/gateway/plugins) for
+ * this route instead. `usePoolRows` shares this same endpoint.
  *
  * @category dashboard
  */
 export const usePoolStats = (options: UsePoolStatsOptions = {}): PoolStats => {
   const queryClient = useQueryClient()
+  const token = useAuthToken()
   const factory = minerpoolStatsQuery(queryClient)
 
   const result: UseQueryResult<MinerpoolExtDataEntry[][], Error> = useQuery({
     ...factory,
+    enabled: options.enabled ?? !!token,
     refetchInterval: options.refetchInterval ?? 120_000,
   })
 

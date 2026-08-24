@@ -7,8 +7,10 @@ const { build: buildEnvelope } = require('../../protocol/envelope')
 /**
  * Telemetry Collector
  *
- * Stateless proxy: routes telemetry queries from Gateway to the owning worker.
+ * Proxy: routes telemetry queries from Gateway to the owning worker.
  * Kernel does NOT store telemetry — workers own their telemetry storage.
+ * Not strictly stateless: _subscribers holds deviceId → Set<callback> in
+ * process for fan-out, but nothing it keeps is persisted or recovered.
  *
  * Two modes:
  * 1. Scheduler-driven pull: fan out telemetry.pull to all Ready workers

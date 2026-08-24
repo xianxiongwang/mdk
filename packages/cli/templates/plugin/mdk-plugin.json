@@ -1,0 +1,16 @@
+{
+  "name": "__PLUGIN_NAME__",
+  "version": "0.1.0",
+  "description": "MDK Gateway Plugin — HTTP endpoints that aggregate worker telemetry.",
+  "routes": [
+    {
+      "id": "__PLUGIN_NAME__.summary",
+      "handler": "./controllers/summary.js",
+      "auth": false,
+      "http": {
+        "method": "GET",
+        "path": "/api/__PLUGIN_NAME__/summary"
+      }
+    }
+  ]
+}

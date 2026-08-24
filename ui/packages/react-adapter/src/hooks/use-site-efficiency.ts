@@ -22,7 +22,7 @@ export type UseSiteEfficiencyParams = {
    * Optional override for the numerator. When provided, the hook skips its
    * internal `useSiteConsumption` call and divides this watts value by the
    * hashrate. Pair with `useSitePowerMeter().valueW` for the header's
-   * site-level (powermeter) efficiency reading, matching Mining OS.
+   * site-level (powermeter) efficiency reading, matching the reference app.
    */
   powerW?: number
 }

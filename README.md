@@ -1,6 +1,6 @@
 # MDK
 
-[![Release](https://img.shields.io/github/v/release/tetherto/mdk?display_name=tag&style=flat-square)](https://github.com/tetherto/mdk/releases/tag/v0.6.0)
+[![Release](https://img.shields.io/github/v/release/tetherto/mdk?display_name=tag&style=flat-square)](https://github.com/tetherto/mdk/releases/tag/v0.7.0)
 [![CI](https://img.shields.io/github/actions/workflow/status/tetherto/mdk/ci.yml?branch=main&label=CI&style=flat-square&logo=github)](https://github.com/tetherto/mdk/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/tetherto/mdk/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/tetherto/mdk/actions/workflows/github-code-scanning/codeql)
 [![Documentation](https://img.shields.io/badge/docs-mdk.tether.io-2ea44f?style=flat-square)](https://docs.mdk.tether.io)
@@ -11,7 +11,7 @@
 
 MDK is under active development and is **not yet considered stable**. 
 
-Current release [v0.6.0](https://github.com/tetherto/mdk/releases/tag/v0.5.0). 
+Current release [v0.7.0](https://github.com/tetherto/mdk/releases/tag/v0.7.0). 
 
 ## Table of Contents
 
@@ -97,7 +97,7 @@ The latest development code is available on the [`main`](https://github.com/teth
 [Semantic Versioning 2.0.0](https://semver.org/): `0.y.z` versions are initial development (public API not stable until `1.0.0`); `1.0.0` and 
 above denote a stable public API.
 
-Releases have notes [`docs/reference/release-notes/](docs/reference/release-notes/) and the full version history is
+Releases have notes [`docs/reference/release-notes/`](docs/reference/release-notes/) and the full version history is
 available as a [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Get started
@@ -114,7 +114,9 @@ MDK ships a backend SDK and an optional dashboarding layer. Find your lane:
 - **I'm an app developer building a React UI**: scaffold or add MDK to an existing app with the [UI toolkit and CLI](ui/README.md#getting-started)
 - **I'm an app developer building backend services or Gateway plugins**: run the [backend stack locally](examples/backend/README.md) or start with 
 the [Gateway API surfaces](docs/guides/gateway/index.md)
-- **I'm an app developer building a dashboard end to end**: follow [Build a dashboard](docs/tutorials/build-a-dashboard.md)
+- **I'm an app developer building a dashboard end to end**: follow [build a dashboard](docs/tutorials/build-a-dashboard.md), or scaffold one against
+a running stack with [`mdk create dashboard`](packages/cli/README.md) (`@tetherto/mdk-cli`) — a separate tool from the `mdk-ui` CLI above, which adds
+pages and components inside an app you already have
 - **I'm building with AI**: how do I point an agent at MDK? Read the [agent entry points](docs/README.md#agent)
 
 ### Agents
@@ -129,15 +131,15 @@ If you are an LLM being pointed at this repo, read these first:
 
 ## Build and develop
 
-The repo root is a real npm workspace: every `backend/core/*` and `backend/workers/*` package, plus `examples/mvp-site`, is a
-workspace member, so a single `npm install` (or `npm ci`) at the root installs and links them all together. `ui/` stays a
+The repo root is a real npm workspace: every `backend/core/*` and `backend/workers/*` package, plus [`examples/mvp-site`](./examples/mvp-site/README.md), is a
+workspace member, so a single `npm install` (or `npm ci`) at the root installs and links them all together. [`ui/`](./ui/README.md) stays a
 separate, nested npm workspace with its own `apps/*` + `packages/*` members; the root itself has no Turbo configuration.
 
 | Domain | Location | Tooling |
 | --- | --- | --- |
 | UI | [`ui/`](ui/README.md) | npm workspace (`apps/*` + `packages/*`) driven by Turbo |
-| Core (backend) | [`backend/core/`](backend/core/README.md) | root npm workspace member, installed via `install-packages.sh` |
-| Workers (backend) | [`backend/workers/`](backend/workers/README.md) | root npm workspace member, installed via `install-packages.sh` |
+| Core (backend) | [`backend/core/`](backend/core/README.md) | root npm workspace member, installed via [`install-packages.sh`](backend/core/install-packages.sh) |
+| Workers (backend) | [`backend/workers/`](backend/workers/README.md) | root npm workspace member, installed via [`install-packages.sh`](backend/workers/install-packages.sh) |
 
 Run any task once from the repo root and it fans out to all three domains:
 
@@ -156,8 +158,8 @@ installed dependencies.
 To run the supported Worker fleet with mock devices as separate PM2-supervised
 processes, use [`examples/mvp-site/`](examples/mvp-site/README.md).
 
-> Note: `setup`/`ci` fans out per domain, but `backend/core` and `backend/workers` packages are root workspace members, so a
-> plain `npm install` (or `npm ci`) at the root installs and links them directly. `ui/` stays outside the root workspace and
+> Note: `setup`/`ci` fans out per domain, but [`backend/core`](./backend/core/README.md) and [`backend/workers`](./backend/workers/README.md) packages are root workspace members, so a
+> plain `npm install` (or `npm ci`) at the root installs and links them directly. [`ui/`](./ui/README.md) stays outside the root workspace and
 > needs its own `npm --prefix ui install`.
 
 ### Documentation

@@ -60,8 +60,8 @@ For the deployment path:
 [catalogue-miners]: ../../../backend/workers/docs/supported-hardware.md#miners
 <!-- docs@tether.io: catalogue-miners → reference/supported-hardware#miners -->
 
-[workers-connect]: ../../concepts/stack/workers.md
-<!-- docs@tether.io: workers-connect → concepts/stack/workers -->
+[workers-connect]: ../../../backend/workers/README.md
+<!-- docs@tether.io: workers-connect → https://github.com/tetherto/mdk/blob/main/backend/workers/README.md -->
 
 [supported-hardware]: ../../reference/supported-hardware.md
 <!-- docs@tether.io: supported-hardware → reference/supported-hardware -->

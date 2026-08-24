@@ -6,6 +6,7 @@ Context: globs: docs/**/*.md, **/README.md, backend/**/docs/**/*.md, ui/**/docs/
 
 - US English
 - Sentence case headings (first word and proper nouns only)
+- Proper nouns for MDK components, capitalize in prose (plurals too): Gateway, Worker, Worker Plugin, Kernel
 - Present tense, direct voice (e.g. "This page walks through…", not "This page will walk through…")
 - Code identifiers in backticks (package names, file names, function names, etc.)
 - Title lives in frontmatter only; don't repeat it as an H2
@@ -35,8 +36,9 @@ Ask maintainer if the page you are building is to be ported to user docs `tether
 
 ## Fixed sections, in order
 
-1. `## Overview`: one paragraph, or `## How it works` followed by a sentence starting "This page ..."
-2. `## Next steps`: bullet list, each item `[Label](path): description` (no bold, no em dash)
+1. `## TL;DR` (optional): only when the page's core fact fits in a few lines. Comes before `## Overview` when present.
+2. `## Overview`: one paragraph, or `## How it works` followed by a sentence starting "This page ..."
+3. `## Next steps`: bullet list, each item `[Label](path): description` (no bold, no em dash)
 
 ## Admonitions
 

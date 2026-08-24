@@ -1,12 +1,5 @@
-import {
-  addThingCommentMutation,
-  AUTH_LEVELS,
-  AUTH_PERMISSIONS,
-  deleteThingCommentMutation,
-  editThingCommentMutation,
-  queryKeys,
-  type ThingCommentBody,
-} from '@tetherto/mdk-ui-foundation'
+import { AUTH_LEVELS, AUTH_PERMISSIONS, type ThingCommentBody } from '@tetherto/mdk-ui-foundation'
+import { addThingCommentMutation, deleteThingCommentMutation, editThingCommentMutation, queryKeys } from '@tetherto/mdk-ui-foundation/presets/mining'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { useCheckPerm } from './use-permissions'
@@ -36,12 +29,11 @@ export type UseThingCommentResult = {
  * the `list-things` queries to refresh the detail panel and tables.
  *
  * @remarks
- * The `/auth/thing/comment` endpoint is illustrative. MDK does not ship built-in
- * endpoints — create your own via a
+ * The `/auth/thing/comment` endpoint is illustrative. MDK does not ship a built-in
+ * endpoint for it — create your own via a
  * [Gateway plugin](https://docs.tether.io/mdk/guides/gateway/plugins) matching
- * your Worker/business logic. See the
- * [full-site example](https://github.com/tetherto/mdk/tree/main/examples/full-site/plugins/site)
- * for a working reference.
+ * your Worker/business logic. No reference implementation of `/auth/thing/comment`
+ * ships in this repo.
  *
  * @category op-centre
  */

@@ -1,5 +1,5 @@
 import { useActions, useDeviceResolution } from '@tetherto/mdk-react-adapter'
-import { appendContainerToTag } from '@tetherto/mdk-ui-foundation'
+import { appendContainerToTag } from '@tetherto/mdk-ui-foundation/presets/mining'
 import _compact from 'lodash/compact'
 import _concat from 'lodash/concat'
 import _filter from 'lodash/filter'

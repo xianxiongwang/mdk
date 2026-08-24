@@ -14,6 +14,13 @@
  */
 export const APP_NAME = 'MDK UI Shell'
 
+/**
+ * Dev-only auth bypass. When `VITE_AUTH_BYPASS=true`, the app skips the `/signin`
+ * gate, disables token-refresh polling, and boots with a stub token so you land
+ * straight on the dashboard without an OAuth backend. Never enable in production.
+ */
+export const AUTH_BYPASS: boolean = import.meta.env.VITE_AUTH_BYPASS === 'true'
+
 const required = (key: string, value: string | undefined): string => {
   if (value === undefined || value.trim().length === 0) {
     console.warn(`[mdk-ui-shell] missing required env var: ${key}`)
@@ -23,10 +30,17 @@ const required = (key: string, value: string | undefined): string => {
 }
 
 /**
- * Gateway API base URL. Empty string means "use relative URLs" — the Vite
- * dev proxy (or a production reverse proxy) handles routing.
+ * Gateway API base URL. Empty string means "use relative URLs" — the Vite dev
+ * proxy (or a production reverse proxy) handles routing.
+ *
+ * `VITE_MDK_API_URL` is the name MDK itself reads; `VITE_API_BASE_URL` is the
+ * deprecated alias, honoured here for one major so an existing `.env` keeps
+ * working. Both are read at this layer rather than being left to MDK's own env
+ * chain, because the shell deliberately defaults to `''` (proxy the requests)
+ * where MDK defaults to `http://localhost:3000`.
  */
-export const API_BASE_URL: string = import.meta.env.VITE_API_BASE_URL ?? ''
+export const API_BASE_URL: string
+  = import.meta.env.VITE_MDK_API_URL ?? import.meta.env.VITE_API_BASE_URL ?? ''
 
 /**
  * OAuth backend base URL. Required and must be absolute (the sign-in flow

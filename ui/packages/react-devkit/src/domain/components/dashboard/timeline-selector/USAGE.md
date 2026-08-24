@@ -1,6 +1,6 @@
 # TimelineSelector
 
-Dropdown for picking the dashboard time range — wraps `core/Select` with the
+Dropdown for picking the dashboard time range — wraps [`core/Select`](../../../../primitives/components/select/index.tsx) with the
 canonical option list from `getTimelineOptions`. Pair with
 `useDashboardTimeRange` from `@tetherto/mdk-react-adapter` to drive the
 hashrate / consumption / power-mode chart hooks.

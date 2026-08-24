@@ -1,8 +1,8 @@
 # MDK Protocol
 
 Load this before writing anything that builds, sends, or answers an envelope.
-Source of truth: `backend/core/kernel/lib/protocol/` (`actions.js`,
-`envelope.js`, `schemas.js`). Protocol version: `0.2.0`.
+Source of truth: [`backend/core/kernel/lib/protocol/`](../../../../../../backend/core/kernel/lib/protocol/) ([`actions.js`](../../../../../../backend/core/kernel/lib/protocol/actions.js),
+[`envelope.js`](../../../../../../backend/core/kernel/lib/protocol/envelope.js), [`schemas.js`](../../../../../../backend/core/kernel/lib/protocol/schemas.js)). Protocol version: `0.2.0`.
 
 ## The envelope
 
@@ -25,14 +25,14 @@ no more:
 
 **Never add transport-level fields — extend `payload`.** Envelopes are
 validated structurally (`ERR_ENVELOPE_*`) and, per action, by payload
-validators in `schemas.js` (`ERR_PAYLOAD_*`); unknown actions are rejected
+validators in [`schemas.js`](../../../../../../backend/core/kernel/lib/protocol/schemas.js) (`ERR_PAYLOAD_*`); unknown actions are rejected
 with `ERR_ENVELOPE_ACTION_UNKNOWN`. On the wire an envelope is
 JSON-serialized to a Buffer and sent over the `'mdk'` HRPC method.
 
 Build responses with `buildResponse(requestEnvelope, action, payload, sender)`
 — it flips `target` to the request's `sender` and carries `deviceId` over.
 
-## Action set (`actions.js`)
+## Action set ([`actions.js`](../../../../../../backend/core/kernel/lib/protocol/actions.js))
 
 | Direction | Request → Response | Purpose |
 | --- | --- | --- |
@@ -56,7 +56,7 @@ Also defined there: `COMMAND_SCOPES` (`device` | `worker` | `rack`),
 
 Payload shape: `{ query: { type, ...params } }`, deviceId in the envelope.
 `type` selects what a worker returns (dispatch in
-`backend/core/mdk-worker/lib/worker-runtime.js` `_handleTelemetry`):
+[`backend/core/mdk-worker/lib/worker-runtime.js`](../../../../../../backend/core/mdk-worker/lib/worker-runtime.js) `_handleTelemetry`):
 
 - `type: 'metrics'` (default) — runs **every** declared telemetry handler for
   the addressed device: `{ deviceId, metrics: { <name>: value, … }, timestamp }`.
@@ -76,7 +76,7 @@ Per-field handler errors come back inside the payload
 
 Payload: `{ commandId, command, params }`, deviceId in the envelope.
 The **Kernel's dispatcher validates before dispatch**
-(`backend/core/kernel/lib/modules/command-dispatcher/index.js`):
+([`backend/core/kernel/lib/modules/command-dispatcher/index.js`](../../../../../../backend/core/kernel/lib/modules/command-dispatcher/index.js)):
 the command must appear in the worker's declared capabilities
 (`ERR_COMMAND_NOT_IN_CAPABILITIES`), params must match declared types
 (`ERR_PARAM_TYPE`), and numeric params must be within declared `min`/`max`

@@ -23,4 +23,4 @@ Wrapper that handles three states for a chart's content area:
 
 ## Example
 
-See `chart-wrapper.example.tsx` for a runnable example.
+See [`chart-wrapper.example.tsx`](./chart-wrapper.example.tsx) for a runnable example.

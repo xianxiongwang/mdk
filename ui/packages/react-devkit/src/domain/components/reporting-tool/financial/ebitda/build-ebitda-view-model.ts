@@ -38,7 +38,7 @@ export type EbitdaViewModel = {
   btcProducedChartInput: ToBarChartDataInput | null
   hasBtcProducedAllZeros: boolean
   currentBTCPrice: number
-  /** When false, hide the EBITDA bar group (Mining OS hides it for `PERIOD.DAILY`). */
+  /** When false, hide the EBITDA bar group (the reference app hides it for `PERIOD.DAILY`). */
   showEbitdaBarChart: boolean
 }
 

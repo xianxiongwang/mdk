@@ -12,14 +12,14 @@ custom HTTP routes.
 A plugin is a directory containing:
 
 - `mdk-plugin.json`: manifest declaring route identity, HTTP surface, and caching
-- One or more controller files — each exports `async function (req, services)`
+- One or more controller files — each exports `async function (req)`
 
 The Gateway registers `telemetry`, `site-hashrate`, and `site-monitor` automatically, and accepts additional plugin directories via 
 `startGateway({ extraPluginDirs: [...] })`. The `auth` plugin ships here but is [neither registered nor wired](#the-bundled-auth-plugin).
 
 > [!TIP]
 > New to the plugin system? Read the [Gateway plugins how-to guide](../../../docs/guides/gateway/plugins.md) for a step-by-step walkthrough.
-> For the broader toolkit context, see the [MDK App Toolkit concept page](../../../docs/concepts/stack/app-toolkit.md).
+> For the broader toolkit context, see the [MDK App Toolkit concept page](../../../docs/concepts/app-toolkit.md).
 
 ## Manifest format
 
@@ -35,11 +35,26 @@ What is required and what is rejected is defined by `_validateManifest` in [`plu
 `version`, and a non-empty `routes` array, plus per route an `id`, a `handler`, an allowed `http.method` (`GET`/`POST`/`PUT`/`DELETE`/`PATCH`), an 
 `http.path`, and unique route ids. Path parameters in `{param}` form are normalized to Fastify's `:param`.
 
-Beyond the validated fields, two are read:
+Beyond the validated fields, three are read:
 
-- `cache` is enforced: an array of dot-paths composed into the cache key by [`plugin-adapter.js`](../gateway/workers/lib/plugin-adapter.js). Pass 
-`?overwriteCache=true` to bypass
+- `cache` is enforced: an array of dot-paths composed into the cache key by [`plugin-adapter.js`](../gateway/workers/lib/plugin-adapter.js):
+
+  ```json
+  {
+    "id": "telemetry.hashrate",
+    "cache": ["query.start", "query.end", "query.groupBy"],
+    ...
+  }
+  ```
+
+  Pass `?overwriteCache=true` to bypass and refresh. See [the guide's Caching step](../../../docs/guides/gateway/plugins.md#caching)
+  for the how-to
 - `description` is read by [`generate-plugin-reference.js`](../../../docs/scripts/generate-plugin-reference.js) to build the route tables
+- `stream` marks a route that owns the raw `ServerResponse` instead of returning a plain value: [`plugin-adapter.js`](../gateway/workers/lib/plugin-adapter.js)
+hijacks the reply so Fastify never serializes it, and calls the handler as `(req, raw)`. A throw before any header is written maps to a JSON error
+carrying `err.statusCode` (or `400` by default); a throw after headers are sent just ends the socket instead of leaving it open.
+[`backend/plugins/agent`](../../plugins/agent/README.md) is the shipping example — its message route streams `text/event-stream` this way.
+See [the guide's Stream routes step](../../../docs/guides/gateway/plugins.md#stream-routes) for the how-to
 
 The following have no reader:
 
@@ -49,29 +64,40 @@ and pair each declaration with the matching check in the controller that serves 
 
 ## Controllers
 
-A controller exports `async function (req, services)` and returns a value that is serialized as a `200` JSON response. Use `"handler": 
+A controller exports `async function (req)` and returns a value that is serialized as a `200` JSON response. Use `"handler": 
 "./file.js#namedExport"` for a non-default export. Any shipping controller shows the shape — for example,
 [`hashrate.js`](telemetry/controllers/hashrate.js).
 
-- `req` (`params`, `query`, `body`, `headers`, `_info`) is assembled in [`plugin-adapter.js`](../gateway/workers/lib/plugin-adapter.js)
-- `services` (`mdkClient`, `dataProxy`, `conf`) is defined by the `_pluginServices` getter in 
-[`http.node.wrk.js`](../gateway/workers/http.node.wrk.js) — guard `services.mdkClient`, which is `null` when Kernel is not connected
+`req`, assembled in [`plugin-adapter.js`](../gateway/workers/lib/plugin-adapter.js):
 
-The [plugin authoring guide](../../../docs/guides/gateway/plugins.md) walks through building a controller, including when to use `mdkClient` 
-versus `dataProxy`.
+| Field | Type | Contains |
+| --- | --- | --- |
+| `req.params` | `object` | Path parameters (e.g. `{ deviceId: 'wm-001' }`) |
+| `req.query` | `object` | Query string parameters |
+| `req.body` | `object` | Parsed JSON request body |
+| `req.headers` | `object` | HTTP headers |
+| `req._info` | `object` | Internal request metadata (rarely needed) |
+
+- A controller builds its own [`@tetherto/mdk-client`](../client/README.md) from the plugin's context
+config (`require('@tetherto/mdk-gateway/plugin')`), same as [`telemetry/lib/client.js`](telemetry/lib/client.js) does, and requires that
+module once per plugin rather than per controller
+
+> [!TIP]
+> The [plugin authoring guide](../../../docs/guides/gateway/plugins.md) walks through building a controller and the plugin's context module.
 
 ## Default plugins
 
-These plugins ship with MDK. `telemetry`, `site-hashrate`, and `site-monitor` are registered on Gateway startup by 
+These plugins ship with MDK: `telemetry`, `site-hashrate`, and `site-monitor`. They are registered on Gateway startup by 
 [`http.node.wrk.js`](../gateway/workers/http.node.wrk.js); `auth` is not, and mounting it needs work first 
 ([the bundled auth plugin](#the-bundled-auth-plugin)).
+
+> [!Note]
+> Every route below is served without authentication: the Gateway applies no token check of its own; [protecting a route is
+> controller responsibility](../../../docs/guides/gateway/plugins.md#auth-and-permissions).
 
 The tables are generated from every `mdk-plugin.json` in this directory by 
 [`docs/scripts/generate-plugin-reference.js`](../../../docs/scripts/generate-plugin-reference.js), so they cover the shipped plugins only. Routes you 
 add through `extraPluginDirs` are owned by their own manifests and are not listed here.
-
-Every route is served without authentication. The Gateway applies no token check of its own, so protecting a route is controller work 
-([auth and permissions](../../../docs/guides/gateway/plugins.md#auth-and-permissions)).
 
 <!-- BEGIN GENERATED: default-plugins. DO NOT EDIT. Regenerate with `npm run generate:plugin-reference`. Source: backend/core/plugins/*/mdk-plugin.json -->
 
@@ -118,16 +144,15 @@ Every route is served without authentication. The Gateway applies no token check
 
 `auth` ships in this package for reference. Adding its directory to `extraPluginDirs` mounts the routes but does not give you working endpoints:
 
-- [`auth/controllers/permissions.js`](auth/controllers/permissions.js) and [`auth/controllers/token.js`](auth/controllers/token.js) call 
-`ctx.authLib`, which the services bag does not carry. The `_pluginServices` getter in 
-[`http.node.wrk.js`](../gateway/workers/http.node.wrk.js) exposes `mdkClient`, `dataProxy`, and `conf`, so both controllers throw a `TypeError` that 
-the worker's `onError` hook returns as HTTP 400
+- [`auth/controllers/permissions.js`](auth/controllers/permissions.js), [`auth/controllers/token.js`](auth/controllers/token.js), and
+[`auth/controllers/ext-data.js`](auth/controllers/ext-data.js) all still declare a second `services` handler parameter and call `ctx.authLib` or
+`ctx.dataProxy` on it, but [`plugin-adapter.js`](../gateway/workers/lib/plugin-adapter.js) invokes every handler with `req` alone, so
+`services` arrives `undefined` — all three throw a `TypeError` on that, which the worker's `onError` hook returns as HTTP 400
 - [`auth/controllers/userinfo.js`](auth/controllers/userinfo.js) returns `req._info.user`. Nothing populates `_info`, which 
 [`plugin-adapter.js`](../gateway/workers/lib/plugin-adapter.js) defaults to `{}`, so the route answers with an empty body
-- [`auth/controllers/ext-data.js`](auth/controllers/ext-data.js) is the exception: it uses `dataProxy` and works once mounted
 
-Authentication is yours to supply. Bring an identity layer and implement the checks your routes need inside their controllers 
-([auth and permissions](../../../docs/guides/gateway/plugins.md#auth-and-permissions)).
+Authentication is [yours to supply](../../../docs/guides/gateway/plugins.md#auth-and-permissions): bring an identity layer and implement the checks 
+your routes need inside their controllers.
 
 ## Mounting plugins
 
@@ -142,9 +167,19 @@ await startGateway({
 })
 ```
 
-The loader validates every manifest and handler at startup and throws an `ERR_PLUGIN_*` error on the first problem — a missing or unparsable manifest, 
-a missing required field, a duplicate route `id`, a handler file that can't be found, or a handler that isn't a function. The codes and the 
-checks behind them live in [`plugin-loader.js`](../gateway/workers/lib/plugin-loader.js).
+### Manifest validation errors
+
+The loader validates every manifest and handler at startup and throws on the first problem:
+
+| Error | Cause |
+| --- | --- |
+| `ERR_PLUGIN_MANIFEST_MISSING` | No `mdk-plugin.json` found in the plugin directory |
+| `ERR_PLUGIN_MANIFEST_INVALID` | JSON parse error, or missing required field (`name`, `version`, or `routes`) |
+| `ERR_PLUGIN_ROUTE_DUPLICATE_ID` | Two routes in the same manifest share the same `id` |
+| `ERR_PLUGIN_HANDLER_NOT_FOUND` | The `handler` file path does not exist or failed to load |
+| `ERR_PLUGIN_HANDLER_NOT_FUNCTION` | The handler file exports something other than a function |
+
+The codes and the checks behind them live in [`plugin-loader.js`](../gateway/workers/lib/plugin-loader.js).
 
 ## Directory layout
 
@@ -159,24 +194,31 @@ plugins/
 │       └── ext-data.js
 ├── telemetry/
 │   ├── mdk-plugin.json
-│   └── controllers/
-│       ├── hashrate.js
-│       ├── consumption.js
-│       ├── efficiency.js
-│       ├── miner-status.js
-│       ├── power-mode.js
-│       ├── temperature.js
-│       └── containers.js
+│   ├── controllers/
+│   │   ├── hashrate.js
+│   │   ├── consumption.js
+│   │   ├── efficiency.js
+│   │   ├── miner-status.js
+│   │   ├── power-mode.js
+│   │   ├── temperature.js
+│   │   └── containers.js
+│   └── lib/
+│       ├── client.js         # mdk client built from this plugin's ambient context
+│       └── site-data.js      # worker-owned telemetry history over the mdk client
 ├── site-hashrate/
 │   ├── mdk-plugin.json
-│   └── controllers/
-│       └── hashrate-history.js
+│   ├── controllers/
+│   │   └── hashrate-history.js
+│   └── lib/
+│       └── client.js         # mdk client built from this plugin's ambient context
 ├── site-monitor/
 │   ├── mdk-plugin.json
-│   └── controllers/
-│       ├── site.js
-│       ├── feature-config.js
-│       └── hashrate.js
+│   ├── controllers/
+│   │   ├── site.js
+│   │   ├── feature-config.js
+│   │   └── hashrate.js
+│   └── lib/
+│       └── client.js         # mdk client built from this plugin's ambient context
 ├── lib/
 │   ├── constants.js
 │   ├── metrics.utils.js
@@ -199,6 +241,6 @@ npm run generate:plugin-reference
 
 - [Build your first plugin](../../../docs/guides/gateway/plugins.md)
 - See a working [`extraPluginDirs` setup](../../../examples/full-site/README.md)
-- Review the [Gateway's extension model, data access, and auth design](../../../docs/concepts/stack/gateway.md)
-- [Understand where plugins fit in the stack](../../../docs/concepts/stack/app-toolkit.md)
+- Review the [Gateway's extension model, data access, and security model](../gateway/README.md#extend-the-gateway)
+- [Understand where plugins fit as an extension point](../../../docs/concepts/the-integration-model.md)
 - See all [`startGateway()` options](../mdk/README.md)

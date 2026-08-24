@@ -1,5 +1,6 @@
 'use strict'
 
+const dataProxy = require('../lib/site-data')
 const {
   WORKER_TYPES,
   AGGR_FIELDS,
@@ -158,8 +159,8 @@ function calculateGroupedConsumptionSummary (log, groupBy) {
   }
 }
 
-module.exports = async function (req, services) {
-  return getConsumption(services, req)
+module.exports = async function (req) {
+  return getConsumption({ dataProxy }, req)
 }
 
 module.exports.getConsumption = getConsumption

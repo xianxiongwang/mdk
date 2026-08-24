@@ -375,3 +375,67 @@ test('loadPlugin - throws ERR_PLUGIN_HANDLER_NOT_FOUND when handler file has a s
   }
   t.pass()
 })
+
+test('loadPlugin - carries annotations and agent metadata through verbatim', (t) => {
+  const dir = path.join(FIXTURES_DIR, 'agent-meta')
+  const agent = {
+    enabled: true,
+    answers: 'how many devices match a family and state',
+    useWhen: ['how many miners are online', 'number of offline containers'],
+    returns: 'a count with a one-line summary',
+    minCapability: 'small'
+  }
+  writeFixture(dir, {
+    'mcp-plugin.json': {
+      name: '@test/p',
+      version: '1.0.0',
+      tools: [{ id: 'count_devices', handler: './tools/count.js', description: 'counts devices', annotations: { readOnlyHint: true }, agent }]
+    },
+    'tools/count.js': '\'use strict\'\nmodule.exports = { schema: {}, handler: async () => ({}) }'
+  })
+
+  const plugin = loadPlugin(dir)
+  t.alike(plugin.tools[0].agent, agent, 'should carry the agent block unchanged')
+  t.alike(plugin.tools[0].annotations, { readOnlyHint: true }, 'should carry annotations unchanged')
+  t.pass()
+})
+
+test('loadPlugin - leaves annotations and agent undefined when not declared', (t) => {
+  const dir = path.join(FIXTURES_DIR, 'no-agent-meta')
+  writeFixture(dir, {
+    'mcp-plugin.json': {
+      name: '@test/p',
+      version: '1.0.0',
+      tools: [{ id: 'x', handler: './tools/x.js', description: 'x' }]
+    },
+    'tools/x.js': '\'use strict\'\nmodule.exports = { schema: {}, handler: async () => ({}) }'
+  })
+
+  const plugin = loadPlugin(dir)
+  t.is(plugin.tools[0].agent, undefined, 'should not invent an agent block')
+  t.is(plugin.tools[0].annotations, undefined, 'should not invent annotations')
+  t.pass()
+})
+
+test('loadPlugin - throws ERR_PLUGIN_MANIFEST_INVALID when agent metadata is not an object', (t) => {
+  for (const [label, agent] of [['string', 'small'], ['array', ['a']], ['null', null]]) {
+    const dir = path.join(FIXTURES_DIR, 'bad-agent-' + label)
+    writeFixture(dir, {
+      'mcp-plugin.json': {
+        name: '@test/p',
+        version: '1.0.0',
+        tools: [{ id: 'x', handler: './tools/x.js', description: 'x', agent }]
+      },
+      'tools/x.js': '\'use strict\'\nmodule.exports = { schema: {}, handler: async () => ({}) }'
+    })
+
+    try {
+      loadPlugin(dir)
+      t.fail('should have thrown for ' + label)
+    } catch (err) {
+      t.ok(err.message.includes('ERR_PLUGIN_MANIFEST_INVALID'), 'should reject an agent block that is a ' + label)
+      t.ok(err.message.includes('"agent"'), 'should name the offending field')
+    }
+  }
+  t.pass()
+})

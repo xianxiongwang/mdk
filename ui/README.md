@@ -47,7 +47,7 @@ The monorepo ships **runtime packages** (what React apps depend on), **assets**,
 
 ### Product — runtime packages and assets
 
-### `@tetherto/mdk-ui-foundation` (`packages/ui-foundation`)
+### `@tetherto/mdk-ui-foundation` ([`packages/ui-foundation`](./packages/ui-foundation/README.md))
 
 Framework-agnostic headless package. Pure TypeScript, no React.
 
@@ -72,7 +72,7 @@ Framework-agnostic headless package. Pure TypeScript, no React.
   `PduLayoutParams`, `GlobalDataParams`, `ThingConfigParams`,
   `ThingCommentBody`)
 
-### `@tetherto/mdk-react-adapter` (`packages/react-adapter`)
+### `@tetherto/mdk-react-adapter` ([`packages/react-adapter`](./packages/react-adapter/README.md))
 
 React bindings for the headless core.
 
@@ -83,21 +83,21 @@ React bindings for the headless core.
 - Re-exports of `useQuery` / `useMutation` / `useQueryClient` from
   `@tanstack/react-query` for convenience.
 
-### `@tetherto/mdk-react-devkit` (`packages/react-devkit`)
+### `@tetherto/mdk-react-devkit` ([`packages/react-devkit`](./packages/react-devkit/README.md))
 
 The React UI library:
 
-- `src/primitives/`: generic UI primitives built on Radix UI (Button, Dialog,
+- [`src/primitives/`](./packages/react-devkit/src/primitives/): generic UI primitives built on Radix UI (Button, Dialog,
   Switch, Table, Charts, …). BEM class names, SCSS design tokens, CSS
   custom property theming.
-- `src/domain/`: mining-domain components, hooks and a TanStack
+- [`src/domain/`](./packages/react-devkit/src/domain/): mining-domain components, hooks and a TanStack
   Query API stub.
 
-### `@tetherto/mdk-fonts` (`packages/fonts`)
+### `@tetherto/mdk-fonts` ([`packages/fonts`](./packages/fonts/README.md))
 
 Font assets only (JetBrains Mono).
 
-### Catalog app (`apps/catalog`)
+### Catalog app ([`apps/catalog`](./apps/catalog/README.md))
 
 Interactive showcase wrapped in `<MdkProvider>`. Runs via
 `npm run dev:catalog`. Includes a `Guides` section with Getting Started,
@@ -105,7 +105,7 @@ Adapter Hooks, and Theming pages alongside per-component demos.
 
 ### Tooling — build and explore
 
-### `@tetherto/mdk-ui-cli` (`packages/cli`)
+### `@tetherto/mdk-ui-cli` ([`packages/cli`](./packages/cli/README.md))
 
 The `mdk-ui` CLI supports scaffolding, registry discovery, and agent
 workflows (`registry`, `docs`, `example`, `suggest`, `create`, `add page`,
@@ -178,7 +178,7 @@ running on `http://localhost:3000` and a Google OAuth client. See
 for the end-to-end recipe.
 
 If you'd rather wire MDK into an existing app manually, add the three
-runtime packages to its `package.json`:
+runtime packages to its [`package.json`](./package.json):
 
 ```json
 {

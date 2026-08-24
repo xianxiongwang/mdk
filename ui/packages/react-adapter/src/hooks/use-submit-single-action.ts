@@ -1,4 +1,5 @@
-import { actionsStore, submitActionMutation } from '@tetherto/mdk-ui-foundation'
+import { actionsStore } from '@tetherto/mdk-ui-foundation'
+import { submitActionMutation } from '@tetherto/mdk-ui-foundation/presets/mining'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import {
@@ -27,6 +28,13 @@ export type UseSubmitSingleActionResult = {
  * Submits a single action from the staged queue by its local `id`.
  * Inspects the 200 response body for embedded errors before treating the call
  * as successful. Removes the action from the queue only on genuine success.
+ *
+ * @remarks
+ * Shares {@link useSubmitPendingActions}'s `/auth/actions` endpoint. The
+ * `/auth/actions` endpoint is illustrative. MDK does not ship a built-in
+ * endpoint for it — create your own via a
+ * [Gateway plugin](https://docs.tether.io/mdk/guides/gateway/plugins) matching
+ * your Worker/business logic.
  *
  * @category dashboard
  */

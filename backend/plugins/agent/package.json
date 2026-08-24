@@ -1,0 +1,22 @@
+{
+  "name": "@tetherto/mdk-plugin-agent",
+  "version": "0.7.0",
+  "description": "MDK gateway agent plugin: auth-gated chat sessions, SSE streams and approval round-trips.",
+  "author": "Tether",
+  "license": "Apache-2.0",
+  "private": true,
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "lint": "standard",
+    "lint:fix": "standard --fix",
+    "test": "NODE_ENV=test brittle tests/*.test.js"
+  },
+  "dependencies": {
+    "debug": "4.4.1"
+  },
+  "optionalDependencies": {
+    "@tetherto/mdk-agent": "*"
+  }
+}

@@ -1,6 +1,6 @@
 {
   "name": "@tetherto/mdk-backend-core",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "description": "MDK Core",
   "keywords": [
@@ -19,7 +19,7 @@
     "lint": "standard",
     "lint:fix": "standard --fix",
     "test": "npm run lint && npm run test:packages",
-    "test:packages": "for pkg in gateway client mdk kernel; do if [ -f \"$pkg/package.json\" ]; then npm test --prefix \"$pkg\" || exit 1; fi; done"
+    "test:packages": "for pkg in agent gateway client mdk kernel; do if [ -f \"$pkg/package.json\" ]; then npm test --prefix \"$pkg\" || exit 1; fi; done"
   },
   "devDependencies": {
     "standard": "17.1.0"

@@ -9,22 +9,36 @@ const randomNumber = (min = 0, max = 1) => {
   return parseFloat(number.toFixed(2))
 }
 
+// Baseline reading (30-40C) assumes a modest reference rack venting into this
+// sensor's inlet. Scale the baseline up for larger simulated fleets (more
+// ASICs exhausting into the same container) so the reading tracks
+// ctx.minerCount / `--miners N` instead of always reporting the same fixed
+// range regardless of fleet size.
+const BASELINE_MINER_NUM = 20
+const DEG_C_PER_MINER = 0.15
+
+const baselineRaw = (ctx) => {
+  const minerNum = (ctx && ctx.minerCount) || BASELINE_MINER_NUM
+  const extraDegC = Math.max(0, minerNum - BASELINE_MINER_NUM) * DEG_C_PER_MINER
+  return 300 + Math.round(extraDegC * 10)
+}
+
 module.exports = function (ctx) {
   const state = {
     temp: [
-      Math.floor(randomNumber() * 100) + 300,
-      Math.floor(randomNumber() * 100) + 300,
-      Math.floor(randomNumber() * 100) + 300,
-      Math.floor(randomNumber() * 100) + 300
+      Math.floor(randomNumber() * 100) + baselineRaw(ctx),
+      Math.floor(randomNumber() * 100) + baselineRaw(ctx),
+      Math.floor(randomNumber() * 100) + baselineRaw(ctx),
+      Math.floor(randomNumber() * 100) + baselineRaw(ctx)
     ]
   }
 
   const buffer = Buffer.alloc(8)
 
   const getInitialState = () => {
-    // random value between 300 and 400
+    // random value between baseline and baseline+100
     const newState = cloneDeep(state)
-    newState.temp = newState.temp.map(() => ctx?.error ? 8500 : Math.floor(randomNumber() * 100) + 300)
+    newState.temp = newState.temp.map(() => ctx?.error ? 8500 : Math.floor(randomNumber() * 100) + baselineRaw(ctx))
 
     buffer.writeUInt16BE(newState.temp[0], 0)
     buffer.writeUInt16BE(newState.temp[1], 2)

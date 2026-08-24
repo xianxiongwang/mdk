@@ -1,5 +1,6 @@
 'use strict'
 
+const dataProxy = require('../lib/site-data')
 const {
   WORKER_TYPES,
   AGGR_FIELDS,
@@ -149,12 +150,12 @@ function processContainerHistoryData (results, containerId) {
   return log
 }
 
-module.exports = async function (req, services) {
-  return getContainerTelemetry(services, req)
+module.exports = async function (req) {
+  return getContainerTelemetry({ dataProxy }, req)
 }
 
-module.exports.history = async function (req, services) {
-  return getContainerHistory(services, req)
+module.exports.history = async function (req) {
+  return getContainerHistory({ dataProxy }, req)
 }
 
 module.exports.getContainerTelemetry = getContainerTelemetry

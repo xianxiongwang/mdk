@@ -17,7 +17,7 @@ Deployment-specific requirements:
 - A Node.js service or script in your deployment that runs the MDK Worker and registers devices
 - A supported Avalon device reachable from the machine or container running the Worker
 - The miner API reachable over the native CGMiner TCP API, typically port `4028`
-- No API username or password. The Avalon CGMiner API is unauthenticated
+- A `password` for each device: the CGMiner wire protocol itself does not authenticate, but the Worker's own config validation requires this field
 
 <Steps>
 
@@ -50,10 +50,13 @@ Avalon ships one model family today, `a1346` — confirm this against the [USAGE
 
 #### 2.2 Register your miner
 
-Avalon devices use the native CGMiner TCP API on port 4028, which is unauthenticated (no username or password). Add this code to the Node.js service or script that runs the MDK Worker in your deployment. The snippet shows the minimum boot call seeding one Avalon device; replace the example IP address with your miner's value:
+Avalon devices use the native CGMiner TCP API on port 4028. The wire protocol itself does not authenticate, but the
+Avalon Worker Plugin's own config validation rejects a device with no `password`. Add this code to the Node.js
+service or script that runs the MDK Worker in your deployment. The snippet shows the minimum boot call seeding one
+Avalon device; replace the example IP address and password with your miner's values:
 
 ```js
-const { getKernel } = require('@tetherto/mdk')
+const { getKernel } = require('@tetherto/mdk/backend/core/mdk')
 const { startAvalonWorker } = require('@tetherto/mdk-worker-avalon')
 
 const kernel = await getKernel()
@@ -64,7 +67,7 @@ const worker = await startAvalonWorker({
   storeDir: './store/avalon-rack-1',
   seedDevices: [{
     info: { container: 'site-1', serialNum: 'AV-001' },
-    opts: { address: '192.168.1.30', port: 4028 }
+    opts: { address: '192.168.1.30', port: 4028, password: 'admin' }
   }]
 })
 await kernel.registerWorker(worker.runtime.getPublicKey())
@@ -78,12 +81,12 @@ await kernel.registerWorker(worker.runtime.getPublicKey())
 ```js
 const { createMdkClient } = require('@tetherto/mdk/backend/core/client')
 
-const client = createMdkClient({ hrpc: { key: kernel.getPublicKey() } })
+const client = createMdkClient({ kernelKey: kernel.getPublicKey() })
 await client.connect()
 await client.sendWorkerCommand('avalon-rack-1', null, 'registerThing', {
   id: 'AV-002',
   info: { container: 'site-1', serialNum: 'AV-002' },
-  opts: { address: '192.168.1.31', port: 4028 }
+  opts: { address: '192.168.1.31', port: 4028, password: 'admin' }
 })
 ```
 
@@ -105,7 +108,7 @@ For the full `seedDevices`/`registerThing` option reference and the mock `create
 
 ## Troubleshooting
 
-The development example on this page is `examples/backend/miners/avalon/index.js`. A working run prints `Kernel HRPC key:` and `Device:`, then stays running until Ctrl+C.
+The development example on this page is [`examples/backend/miners/avalon/index.js`](../../../examples/backend/miners/avalon/index.js). A working run prints `Kernel HRPC key:` and `Device:`, then stays running until Ctrl+C.
 
 If the example does not print both values, or if its mock port is already in use, follow [miner troubleshooting][miner-troubleshooting].
 
@@ -131,8 +134,8 @@ If the example does not print both values, or if its mock port is already in use
 [get-started]: ../../tutorials/run-a-site.md
 <!-- docs@tether.io: get-started → tutorials/run-a-site -->
 
-[deployment-topologies]: ../../concepts/deployment-topologies.md
-<!-- docs@tether.io: deployment-topologies → concepts/deployment-topologies -->
+[deployment-topologies]: ../deployment/index.md
+<!-- docs@tether.io: deployment-topologies → guides/deployment -->
 
 [avalon-contract]: ../../../backend/workers/miners/avalon/plugin/mdk-contract.json
 <!-- docs@tether.io: avalon-contract → https://github.com/tetherto/mdk/blob/main/backend/workers/miners/avalon/plugin/mdk-contract.json -->

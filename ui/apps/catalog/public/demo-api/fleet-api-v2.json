@@ -1,0 +1,75 @@
+{
+  "apiVersion": "fleet/v2",
+  "generatedAt": 1754300000000,
+  "page": { "number": 1, "size": 4, "totalRecords": 4 },
+  "records": [
+    {
+      "assetRef": "PUMP-014",
+      "kind": "coolant-pump",
+      "zone": "Hall B / Row 3",
+      "health": {
+        "state": "degraded",
+        "notices": [
+          {
+            "ref": "n-8801",
+            "title": "Impeller vibration above threshold",
+            "detail": "RMS velocity 7.4 mm/s (limit 6.0)",
+            "level": "warning",
+            "raisedAtMs": 1754299400000
+          }
+        ]
+      },
+      "readings": { "flowLitresPerMin": 412.5, "inletTempC": 18.2 }
+    },
+    {
+      "assetRef": "PUMP-021",
+      "kind": "coolant-pump",
+      "zone": "Hall B / Row 5",
+      "health": { "state": "nominal", "notices": [] },
+      "readings": { "flowLitresPerMin": 455.1, "inletTempC": 17.6 }
+    },
+    {
+      "assetRef": "CHILL-002",
+      "kind": "chiller",
+      "zone": "Plant Room",
+      "health": {
+        "state": "faulted",
+        "notices": [
+          {
+            "ref": "n-8802",
+            "title": "Compressor lockout",
+            "detail": "High-pressure trip, 3 restarts in 20 min",
+            "level": "critical",
+            "raisedAtMs": 1754299900000
+          },
+          {
+            "ref": "n-8803",
+            "title": "Condenser approach temperature high",
+            "detail": "Approach 9.1 K (design 5.0 K)",
+            "level": "warning",
+            "raisedAtMs": 1754299100000
+          }
+        ]
+      },
+      "readings": { "flowLitresPerMin": 0, "inletTempC": 24.9 }
+    },
+    {
+      "assetRef": "AHU-007",
+      "kind": "air-handler",
+      "zone": "Hall A / Mezzanine",
+      "health": { "state": "nominal", "notices": [] },
+      "readings": { "flowLitresPerMin": 0, "inletTempC": 21.4 }
+    }
+  ],
+  "series": {
+    "metric": "totalFlowLitresPerMin",
+    "unit": "L/min",
+    "samples": [
+      { "atMs": 1754292800000, "value": 831.2 },
+      { "atMs": 1754294600000, "value": 848.9 },
+      { "atMs": 1754296400000, "value": 862.4 },
+      { "atMs": 1754298200000, "value": 855.0 },
+      { "atMs": 1754300000000, "value": 867.6 }
+    ]
+  }
+}

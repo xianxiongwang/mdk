@@ -19,13 +19,13 @@
      * actions cluster with no way to scroll to it. min-width: 0 lets
      * the header shrink so the __main slot absorbs the squeeze. */
     min-width: 0;
-    min-height: 4.6875rem; /* 75px — matches the Mining OS reference header */
+    min-height: 4.6875rem; /* 75px — matches the reference app header */
     padding: 0 1rem;
     background: var(--mdk-color-surface, #0a0a09);
     color: var(--mdk-color-text-primary, #f5f5f0);
     /* Sits above the sidebar (z-index 10) so the sidebar's top-right
      * notch ::after tucks under the header's bottom border, forming
-     * the continuous Mining OS-style L-shape. */
+     * the continuous reference-app-style L-shape. */
     position: relative;
     z-index: 11;
     border-bottom: 0.5px solid var(--mdk-color-primary, #f7931a);
@@ -42,7 +42,7 @@
       /* Pin to the sidebar's expanded width so the leading
        * HeaderStatDividerIcon in the stats bar starts at exactly
        * the sidebar's right edge, forming the continuous orange
-       * stroke from sidebar to header chevron (Mining OS L-shape). */
+       * stroke from sidebar to header chevron (the reference app L-shape). */
       width: var(--mdk-shell-sidebar-width, 220px);
       box-sizing: border-box;
       padding: 0 0.75rem 0 0.25rem;

@@ -1,13 +1,17 @@
 'use strict'
 
 const path = require('path')
+const { STATUS_CODES } = require('http')
 const async = require('async')
 const TetherWrkBase = require('@tetherto/tether-wrk-base/workers/base.wrk.tether')
-const debug = require('debug')('store:aggr')
-const { createDataProxy } = require('./lib/data.proxy')
-const { createMdkClient } = require('@tetherto/mdk-client')
+const createLogger = require('debug')
+const debug = createLogger('store:aggr')
 const { loadPlugin } = require('./lib/plugin-loader')
 const { buildFastifyRoutes } = require('./lib/plugin-adapter')
+const { buildPluginContext } = require('./lib/plugin-gateway')
+const { startMcpHttpServer, generateToolsFromGatewayPlugin } = require('@tetherto/mdk-mcp')
+
+const DEFAULT_MCP_PORT_OFFSET = 100
 
 const MDK_PLUGINS_ROOT = path.dirname(require.resolve('@tetherto/mdk-plugins/package.json'))
 
@@ -22,10 +26,6 @@ class WrkServerHttp extends TetherWrkBase {
     this.storeDir = 'http'
     this.prefix = `${this.wtype}-${ctx.port}`
     this.queuedRequests = new Map()
-
-    this.isRpcMode = ctx.isRpcMode !== false
-    if (ctx.kernel) this.kernel = ctx.kernel
-    this.dataProxy = createDataProxy(this)
 
     this.init()
     this.start()
@@ -51,31 +51,36 @@ class WrkServerHttp extends TetherWrkBase {
     ])
 
     this._plugins = []
-    const wrk = this
-    this._pluginServices = {
-      get dataProxy () { return wrk.dataProxy },
-      get mdkClient () { return wrk.mdkClient || null },
-      get conf () { return wrk.conf }
-    }
+    this._mcpTools = []
 
     this.registerPlugin(path.join(MDK_PLUGINS_ROOT, 'telemetry'))
     this.registerPlugin(path.join(MDK_PLUGINS_ROOT, 'site-hashrate'))
     this.registerPlugin(path.join(MDK_PLUGINS_ROOT, 'site-monitor'))
 
-    for (const dir of this.ctx.extraPluginDirs || []) {
-      this.registerPlugin(dir)
+    // Entries are a plugin dir, or { dir, config, autoGenerateMcp } when the
+    // stack spec carries per-plugin config (spec.gateway.plugins[].config).
+    for (const entry of this.ctx.extraPluginDirs || []) {
+      if (typeof entry === 'string') this.registerPlugin(entry)
+      else this.registerPlugin(entry.dir, entry.config, entry.autoGenerateMcp)
     }
   }
 
-  registerPlugin (pluginDir) {
-    const plugin = loadPlugin(pluginDir)
-    const services = this._pluginServices
-    for (const route of plugin.routes) {
-      const handler = route._handler
-      route._handler = (req) => handler(req, services)
-    }
+  // When autoGenerateMcp is true, the plugin's HTTP routes are converted into
+  // MCP tools (params/body -> Zod schema, bound route handler reused as-is)
+  // and queued for the in-process MCP server started in _start().
+  registerPlugin (pluginDir, pluginConf, autoGenerateMcp) {
+    // buildPluginContext constructs everything a plugin sees as
+    // '@tetherto/mdk-gateway/plugin' — plugins never touch the worker.
+    const { context } = buildPluginContext(this, pluginDir, pluginConf)
+    const plugin = loadPlugin(pluginDir, context)
     this._plugins.push(plugin)
     debug('registered plugin %s (%d routes)', plugin.manifest.name, plugin.routes.length)
+
+    if (autoGenerateMcp) {
+      const tools = generateToolsFromGatewayPlugin(plugin)
+      this._mcpTools.push(...tools)
+      debug('auto-generated %d MCP tool(s) from plugin %s', tools.length, plugin.manifest.name)
+    }
   }
 
   debugGeneric (msg) {
@@ -103,39 +108,37 @@ class WrkServerHttp extends TetherWrkBase {
         httpd.addHook('onError', async (request, reply, error) => {
           const isSafe = error.message && error.message.startsWith('ERR_')
           const message = isSafe ? error.message : 'Bad Request'
+          const status = Number.isInteger(error.statusCode) && error.statusCode >= 400 ? error.statusCode : 400
 
           if (!isSafe) {
             debug('onError handler:', error.message)
           }
 
-          return reply.status(400).send({
-            statusCode: 400,
-            error: 'Bad Request',
+          return reply.status(status).send({
+            statusCode: status,
+            error: STATUS_CODES[status] || 'Bad Request',
             message
           })
         })
 
         await httpd.startServer()
 
-        if (this.ctx.kernelKey) {
-          const key = Buffer.isBuffer(this.ctx.kernelKey) ? this.ctx.kernelKey.toString('hex') : this.ctx.kernelKey
-          const hrpc = { key }
-          if (this.ctx.kernelBootstrap) hrpc.bootstrap = this.ctx.kernelBootstrap
-          this.mdkClient = createMdkClient({ hrpc })
-          try {
-            await this.mdkClient.connect()
-            debug('Client connected to Kernel over HRPC: %s...', key.slice(0, 16))
-          } catch (err) {
-            debug('Client could not connect to Kernel over HRPC: %s', err.message)
-            this.mdkClient = null
-          }
-        }
-
         // rpc client key to be allowed through destination server firewall
         this.status.rpcClientKey = this.net_r0.dht.defaultKeyPair.publicKey.toString('hex')
         this.saveStatus()
+
+        if (this._mcpTools.length) {
+          const mcpPort = this.ctx.mcp?.port || (this.ctx.port + DEFAULT_MCP_PORT_OFFSET)
+          this._mcpServer = await startMcpHttpServer(mcpPort, this._mcpTools)
+          debug('MCP server auto-started on port %d (%d tool(s))', mcpPort, this._mcpTools.length)
+        }
       }
     ], cb)
+  }
+
+  _stop (cb) {
+    if (!this._mcpServer) return super._stop(cb)
+    this._mcpServer.close(() => super._stop(cb))
   }
 }
 

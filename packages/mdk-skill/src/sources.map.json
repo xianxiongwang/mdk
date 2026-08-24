@@ -4,7 +4,7 @@
     {
       "source": "packages/mdk-skill/src/skills",
       "dest": ".",
-      "note": "Hand-authored suite content: router, mdk-device-worker, three stub skills."
+      "note": "Hand-authored suite content: router + mdk-worker-plugin, mdk-gateway-plugin, mdk-ui-component, mdk-deployment (full workflows)."
     },
     {
       "source": "packages/mdk-skill/src/mdk-contract.schema.json",
@@ -13,21 +13,21 @@
     },
     {
       "source": "packages/mdk-skill/src/mdk-contract.schema.json",
-      "dest": "mdk-device-worker/references/mdk-contract.schema.json",
+      "dest": "mdk-worker-plugin/references/mdk-contract.schema.json",
       "note": "Second copy so the device-worker skill is self-contained when installed alone; same source, cannot drift apart."
     },
     {
-      "source": "backend/workers/samples/demo-worker",
-      "dest": "mdk-device-worker/assets/worker-template",
+      "source": "packages/cli/templates/worker",
+      "dest": "mdk-worker-plugin/assets/worker-template",
       "exclude": [
         "node_modules",
         "package-lock.json"
       ],
-      "note": "Verbatim copy of the shipped sample so the template cannot drift."
+      "note": "Verbatim copy of the CLI worker scaffold (mdk create worker) so the skill template cannot drift from what agents are told to run."
     },
     {
       "source": "packages/mdk-skill/src/worker-template-extras/smoke.config.js",
-      "dest": "mdk-device-worker/assets/worker-template/smoke.config.js",
+      "dest": "mdk-worker-plugin/assets/worker-template/smoke.config.js",
       "note": "Smoke-harness glue layered onto the template copy."
     }
   ]

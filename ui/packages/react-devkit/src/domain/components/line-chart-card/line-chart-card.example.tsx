@@ -6,8 +6,11 @@ import { LineChartCard, type LineChartCardData } from '@tetherto/mdk-react-devki
 const NOW = Date.now()
 const MS_PER_MIN = 60 * 1000
 
+/* `x` is a Unix timestamp in **milliseconds** — `LineChart` divides it by 1000
+ * itself to derive the lightweight-charts `UTCTimestamp`. Pass seconds here and
+ * every point lands in January 1970. */
 const points = Array.from({ length: 90 }, (_, i) => ({
-  x: Math.floor((NOW - (90 - i) * MS_PER_MIN) / 1000),
+  x: NOW - (90 - i) * MS_PER_MIN,
   y: 50 + Math.sin(i / 8) * 6 + Math.random() * 1.2,
 }))
 

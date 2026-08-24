@@ -78,7 +78,11 @@ class BaseMock {
 
   static expose (leafModule) {
     if (leafModule && require.main === leafModule) this.runCli()
-    return { createServer: (opts) => this.create(opts) }
+    return {
+      createServer: (opts) => this.create(opts),
+      types: this.TYPES,
+      defaultPassword: this.extraCliOptions?.password?.default
+    }
   }
 
   static runCli () {

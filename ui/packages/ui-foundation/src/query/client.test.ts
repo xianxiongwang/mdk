@@ -1,27 +1,37 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { authStore } from '../store/auth-store'
 import { MdkFetchError } from '../types/api-mining.types'
-import { createMdkQueryClient, getApiBaseUrl, resolveApiBaseUrl } from './client'
+import {
+  API_BASE_URL_ENV,
+  createMdkQueryClient,
+  DEPRECATED_API_BASE_URL_ENV,
+  getApiBaseUrl,
+  resolveApiBaseUrl,
+} from './client'
 
 describe('resolveApiBaseUrl', () => {
-  const originalNodeEnv = process.env.MDK_API_URL
+  const NAMES = [API_BASE_URL_ENV.node, DEPRECATED_API_BASE_URL_ENV.node]
+  const original = new Map(NAMES.map((name) => [name, process.env[name]]))
 
   beforeEach(() => {
-    delete process.env.MDK_API_URL
+    for (const name of NAMES) delete process.env[name]
   })
 
   afterEach(() => {
-    if (originalNodeEnv === undefined) delete process.env.MDK_API_URL
-    else process.env.MDK_API_URL = originalNodeEnv
+    for (const name of NAMES) {
+      const value = original.get(name)
+      if (value === undefined) delete process.env[name]
+      else process.env[name] = value
+    }
   })
 
   it('prefers an explicit override', () => {
-    process.env.MDK_API_URL = 'http://from-env'
+    process.env[API_BASE_URL_ENV.node] = 'http://from-env'
     expect(resolveApiBaseUrl('http://override')).toBe('http://override')
   })
 
   it('falls back to MDK_API_URL', () => {
-    process.env.MDK_API_URL = 'http://from-env'
+    process.env[API_BASE_URL_ENV.node] = 'http://from-env'
     expect(resolveApiBaseUrl()).toBe('http://from-env')
   })
 
@@ -34,13 +44,54 @@ describe('resolveApiBaseUrl', () => {
   })
 
   it('ignores whitespace-only overrides', () => {
-    process.env.MDK_API_URL = 'http://from-env'
+    process.env[API_BASE_URL_ENV.node] = 'http://from-env'
     expect(resolveApiBaseUrl('   ')).toBe('http://from-env')
   })
 
   it('honors an explicit empty string as "use relative URLs"', () => {
-    process.env.MDK_API_URL = 'http://from-env'
+    process.env[API_BASE_URL_ENV.node] = 'http://from-env'
     expect(resolveApiBaseUrl('')).toBe('')
+  })
+
+  describe('deprecated aliases', () => {
+    it('reads the deprecated name when the canonical one is unset', () => {
+      process.env[DEPRECATED_API_BASE_URL_ENV.node] = 'http://from-legacy'
+      expect(resolveApiBaseUrl()).toBe('http://from-legacy')
+    })
+
+    it('prefers the canonical name over the deprecated one', () => {
+      process.env[API_BASE_URL_ENV.node] = 'http://canonical'
+      process.env[DEPRECATED_API_BASE_URL_ENV.node] = 'http://legacy'
+      expect(resolveApiBaseUrl()).toBe('http://canonical')
+    })
+
+    it('names the replacement when it warns', () => {
+      /* The resolver warns once per process, so this asserts the message rather
+       * than the call count — a sibling test may already have consumed it. */
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      process.env[DEPRECATED_API_BASE_URL_ENV.node] = 'http://from-legacy'
+
+      resolveApiBaseUrl()
+      resolveApiBaseUrl()
+
+      const messages = warn.mock.calls.map((call) => String(call[0]))
+      expect(warn.mock.calls.length).toBeLessThanOrEqual(1)
+      for (const message of messages) {
+        expect(message).toContain(DEPRECATED_API_BASE_URL_ENV.node)
+        expect(message).toContain(API_BASE_URL_ENV.node)
+      }
+      warn.mockRestore()
+    })
+
+    it('does not warn when only the canonical name is set', () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      process.env[API_BASE_URL_ENV.node] = 'http://canonical'
+
+      resolveApiBaseUrl()
+
+      expect(warn).not.toHaveBeenCalled()
+      warn.mockRestore()
+    })
   })
 })
 

@@ -130,7 +130,7 @@ The toolkit follows a **framework-first** naming convention:
    }
    ```
 
-3. Add `tsconfig.json` extending `tsconfig.base.json`:
+3. Add `tsconfig.json` extending [`tsconfig.base.json`](../tsconfig.base.json):
 
    ```json
    {
@@ -142,8 +142,8 @@ The toolkit follows a **framework-first** naming convention:
 
 4. Add `src/index.ts` and start writing code.
 5. Run `npm install` at the repo root to wire the new workspace.
-6. Update `docs/ARCHITECTURE.md`, `README.md`, and (where applicable)
-   `CLAUDE.md` and [`AGENTS.md`](../AGENTS.md) so the new package is discoverable.
+6. Update [`docs/ARCHITECTURE.md`](./ARCHITECTURE.md), [`README.md`](../README.md), and (where applicable)
+   [`CLAUDE.md`](../CLAUDE.md) and [`AGENTS.md`](../AGENTS.md) so the new package is discoverable.
 
 ## State, theming, and styling rules
 
@@ -158,7 +158,7 @@ These are enforced architectural decisions — please follow them:
 - **Styling** uses SCSS with cascade layers. The devkit's compiled CSS
   emits `@layer base, mdk, app;` followed by `@layer mdk { … }`. Tokens
   live under `--mdk-*` CSS custom properties — see
-  `docs/STYLING.md`.
+  [`docs/STYLING.md`](./STYLING.md).
 - **No inline styles** in components. Use BEM class names
   (`mdk-<block>__<element>--<modifier>`) and override with
   `@layer app` in consuming apps.
@@ -273,17 +273,17 @@ the targets in `vitest.config.js` as packages mature.
 
 When you change behaviour, update the matching docs:
 
-- `README.md` — top-level summary.
+- [`README.md`](../README.md) — top-level summary.
 - [`AGENTS.md`](../AGENTS.md) — repo-level guide for AI agents: manifests,
   `mdk-ui` CLI, contributor quick recipes (keep in sync when agent surfaces change).
 - [`docs/AGENT_FIRST.md`](AGENT_FIRST.md) — plain-language tour, local test
   checklist, and the end-to-end shell setup for the agent-first system.
-- `CLAUDE.md` — Claude Code guidance in this repo (keep in sync with `AGENTS.md`
+- [`CLAUDE.md`](../CLAUDE.md) — Claude Code guidance in this repo (keep in sync with [`AGENTS.md`](../AGENTS.md)
   and the rules below).
-- `docs/ARCHITECTURE.md` — package boundaries, dependency graph, directory
+- [`docs/ARCHITECTURE.md`](./ARCHITECTURE.md) — package boundaries, dependency graph, directory
   tree, and per-package responsibilities.
-- `docs/BUILD.md` — anything that affects build tasks or scripts.
-- `docs/STYLING.md` — styling changes.
+- [`docs/BUILD.md`](./BUILD.md) — anything that affects build tasks or scripts.
+- [`docs/STYLING.md`](./STYLING.md) — styling changes.
 
 ### Component and hook documentation tiers
 
@@ -374,7 +374,7 @@ for the full explanation.
 
 #### Blueprints — only when adding a new user intent
 
-Blueprints live in `packages/react-devkit/blueprints/` and map a high-level
+Blueprints live in [`packages/react-devkit/blueprints/`](../packages/react-devkit/blueprints/README.md) and map a high-level
 goal ("build a mining dashboard") to a concrete set of components. You do
 **not** write a blueprint per component. Write one only when there is a new
 category of user intent that isn't covered by the existing four blueprints

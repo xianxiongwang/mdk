@@ -17,7 +17,7 @@ const fs = require('fs')
 const path = require('path')
 const { setTimeout: sleep } = require('timers/promises')
 
-const { createMdkClient } = require('@tetherto/mdk-client')
+const { createRawMdkClient } = require('@tetherto/mdk-client')
 
 const KEY_FILE = path.join(os.tmpdir(), 'mdk-site-antminer', 'kernel', '.kernel-key')
 
@@ -29,7 +29,7 @@ const main = async () => {
     console.error('Is the example running? Start it with `node index.js` first.')
     throw new Error('ERR_KERNEL_KEY_FILE_NOT_FOUND')
   }
-  const client = createMdkClient({ hrpc: { key: fs.readFileSync(KEY_FILE, 'utf8').trim() } })
+  const client = createRawMdkClient({ hrpc: { key: fs.readFileSync(KEY_FILE, 'utf8').trim() } })
   try {
     await client.connect()
   } catch (err) {

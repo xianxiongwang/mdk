@@ -45,12 +45,12 @@ export const Example = () => {
 
 ## Data contracts
 
-- `Device` — `foundation/types/device.ts`; only `id`, `code`, `tags`, `info.container`, `info.poolConfig`, and `last.snap.stats.status` are read.
-- `PoolConfigData` — `foundation/components/pool-manager/hooks/use-pool-configs.ts`; the hook parses `poolUrls` into typed `PoolEndpoint[]` and resolves pool metadata.
-- `PoolSummary` — `foundation/components/pool-manager/types.ts`; returned in `onSubmit`.
+- `Device` — [`foundation/types/device.ts`](../../../types/device.ts); only `id`, `code`, `tags`, `info.container`, `info.poolConfig`, and `last.snap.stats.status` are read.
+- `PoolConfigData` — [`foundation/components/pool-manager/hooks/use-pool-configs.ts`](../hooks/use-pool-configs.ts); the hook parses `poolUrls` into typed `PoolEndpoint[]` and resolves pool metadata.
+- `PoolSummary` — [`foundation/components/pool-manager/types.ts`](../types.ts); returned in `onSubmit`.
 
 ## Notes
 
 - The modal does not fetch data itself — pass pre-fetched `miners` and `poolConfig` from the parent.
-- The credential template preview section is gated by the `SHOW_CREDENTIAL_TEMPLATE` constant in `pool-manager-constants.ts`.
+- The credential template preview section is gated by the `SHOW_CREDENTIAL_TEMPLATE` constant in [`pool-manager-constants.ts`](../pool-manager-constants.ts).
 - Use `PoolManagerMinerExplorer` when you need a full miner-selection workflow before opening this modal.

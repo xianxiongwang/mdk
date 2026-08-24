@@ -1,6 +1,6 @@
 # Agent-ready contract — core and workers
 
-Applies to `backend/core/` and `backend/workers/` exports. Workers already ship the contract — `mdk-contract.json` per Worker. Core's per-export shape is still open (see [Decisions deferred](#decisions-deferred)). The UI protocol lives at [`ui/AGENTS.md`](../../../ui/AGENTS.md); this file does not bind UI.
+Applies to [`backend/core/`](../../../backend/core/README.md) and [`backend/workers/`](../../../backend/workers/README.md) exports. Workers already ship the contract — `mdk-contract.json` per Worker. Core's per-export shape is still open (see [Decisions deferred](#decisions-deferred)). The UI protocol lives at [`ui/AGENTS.md`](../../../ui/AGENTS.md); this file does not bind UI.
 <!-- mdk-monorepo: repoint to package-level AGENTS.md until ui/docs/AGENT_READY.md is populated -->
 
 ## What already ships
@@ -9,7 +9,7 @@ Applies to `backend/core/` and `backend/workers/` exports. Workers already ship 
 
 Every Worker package on disk carries an **`mdk-contract.json`** that is the canonical contract for both programmatic capabilities and AI context.
 
-Schema: `mdk-contract.schema.json` — formal JSON Schema: the `@tetherto/mdk-worker` package ships the same schema as the validation target. Vendoring into this repo is pending — see [QA gates](ia.md#qa-gates) for the proposed `check:contract` step.
+Schema: [`mdk-contract.schema.json`](../../../backend/core/mdk-worker/mdk-contract.schema.json) — formal JSON Schema, vendored in this repo. See [QA gates](ia.md#qa-gates) for the proposed `check:contract` step that would make validation against it build-blocking (it already runs warn-only via [`generate-catalogue.js`](../../../backend/workers/scripts/generate-catalogue.js)).
 
 Required top-level shape:
 
@@ -46,7 +46,7 @@ See [`backend/workers/miners/whatsminer/plugin/mdk-contract.json`](../../../back
 
 ### Core
 
-Nothing yet. Core monorepo presence today. The open question is whether `backend/core/` adopts UI's JSDoc shape (`@tier`, `@category`, `@domain`, `@kernelCapability` parsed by the registry generator) for non-UI exports, or has alt contract surface. See [Decisions deferred](#decisions-deferred). 
+Nothing yet. Core monorepo presence today. The open question is whether [`backend/core/`](../../../backend/core/README.md) adopts UI's JSDoc shape (`@tier`, `@category`, `@domain`, `@kernelCapability` parsed by the registry generator) for non-UI exports, or has alt contract surface. See [Decisions deferred](#decisions-deferred). 
 
 ## What this monorepo adds on top
 
@@ -83,12 +83,12 @@ See [`backend/core/docs/examples-convention.md`](../../../backend/core/docs/exam
 
 ## Tag rules
 
-The constraint surface for Worker tags is `mdk-contract.schema.json`, not the docs. The docs catalogue reads contract fields, pretty-prints them via the [`tag-vocab.yaml`](tag-vocab.yaml) presentation overlay, and groups Workers into integration kinds via the same overlay's `integration-kinds` section.
+The constraint surface for Worker tags is [`mdk-contract.schema.json`](../../../backend/core/mdk-worker/mdk-contract.schema.json), not the docs. The docs catalogue reads contract fields, pretty-prints them via the [`tag-vocab.yaml`](tag-vocab.yaml) presentation overlay, and groups Workers into integration kinds via the same overlay's `integration-kinds` section.
 
 | Source field | Where it is constrained | Where it is displayed |
 |--------------|------------------------|------------------------|
-| `metadata.deviceFamily` | enum in `mdk-contract.schema.json` | `tag-vocab.yaml` → `device-families` (label only, falls back to slug) |
-| `metadata.provider` | open string in current schema | `tag-vocab.yaml` → `providers` (label only, falls back to slug) |
+| `metadata.deviceFamily` | enum in [`mdk-contract.schema.json`](../../../backend/core/mdk-worker/mdk-contract.schema.json) | [`tag-vocab.yaml`](./tag-vocab.yaml) → `device-families` (label only, falls back to slug) |
+| `metadata.provider` | open string in current schema | [`tag-vocab.yaml`](./tag-vocab.yaml) → `providers` (label only, falls back to slug) |
 | `metadata.modelsSupported[]` | per-contract | aggregated by the docs build into namespaced ids |
 
 Tags are **read from the contract**, not declared elsewhere. No parallel `manifest.yaml`, no duplicated metadata. Adding a Worker for a new vendor does not require a docs-side PR to the overlay — the schema validates the contract, the slug ships, and the overlay catches up only when someone wants prettier display.
@@ -111,13 +111,13 @@ Once `dist/index.json` is shipping, it would also unlock [`check:integrations-fr
 
 ## Gateway plugin reference
 
-The default Gateway plugins in `backend/core/plugins/` each ship an `mdk-plugin.json` manifest — the source of truth for their HTTP routes. [`docs/scripts/generate-plugin-reference.js`](../../scripts/generate-plugin-reference.js) (`npm run generate:plugin-reference` in `backend/core/plugins`) reads those manifests and regenerates the route tables inside the marked region of [`backend/core/plugins/README.md`](../../../backend/core/plugins/README.md), so the published route list never drifts from the manifests. This is the same read-source-of-truth, generate, ship pattern as the Worker catalogue.
+The default Gateway plugins in [`backend/core/plugins/`](../../../backend/core/plugins/README.md) each ship an `mdk-plugin.json` manifest — the source of truth for their HTTP routes. [`docs/scripts/generate-plugin-reference.js`](../../scripts/generate-plugin-reference.js) (`npm run generate:plugin-reference` in [`backend/core/plugins`](../../../backend/core/plugins/README.md)) reads those manifests and regenerates the route tables inside the marked region of [`backend/core/plugins/README.md`](../../../backend/core/plugins/README.md), so the published route list never drifts from the manifests. This is the same read-source-of-truth, generate, ship pattern as the Worker catalogue.
 
 Only the default plugins are generated — plugins mounted at runtime via `startGateway({ extraPluginDirs })` live outside the repo and document their own routes. A [`check:plugin-reference-fresh`](ia.md#checkplugin-reference-fresh) gate would keep the generated tables honest; it is not wired today, so regenerate and commit when a default plugin's routes change.
 
 ## Decisions deferred
 
-- **JSDoc parity for core exports.** Whether `backend/core/` adopts UI's JSDoc shape (`@tier`, `@category`, `@domain`, `@kernelCapability`) for non-UI exports, or stays contract-free. Do not introduce a third format alongside `mdk-contract.json` and JSDoc — no `manifest.yaml` for core.
-- **Where the JSON Schema lives long-term.** When monorepo absorbs schema ownership, discover location of `mdk-contract.schema.json` possible home is `docs/schemas/`.
+- **JSDoc parity for core exports.** Whether [`backend/core/`](../../../backend/core/README.md) adopts UI's JSDoc shape (`@tier`, `@category`, `@domain`, `@kernelCapability`) for non-UI exports, or stays contract-free. Do not introduce a third format alongside `mdk-contract.json` and JSDoc — no `manifest.yaml` for core.
+- **Where the JSON Schema lives long-term.** When monorepo absorbs schema ownership, discover location of [`mdk-contract.schema.json`](../../../backend/core/mdk-worker/mdk-contract.schema.json) — a possible home is `docs/schemas/` (not created yet; proposal only).
 - **Whether `wtype`, `cooling`, `powerModes` deserve schema fields.** The current contract has them implicitly via `commands.setPowerMode.params`, but UI catalogue browse may want first-class fields.
 - **Per-model folders** (`*/packages/hardware/<vendor>/<model>/`) appear only when there is genuinely model-specific prose the contract can't hold (firmware caveats, photos, vendor links). Default: no folder, just an entry in `modelsSupported[]`.

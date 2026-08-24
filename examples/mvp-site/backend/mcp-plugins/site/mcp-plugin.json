@@ -1,43 +1,101 @@
 {
-  "name": "@tetherto/mdk-plugin-full-site-mcp",
-  "version": "0.1.0",
-  "description": "Full-site example MCP tools: query and control workers/devices via the MDK protocol client over the RPC listener.",
+  "name": "@tetherto/mdk-plugin-mvp-site-mcp",
+  "version": "0.2.0",
+  "description": "Agent-contract MCP tools: closed-vocabulary, summary-first site queries and actions for the MDK agent, via the MDK protocol client over the RPC listener.",
   "tools": [
     {
-      "id": "get_status",
-      "handler": "./tools/get-status.js",
-      "description": "Get current status of all workers and device counts",
-      "safety": "read-only"
+      "id": "summarize_site",
+      "handler": "./tools/summarize-site.js",
+      "description": "How the site is doing right now: worker and device totals, how many are online, and which are not.",
+      "safety": "read-only",
+      "annotations": { "readOnlyHint": true },
+      "agent": {
+        "enabled": true,
+        "minCapability": "small",
+        "answers": "How many workers and devices exist and how many are online.",
+        "useWhen": ["how is the site doing", "give me a site overview", "is anything down"],
+        "notFor": [
+          "counting one family (use count_devices)",
+          "listing devices (use list_devices)",
+          "any reading, metric, power figure, energy use or cost — this tool holds none of them"
+        ],
+        "returns": "counts of workers and devices by family and state, plus the ids of anything offline. Inventory only: no readings, no power, no energy and no cost figures"
+      }
     },
     {
-      "id": "get_capabilities",
-      "handler": "./tools/get-capabilities.js",
-      "description": "Get the capabilities (command schema) for a device",
-      "safety": "read-only"
+      "id": "count_devices",
+      "handler": "./tools/count-devices.js",
+      "description": "How many devices match a family and a readiness state.",
+      "safety": "read-only",
+      "annotations": { "readOnlyHint": true },
+      "agent": {
+        "enabled": true,
+        "minCapability": "small",
+        "answers": "How many devices there are, by family and state.",
+        "useWhen": ["how many miners are there", "number of offline devices", "how many powermeters"],
+        "notFor": ["naming them (use list_devices)"],
+        "returns": "a single count with a one-line summary"
+      }
     },
     {
-      "id": "pull_telemetry",
-      "handler": "./tools/pull-telemetry.js",
-      "description": "Pull telemetry metrics for a device",
-      "safety": "read-only"
+      "id": "list_devices",
+      "handler": "./tools/list-devices.js",
+      "description": "Which devices match a family and a readiness state, named individually.",
+      "safety": "read-only",
+      "annotations": { "readOnlyHint": true },
+      "agent": {
+        "enabled": true,
+        "minCapability": "small",
+        "answers": "Which devices match a family and state.",
+        "useWhen": ["list the miners", "which devices are offline", "show me the powermeters"],
+        "notFor": ["counting only (use count_devices)"],
+        "returns": "the matching devices, one per line, with a one-line summary"
+      }
     },
     {
-      "id": "pull_state",
-      "handler": "./tools/pull-state.js",
-      "description": "Pull current state snapshot for a device",
-      "safety": "read-only"
+      "id": "get_device",
+      "handler": "./tools/get-device.js",
+      "description": "What one named device reports or supports: its live readings, its state, the commands it accepts, or the power modes it allows.",
+      "safety": "read-only",
+      "annotations": { "readOnlyHint": true },
+      "agent": {
+        "enabled": true,
+        "minCapability": "small",
+        "answers": "One attribute of one named device.",
+        "useWhen": ["what is that miner's temperature", "what can I do to this device", "is that device online"],
+        "notFor": ["anything across several devices (use list_devices or rank_devices)"],
+        "returns": "the requested attribute with a one-line summary"
+      }
     },
     {
-      "id": "get_supported_power_modes",
-      "handler": "./tools/get-supported-power-modes.js",
-      "description": "Get the supported power modes for a device",
-      "safety": "read-only"
+      "id": "rank_devices",
+      "handler": "./tools/rank-devices.js",
+      "description": "Devices of a family ordered by a metric, highest or lowest first.",
+      "safety": "read-only",
+      "annotations": { "readOnlyHint": true },
+      "agent": {
+        "enabled": true,
+        "minCapability": "small",
+        "answers": "Which devices lead or trail on a metric.",
+        "useWhen": ["which miner has the lowest power", "hottest miners", "top 3 by hashrate"],
+        "notFor": ["one named device (use get_device)"],
+        "returns": "an ordered list with the metric value, and a one-line summary"
+      }
     },
     {
-      "id": "send_command",
-      "handler": "./tools/send-command.js",
-      "description": "Send a command to a device (e.g. reboot, set_power_mode)",
-      "safety": "write"
+      "id": "act_device",
+      "handler": "./tools/act-device.js",
+      "description": "Perform an action on one named device. Requires operator approval before it runs.",
+      "safety": "write",
+      "annotations": { "readOnlyHint": false },
+      "agent": {
+        "enabled": true,
+        "minCapability": "small",
+        "answers": "A state-changing action on one device.",
+        "useWhen": ["reboot that miner", "restart the device", "set that miner to sleep"],
+        "notFor": ["reading anything (use get_device)"],
+        "returns": "the outcome of the action with a one-line summary"
+      }
     }
   ]
 }

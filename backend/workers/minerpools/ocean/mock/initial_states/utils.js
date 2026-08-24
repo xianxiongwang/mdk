@@ -70,9 +70,15 @@ function generateMockTransactions (username, startTime, endTime) {
   return transactions
 }
 
-function generateUserHashrate (username) {
+// ~100 TH/s per worker — matches generateMockWorkers' per-worker baseline
+// below, so the aggregate here scales with the same fleet size instead of
+// always reporting a flat 5-worker demo figure regardless of ctx.workerCount.
+const AVG_HASHRATE_PER_WORKER = 100000000000000
+
+function generateUserHashrate (username, workerCount) {
   const now = Math.floor(Date.now() / 1000)
-  const baseHashrate = 100000000000000 // 100 TH/s
+  const count = workerCount != null ? workerCount : 5
+  const baseHashrate = count * AVG_HASHRATE_PER_WORKER
 
   return {
     snap_ts: now,
@@ -83,7 +89,7 @@ function generateUserHashrate (username) {
     hashrate_3600s: baseHashrate + randomNumber() * 10000000000000,
     hashrate_43200s: baseHashrate + randomNumber() * 10000000000000,
     hashrate_86400s: baseHashrate + randomNumber() * 10000000000000,
-    active_worker_count: 5
+    active_worker_count: count
   }
 }
 

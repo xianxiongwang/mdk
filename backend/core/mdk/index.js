@@ -201,7 +201,18 @@ async function startKernel (opts = {}) {
  *                                            then the key file.
  * @param {string}  [opts.keyFile]       - Key file to resolve the Kernel key from (default: DEFAULT_KEY_FILE)
  * @param {Array}   [opts.bootstrap]     - DHT bootstrap nodes for the Client (testnets)
- * @param {Array}   [opts.extraPluginDirs] - Extra plugin package dirs to load + register at boot
+ * @param {Array}   [opts.extraPluginDirs] - Extra plugin package dirs to load + register at boot.
+ *                                           Each entry is either a plugin dir (string) or
+ *                                           `{ dir, config, autoGenerateMcp }`: `config` hands the
+ *                                           plugin its own config block (merged over common in its
+ *                                           ambient context); when autoGenerateMcp is true, the
+ *                                           plugin's HTTP routes are auto-converted into MCP tools
+ *                                           (reusing the same bound route handlers) and served by
+ *                                           an MCP server the gateway starts in-process — see
+ *                                           opts.mcp.
+ * @param {object}  [opts.mcp]           - Config for the in-process MCP server auto-started when
+ *                                           any extraPluginDirs entry has autoGenerateMcp: true.
+ * @param {number}  [opts.mcp.port]      - MCP server port (default: opts.port + 100)
  * @param {object}  [opts.common]        - Overrides for common.json
  * @param {object}  [opts.httpd]         - Overrides for httpd.config.json
  * @param {object}  [opts.net]           - Overrides for net.config.json
@@ -276,6 +287,7 @@ async function startGateway (opts = {}) {
   }
   if (opts.extraPluginDirs) ctx.extraPluginDirs = opts.extraPluginDirs
   if (opts.additionalRoutes) ctx.additionalRoutes = opts.additionalRoutes
+  if (opts.mcp) ctx.mcp = opts.mcp
 
   // WrkServerHttp constructor calls this.init() + this.start() automatically.
   // bfx-wrk-base emits 'started' (via process.nextTick) when start() completes.

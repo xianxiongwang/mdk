@@ -25,7 +25,7 @@ Core infrastructure packages for MDK. These packages form the coordination layer
 @tetherto/mdk-worker          (Worker Runtime, hosts a plugin's devices behind one HRPC channel)
 ```
 
-Workers are a separate dependency tree (`backend/workers/`). They import `@tetherto/mdk-worker` for the runtime and do not import
+Workers are a separate dependency tree ([`backend/workers/`](../workers/README.md)). They import `@tetherto/mdk-worker` for the runtime and do not import
 from `core/` directly otherwise, except for the MDK Protocol constants shared through `@tetherto/mdk-kernel`.
 
 ## Shared conventions

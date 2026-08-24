@@ -7,7 +7,7 @@
 import { useCurrentAlertDevices, useDevices, useHistoricalAlerts } from '@tetherto/mdk-react-adapter'
 import { Alerts as AlertsFeature } from '@tetherto/mdk-react-devkit'
 import type { Alert, Device } from '@tetherto/mdk-react-devkit'
-import { getDefaultHistoricalAlertsRange, type HistoricalAlertsRange } from '@tetherto/mdk-ui-foundation'
+import { getDefaultHistoricalAlertsRange, type HistoricalAlertsRange } from '@tetherto/mdk-ui-foundation/presets/mining'
 import { useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router'
 
@@ -40,7 +40,7 @@ const AlertsPage = () => {
   return (
     <PageLayout title="Alerts" className="mdk-ui-shell-alerts">
       <AlertsFeature
-        devices={devices.data as Device[][] | undefined}
+        devices={devices.data as Device[] | undefined}
         isCurrentAlertsLoading={devices.isLoading}
         historicalAlerts={historical.data as Alert[] | undefined}
         isHistoricalAlertsLoading={historical.isLoading}

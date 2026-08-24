@@ -26,7 +26,7 @@ $_prefix: "mdk-mining-pools-panel";
     color: var(--mdk-color-white);
   }
 
-  /* Inner sub-card frame — Mining OS nests the table inside a second
+  /* Inner sub-card frame — the reference app nests the table inside a second
    * surface with its own border + slight inset; mirror that look. */
   &__table {
     @include flex_column;

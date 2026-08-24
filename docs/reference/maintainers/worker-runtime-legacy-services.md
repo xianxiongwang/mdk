@@ -9,7 +9,7 @@ minimal reference implementation passes `services: null` and needs none of it.
 ## Migration from MDKWorkerAdapter and ThingManager
 
 0.5.0 extracted the Worker runtime into a standalone [`@tetherto/mdk-worker`][mdk-worker-package] package
-(`backend/core/mdk-worker/`) and migrated every worker in this monorepo onto the `WorkerRuntime` plugin model, deleting
+([`backend/core/mdk-worker/`](../../../backend/core/mdk-worker/index.js)) and migrated every worker in this monorepo onto the `WorkerRuntime` plugin model, deleting
 the legacy `base/` packages (`ThingManager`, `mdk-worker-adapter.js`, the per-family `miners/base`, `containers/base`,
 `power-meter/base`, `temperature/base`, `minerpools/base`).
 

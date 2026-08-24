@@ -26,19 +26,19 @@ etc.) which bind these primitives to the host framework.
     `miners`, `siteStatusLive`, `actions`, `liveActions`
   - Pool Manager mutations: `submitAction`, `submitBatchAction`, `voteAction`, `cancelActions`
   - Thing-comment mutations: `addThingComment`, `editThingComment`, `deleteThingComment`
-- **Query factories** (`factories.ts`): `{ queryKey, queryFn }` objects for mining read endpoints
+- **Query factories** ([`factories.ts`](./src/presets/mining/factories.ts)): `{ queryKey, queryFn }` objects for mining read endpoints
   (auth, devices, tail-log, list-things, history-log, ext-data) and three **Thing-comment
   mutation factories** — `addThingCommentMutation` (POST), `editThingCommentMutation` (PUT),
   `deleteThingCommentMutation` (DELETE) — all sharing one `thingCommentMutationFn` implementation
   targeting `/auth/thing/comment`; there is no GET endpoint — comments are stored on the Thing
   record and returned in the `comments` field of each `listThings` result
-- **Pool factories** (`pool-factories.ts`): query and mutation factory objects for Pool Manager
+- **Pool factories** ([`pool-factories.ts`](./src/presets/mining/pool-factories.ts)): query and mutation factory objects for Pool Manager
   endpoints, including the voting/approval write workflow (`submitActionMutation`,
   `submitBatchActionMutation`, `voteActionMutation`, `cancelActionsMutation`)
 
 ### Device actions
 
-`utils/device-actions.ts` owns the payload vocabulary for the voting/approval write workflow so
+[`utils/device-actions.ts`](./src/utils/device-actions.ts) owns the payload vocabulary for the voting/approval write workflow so
 action names, param positions, and cross-thing shapes never leak into the React layers:
 
 - **Constants**: `DEVICE_ACTION` (miner, container, thing, rack verbs), `DEVICE_BATCH_ACTION`
@@ -60,24 +60,24 @@ action names, param positions, and cross-thing shapes never leak into the React 
 
 ### Query parameter builders
 
-- **Op Centre builders**: (`utils/op-centre-queries.ts`) compose `ListThingsParams` objects for the
+- **Op Centre builders**: ([`utils/op-centre-queries.ts`](./src/presets/mining/dialect/op-centre-queries.ts)) compose `ListThingsParams` objects for the
   Explorer and Site Overview read paths:
   - `buildExplorerListThingsParams` (miner / cabinet / container tab variants)
   - `buildContainerDetailParams`, `buildCabinetDetailParams`
   - `buildContainerWidgetsListParams`, `buildContainerWidgetsRealtimeTailLogParams`
   - Field projection constants: `OP_CENTRE_LIST_THINGS_FIELDS`,
     `OP_CENTRE_CONTAINER_DETAIL_FIELDS`, and related sets
-- **Alert builders**: (`utils/alert-queries.ts`) builds alert-page list-things and history-log params
-- **Dashboard builders**: (`utils/dashboard-queries.ts`) builds tail-log and ext-data params for
+- **Alert builders**: ([`utils/alert-queries.ts`](./src/presets/mining/dialect/alert-queries.ts)) builds alert-page list-things and history-log params
+- **Dashboard builders**: ([`utils/dashboard-queries.ts`](./src/presets/mining/dialect/dashboard-queries.ts)) builds tail-log and ext-data params for
   the operations dashboard
-- **Query utilities**: (`utils/query-utils.ts`) MongoDB-style selector composers (`getByTagsQuery`,
+- **Query utilities**: ([`utils/query-utils.ts`](./src/presets/mining/dialect/query-utils.ts)) MongoDB-style selector composers (`getByTagsQuery`,
   `getByIdsQuery`, `getContainerByContainerTagsQuery`, etc.) and `flattenKernelEnvelope` a
   null-safe helper that flattens per-Kernel nested envelopes from `list-things` / `list-racks` into a
   flat row array
 
 ### Container tab utilities
 
-`utils/container-tabs.ts` owns the per-model container detail-tab matrix so the React layers stay
+[`utils/container-tabs.ts`](./src/presets/mining/dialect/container-tabs.ts) owns the per-model container detail-tab matrix so the React layers stay
 free of container-model knowledge:
 
 - **`CONTAINER_TAB_MATRIX`**: tab sequence keyed by `ContainerModelFamily`
@@ -92,7 +92,7 @@ free of container-model knowledge:
 
 ### API types
 
-`types/api-mining.types.ts` carries the Gateway endpoint contracts:
+[`types/api-mining.types.ts`](./src/types/api-mining.types.ts) carries the Gateway endpoint contracts:
 
 - Tail-log: `TailLogEntry`, `HashRateLogEntry`, `PowerModeTimelineEntry`, `TailLogParams`,
   `TailLogMultiParams`
@@ -107,17 +107,18 @@ free of container-model knowledge:
   `ThingCommentBody`
 - Error class: `MdkFetchError`
 
-Additional type modules: `types/pool.types.ts`, `types/settings.types.ts`, `types/chart.types.ts`.
+Additional type modules: [`types/pool.types.ts`](./src/types/pool.types.ts), [`types/settings.types.ts`](./src/types/settings.types.ts), [`types/chart.types.ts`](./src/types/chart.types.ts).
 
 ## Subpath exports
 
-| Subpath         | Purpose                                                                  |
-| --------------- | ------------------------------------------------------------------------ |
-| `.`             | Top-level barrel                                                         |
-| `./store`       | Zustand vanilla stores                                                   |
-| `./query`       | `QueryClient` factory, `queryKeys`, and query/mutation factories         |
-| `./types`       | Shared type contracts                                                    |
-| `./stores.json` | Machine-readable store + query-helper manifest (generated at build time) |
+| Subpath              | Purpose                                                                                |
+| -------------------- | --------------------------------------------------------------------------------------- |
+| `.`                  | Top-level barrel                                                                       |
+| `./store`            | Zustand vanilla stores                                                                 |
+| `./query`            | Backend-agnostic query core: `createMdkQueryClient`, declarative resource builders, URL/param helpers — works against any API |
+| `./presets/mining`   | The mining Gateway preset: `queryKeys`/`QueryKeyMap`, the read/write factories, and the tag/selector dialect — not in `./query` |
+| `./types`            | Shared type contracts                                                                  |
+| `./stores.json`      | Machine-readable store + query-helper manifest (generated at build time)              |
 
 ## Build strategy
 

@@ -15,7 +15,7 @@ device + registration** half on top so the API actually returns miners.
 - Bringing up Kernel + gateway + N Workers in one process (single-process mode).
 - Starting a **mock Antminer** per Worker and **registering** it as a thing.
 - The full Antminer model family (S19XP, S19XPH, S21, S21PRO) in one site.
-- Live mock telemetry pulled through the Kernel over the MDK Protocol — no hardware (see `verify.js`).
+- Live mock telemetry pulled through the Kernel over the MDK Protocol — no hardware (see [`verify.js`](./verify.js)).
 
 ## Prerequisites
 
@@ -81,12 +81,12 @@ Bitmain's HTTP digest API on loopback, exactly as it would poll a real Antminer.
 | `am-s21pro`  | `S21PRO`  | `s21pro`  | 14024 | digest `root` / `root` |
 
 > Note the `S19XPH` → `s19xp_h` mapping: the registry/manager key is `S19XPH` but the mock and its
-> initial-state files use the underscored `s19xp_h`. `index.js` translates this via `ANTMINER_MOCK_TYPE`.
+> initial-state files use the underscored `s19xp_h`. [`index.js`](./index.js) translates this via `ANTMINER_MOCK_TYPE`.
 
 ## Quickstart
 
 Clone-and-run — no config copy needed (the example falls back to
-`config/mdk.config.json.example`):
+[`config/mdk.config.json.example`](./config/mdk.config.json.example)):
 
 ```bash
 node examples/backend/miners/antminer/index.js     # from the repo root
@@ -106,7 +106,7 @@ devices with their mock ports. `Ctrl+C` shuts everything down cleanly (mocks, Wo
 
 ## Verifying it works (MDK Protocol over HRPC)
 
-The reliable, integrated way to confirm the site is live is `verify.js`. With the example running
+The reliable, integrated way to confirm the site is live is [`verify.js`](./verify.js). With the example running
 in one terminal, run it in another:
 
 ```bash
@@ -139,12 +139,12 @@ curl http://localhost:3000/site-monitor/hashrate   # per-device hashrate/power v
 ```
 
 `/site-monitor/hashrate` aggregates over `worker.list` + `telemetry.pull`, so it reflects the same
-live device data `verify.js` prints. (The legacy per-method data routes — `/auth/list-things`,
+live device data [`verify.js`](./verify.js) prints. (The legacy per-method data routes — `/auth/list-things`,
 `/auth/miners` — never worked against the MDK Kernel and have been removed.)
 
 ## Configuration reference
 
-`config/mdk.config.json` (copied from the `.example`):
+[`config/mdk.config.json`](./config/mdk.config.json.example) (copied from the `.example`):
 
 | Field | Description |
 |---|---|
@@ -156,7 +156,7 @@ Each Worker entry:
 
 | Field | Description |
 |---|---|
-| `worker` | `"miner-antminer"` — maps to `backend/workers/miners/antminer` via `WORKER_PACKAGES`. |
+| `worker` | `"miner-antminer"` — maps to [`backend/workers/miners/antminer`](../../../../backend/workers/miners/antminer/README.md) via `WORKER_PACKAGES`. |
 | `type` | One of `S19XP`, `S19XPH`, `S21`, `S21PRO` — maps to a manager class via `WORKER_REGISTRY`. |
 | `rack` | Rack id; also the per-Worker data dir under `data/`. |
 | `mock` | Mock + registration parameters (below). |
@@ -175,7 +175,7 @@ The `mock` block:
 
 ## How mocks + registration work
 
-For each `worker` service, `index.js`:
+For each `worker` service, [`index.js`](./index.js):
 
 1. `startMock(svc)` → binds the Antminer mock on `mock.port` (kept in `mockHandles` for cleanup).
 2. `startAntminerWorker({ workerId, model, storeDir, seedDevices, ... })` → boots the Worker (via `WorkerRuntime`),
@@ -192,7 +192,6 @@ per-Worker, so distinct Workers may reuse the loopback address).
 ```
 examples/backend/miners/antminer/
 ├── README.md
-├── package.json
 ├── index.js                      # orchestration: Kernel + gateway + Workers + mocks + registration
 ├── verify.js                     # functional check over the MDK Protocol (HRPC)
 ├── config/

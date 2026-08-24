@@ -9,10 +9,10 @@ const path = require('path')
 const fs = require('fs')
 const crypto = require('crypto')
 const { startGateway, onShutdown } = require('@tetherto/mdk-core')
-const { createMdkClient } = require('@tetherto/mdk-client')
 const { createMcpServer } = require('@tetherto/mdk-mcp')
 const {
-  ROOT, GATEWAY_PORT, GATEWAY_HOST, MCP_PORT, PLUGIN_DIRS, MCP_PLUGIN_DIRS, STATIC_ROOT_PATH, DISCOVERY,
+  ROOT, GATEWAY_PORT, GATEWAY_HOST, AUTO_GENERATE_MCP, MCP_PORT, PLUGIN_DIRS, STATIC_ROOT_PATH, DISCOVERY,
+  MCP_AGENT_TOOLS_PORT, MCP_PLUGIN_DIRS,
   loadSeedDevices, startMocks, startSatecMocks, startOceanMock,
   bootKernel, bootWorker, bootOceanWorker, bootSatecWorker
 } = require('../backend/site')
@@ -27,6 +27,25 @@ const readKernelTopic = (root, mode) => {
   const topicFile = path.join(root, '.dht-topic')
   if (!fs.existsSync(topicFile)) throw new Error('ERR_KERNEL_TOPIC_MISSING: start the Kernel first')
   return fs.readFileSync(topicFile, 'utf8').trim()
+}
+
+const KERNEL_KEY_WAIT_TIMEOUT_MS = 30000
+const KERNEL_KEY_POLL_INTERVAL_MS = 250
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+// gateway and mcp start as PM2 apps alongside (not after) the kernel role, so
+// .kernel-key may not exist yet when they boot. Poll for it instead of
+// crashing immediately — avoids a PM2 crash-restart loop racing the kernel's
+// own boot time on every `npm run start`.
+const waitForKernelKey = async (root) => {
+  const kernelKeyFile = path.join(root, '.kernel-key')
+  const deadline = Date.now() + KERNEL_KEY_WAIT_TIMEOUT_MS
+  while (!fs.existsSync(kernelKeyFile)) {
+    if (Date.now() >= deadline) throw new Error('ERR_KERNEL_KEY_MISSING: start the Kernel first')
+    await sleep(KERNEL_KEY_POLL_INTERVAL_MS)
+  }
+  return fs.readFileSync(kernelKeyFile, 'utf8').trim()
 }
 
 // Boots one Whatsminer mock server per seed miner in config/devices.json — the
@@ -53,8 +72,8 @@ const runOceanMock = async () => {
 }
 
 const runSatecMocks = async () => {
-  const { powermeters } = loadSeedDevices()
-  const { ready, close } = startSatecMocks(powermeters)
+  const { miners, powermeters } = loadSeedDevices()
+  const { ready, close } = startSatecMocks(powermeters, miners.length)
   await ready
 
   onShutdown(async () => close())
@@ -130,54 +149,49 @@ const runSatecWorker = async () => {
 
 // Boots the gateway (HRPC mdkClient + site plugin + static UI), connecting to
 // the Kernel by its .kernel-key public key (RPC-listener-only — no in-process
-// Kernel handle).
+// Kernel handle). The site plugin's autoGenerateMcp flag makes the gateway
+// also auto-start an in-process MCP server exposing that plugin's HTTP routes
+// as tools (site_overview, site_history, site_miner_command, site_miner_pools) —
+// no separate mcp-plugin.json or MCP process needed.
 const runGateway = async () => {
   const root = arg('--root', ROOT)
   const port = Number(arg('--port', GATEWAY_PORT))
 
-  const kernelKeyFile = path.join(root, '.kernel-key')
-  if (!fs.existsSync(kernelKeyFile)) throw new Error('ERR_KERNEL_KEY_MISSING: start the Kernel first')
-  const kernelKey = fs.readFileSync(kernelKeyFile, 'utf8').trim()
+  const kernelKey = await waitForKernelKey(root)
 
-  const hnd = await startGateway({
+  await startGateway({
     kernelKey,
-    extraPluginDirs: PLUGIN_DIRS,
+    extraPluginDirs: PLUGIN_DIRS.map((dir) => ({ dir, autoGenerateMcp: AUTO_GENERATE_MCP })),
     port,
+    mcp: { port: MCP_PORT },
     httpd: { h0: { host: GATEWAY_HOST } },
     root: path.join(root, 'gateway'),
     common: { staticRootPath: STATIC_ROOT_PATH }
   })
 
-  // The gateway starts even if the Kernel is unreachable (it just nulls its
-  // client). Fail loudly so PM2 restarts us until the Kernel is up — this is what
-  // makes startup order-independent without depends_on.
-  if (!hnd.mdkClient) {
-    await new Promise((resolve) => hnd.stop(resolve))
-    throw new Error('ERR_KERNEL_NOT_CONNECTED: Kernel not reachable yet — retrying')
-  }
-
+  // The site plugin's own mdk client (lib/client.js) dials the Kernel lazily
+  // per-request, so gateway boot only needs the Kernel's public key (waited
+  // for above), not the Kernel actually reachable yet — no depends_on/ordering
+  // required between the two PM2 apps.
   // Standalone startGateway handles SIGINT/SIGTERM (hnd.stop()).
   console.log('MDK_READY gateway port=%d kernel=%s', port, kernelKey.slice(0, 16))
 }
 
-// Boots the MCP server (Streamable HTTP), connecting to the Kernel by its
-// .kernel-key public key over HRPC — same discovery contract as the gateway,
-// RPC-listener-only (no in-process Kernel handle). Tools come from
-// MCP_PLUGIN_DIRS (mcp-plugin.json manifests, same shape as the gateway's).
+// Boots the standalone MCP server (Streamable HTTP) serving the hand-authored
+// agent-contract tools (backend/mcp-plugins/site) — curated granularity and
+// descriptions the auto-generated gateway tools don't provide. The Kernel's
+// .kernel-key public key goes into the ambient plugin config — each tool
+// plugin authors its own HRPC client from it (lib/client.js), so no client is
+// built here. Tools come from MCP_PLUGIN_DIRS (mcp-plugin.json manifests).
 const runMcp = async () => {
   const root = arg('--root', ROOT)
-  const port = Number(arg('--port', MCP_PORT))
+  const port = Number(arg('--port', MCP_AGENT_TOOLS_PORT))
 
-  const kernelKeyFile = path.join(root, '.kernel-key')
-  if (!fs.existsSync(kernelKeyFile)) throw new Error('ERR_KERNEL_KEY_MISSING: start the Kernel first')
-  const kernelKey = fs.readFileSync(kernelKeyFile, 'utf8').trim()
+  const kernelKey = await waitForKernelKey(root)
 
-  const client = createMdkClient({ hrpc: { key: kernelKey } })
-  await client.connect({ warmup: true })
+  await createMcpServer(root, port, { kernelKey }, MCP_PLUGIN_DIRS)
 
-  await createMcpServer(root, port, client, MCP_PLUGIN_DIRS)
-
-  // createMcpServer handles SIGINT/SIGTERM (closes the client, stops the HTTP server).
+  // createMcpServer handles SIGINT/SIGTERM (stops the HTTP server).
   console.log('MDK_READY mcp port=%d kernel=%s', port, kernelKey.slice(0, 16))
 }
 

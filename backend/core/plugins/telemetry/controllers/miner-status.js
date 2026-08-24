@@ -1,5 +1,6 @@
 'use strict'
 
+const dataProxy = require('../lib/site-data')
 const {
   WORKER_TYPES,
   AGGR_FIELDS,
@@ -97,8 +98,8 @@ function calculateMinerStatusSummary (log) {
   }
 }
 
-module.exports = async function (req, services) {
-  return getMinerStatus(services, req)
+module.exports = async function (req) {
+  return getMinerStatus({ dataProxy }, req)
 }
 
 module.exports.getMinerStatus = getMinerStatus

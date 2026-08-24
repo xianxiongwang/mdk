@@ -14,12 +14,9 @@ import type { UseEnergyReportSiteInput, UseEnergyReportSiteResult } from './ener
  * and container list data for the Energy report site tab.
  *
  * @remarks
- * The `/auth/metrics/*` endpoint is illustrative. MDK does not ship built-in
- * endpoints — create your own via a
- * [Gateway plugin](https://docs.tether.io/mdk/guides/gateway/plugins) matching
- * your Worker/business logic. See the
- * [full-site example](https://github.com/tetherto/mdk/tree/main/examples/full-site/plugins/site)
- * for a working reference.
+ * `/auth/metrics/*` is illustrative. MDK does not ship a built-in endpoint for it — create your own via a
+ * [Gateway plugin](https://docs.tether.io/mdk/guides/gateway/plugins) matching your Worker/business logic. No
+ * reference implementation of `/auth/metrics/*` ships in this repo.
  *
  * @category misc
  * @domain mining-operations

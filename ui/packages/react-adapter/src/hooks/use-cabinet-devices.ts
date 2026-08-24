@@ -1,9 +1,5 @@
-import {
-  buildCabinetDetailParams,
-  flattenKernelEnvelope,
-  type ListThingsDevice,
-  listThingsQuery,
-} from '@tetherto/mdk-ui-foundation'
+import type { ListThingsDevice } from '@tetherto/mdk-ui-foundation'
+import { buildCabinetDetailParams, flattenKernelEnvelope, listThingsQuery  } from '@tetherto/mdk-ui-foundation/presets/mining'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { OP_CENTRE_REALTIME_POLL_INTERVAL_MS } from './poll-intervals'
@@ -33,6 +29,12 @@ export type UseCabinetDevicesResult = {
  * ({@link buildCabinetDetailParams}) — polled at the Op-Centre realtime cadence
  * and flattened across the per-kernel envelope. The detail hook groups the result
  * back into a single cabinet; skips the request entirely when no root is set.
+ *
+ * @remarks
+ * The `/auth/list-things` endpoint is illustrative. MDK does not ship a built-in
+ * endpoint for it — create your own via a
+ * [Gateway plugin](https://docs.tether.io/mdk/guides/gateway/plugins) matching
+ * your Worker/business logic. No reference implementation ships in this repo.
  *
  * @category op-centre
  */

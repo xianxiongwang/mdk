@@ -1,9 +1,9 @@
 # ActionsSidebar
 
-Full-height side panel that surfaces the MiningOS voting/approval workflow.
+Full-height side panel that surfaces the reference app voting/approval workflow.
 Lists local draft actions pending submission, actions already submitted (in
-review), and actions raised by other operators that await your vote. Mirrors the
-`the reference app` sidebar but is built on MDK primitives — no Redux, no Ant Design.
+review), and actions raised by other operators that await your vote. Mirrors
+the reference app's sidebar but is built on MDK primitives — no Redux, no Ant Design.
 
 ## Props
 

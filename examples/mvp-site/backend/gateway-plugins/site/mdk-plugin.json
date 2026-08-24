@@ -1,7 +1,7 @@
 {
-  "name": "@tetherto/mdk-plugin-full-site",
+  "name": "@tetherto/mdk-plugin-mvp-site",
   "version": "0.1.0",
-  "description": "Full-site example plugin: aggregates the site (containers, miners, powermeters, sensors, pools) via the MDK protocol client over the RPC listener.",
+  "description": "MVP-site example plugin: aggregates the site (miners, a powermeter, a mining pool) via the MDK protocol client over the RPC listener.",
   "routes": [
     {
       "id": "site.overview",
@@ -12,12 +12,12 @@
         "path": "/site/overview",
         "responses": {
           "200": {
-            "description": "Live site snapshot: containers, linked miners, site power, sensors, and pools.",
+            "description": "Live site snapshot: miners, site power, and pools.",
             "content": { "application/json": { "schema": { "type": "object" } } }
           }
         }
       },
-      "description": "Live site snapshot assembled from telemetry.pull across all workers: all containers with linked miners (info.container / info.pos), site power consumption from powermeters, inlet temperature from Seneca sensors, and pool data from all minerpool workers.",
+      "description": "Live site snapshot assembled from telemetry.pull across all workers: all miners, site power consumption from powermeters, and pool data from all minerpool workers.",
       "errors": ["ERR_MDK_CLIENT_UNAVAILABLE"],
       "safety": "read-only"
     },
@@ -41,7 +41,7 @@
           }
         }
       },
-      "description": "Historical telemetry from the workers' persisted tail-logs (telemetry.pull type 'logs'). metric=hashrate reads pool stats-history (all pools summed by default; pass deviceId for one pool). metric=site-hashrate reads the miners' own snap tail-logs summed across all miners (MH/s; pass deviceId for one miner). metric=power reads site powermeter series (all meters summed by default; pass deviceId for one meter). metric=temperature reads Seneca sensor series (averaged by default; pass deviceId for one sensor). Defaults to the last hour.",
+      "description": "Historical telemetry from the workers' persisted tail-logs (telemetry.pull type 'logs'). metric=hashrate reads pool stats-history (all pools summed by default; pass deviceId for one pool). metric=site-hashrate reads the miners' own snap tail-logs summed across all miners (MH/s; pass deviceId for one miner). metric=power reads site powermeter series (all meters summed by default; pass deviceId for one meter). metric=temperature reads sensor tail-logs, averaged by default; this example ships no sensor Worker, so it returns empty unless one is added. Defaults to the last hour.",
       "errors": ["ERR_MDK_CLIENT_UNAVAILABLE", "ERR_UNKNOWN_METRIC", "ERR_INVALID_DATE_RANGE", "ERR_UNKNOWN_DEVICE_ID"],
       "safety": "read-only"
     },

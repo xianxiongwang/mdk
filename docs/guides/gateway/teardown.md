@@ -30,7 +30,7 @@ sequence automatically. Workers are **not** auto-chained: a Worker's boot functi
 `kernel._cleanup` yourself if you want Kernel shutdown to cascade to it:
 
 ```js
-const { getKernel, startGateway } = require('@tetherto/mdk')
+const { getKernel, startGateway } = require('@tetherto/mdk/backend/core/mdk')
 const { startWhatsminerWorker } = require('@tetherto/mdk-worker-whatsminer')
 
 const kernel = await getKernel()
@@ -57,7 +57,7 @@ Short-lived processes — integration tests, one-shot scripts — never receive 
 to drain the full cleanup chain. Pass the `kernel` object returned by `getKernel()`; passing a server object stops only the Gateway.
 
 ```js
-const { getKernel, startGateway, shutdown } = require('@tetherto/mdk')
+const { getKernel, startGateway, shutdown } = require('@tetherto/mdk/backend/core/mdk')
 
 const kernel = await getKernel()
 await startGateway({ kernel })
@@ -78,7 +78,7 @@ See [`shutdown` API reference][mdk-readme-shutdown].
 Use `onShutdown` when you need to close resources outside an MDK boot object — for example, a database connection or a log buffer.
 
 ```js
-const { onShutdown } = require('@tetherto/mdk')
+const { onShutdown } = require('@tetherto/mdk/backend/core/mdk')
 
 onShutdown(async () => {
   await db.close()
@@ -116,11 +116,11 @@ See [`onShutdown` API reference][mdk-readme-onshutdown].
 [mdk-readme-onshutdown]: ../../../backend/core/mdk/README.md#onshutdowncleanupfn-opts--handler
 <!-- docs@tether.io: mdk-readme-onshutdown → https://github.com/tetherto/mdk/blob/main/backend/core/mdk/README.md#onshutdowncleanupfn-opts--handler -->
 
-[gateway-concept]: ../../concepts/stack/gateway.md
-<!-- docs@tether.io: gateway-concept → concepts/stack/gateway -->
+[gateway-concept]: ../../../backend/core/gateway/README.md
+<!-- docs@tether.io: gateway-concept → https://github.com/tetherto/mdk/blob/main/backend/core/gateway/README.md -->
 
-[workers-lifecycle]: ../../concepts/stack/workers.md#same-process-mode
-<!-- docs@tether.io: workers-lifecycle → concepts/stack/workers#same-process-mode -->
+[workers-lifecycle]: ../../../backend/workers/README.md
+<!-- docs@tether.io: workers-lifecycle → https://github.com/tetherto/mdk/blob/main/backend/workers/README.md -->
 
 [run-gateway]: run.md
 <!-- docs@tether.io: run-gateway → guides/gateway/run -->

@@ -27,7 +27,7 @@ describe('useCurrentAlertDevices', () => {
     vi.unstubAllGlobals()
   })
 
-  it('returns the raw nested list-things payload unshaped', async () => {
+  it('returns the list-things rows flattened out of the per-node envelope', async () => {
     const payload = [
       [
         {
@@ -64,8 +64,10 @@ describe('useCurrentAlertDevices', () => {
     })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    // Nested array preserved — the table heads it internally.
-    expect(result.current.data).toEqual(payload)
+    // Used to assert `toEqual(payload)` — the nested envelope preserved for the
+    // table to head internally. Now flattened here, so the table's prop type is
+    // a plain row list.
+    expect(result.current.data).toEqual(payload[0])
   })
 
   it('requests the wide alerts field set against list-things', async () => {
@@ -130,6 +132,6 @@ describe('useCurrentAlertDevices', () => {
       wrapper: wrapper(makeClient()),
     })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(result.current.data).toEqual([[]])
+    expect(result.current.data).toEqual([])
   })
 })

@@ -1,9 +1,4 @@
-import {
-  featureConfigQuery,
-  siteQuery,
-  userInfoQuery,
-  type UserInfoResponse,
-} from '@tetherto/mdk-ui-foundation'
+import { featureConfigQuery, siteQuery, userInfoQuery, type UserInfoResponse } from '@tetherto/mdk-ui-foundation/presets/mining'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { useAuthToken } from './use-auth-token'
@@ -55,12 +50,12 @@ const pickRoles = (data: UserInfoResponse | undefined): string | undefined =>
  * @remarks
  * **Prerequisite:** `/auth/site` and `/auth/featureConfig` are served by the
  * default `site-monitor` Gateway plugin, but `/auth/userinfo` has no default
- * provider; the bundled `@tetherto/mdk-plugin-auth` ships unwired. Without a
- * plugin serving `/auth/userinfo`, `email` and `roles` stay `undefined`. Bring
- * your own [Gateway plugin](https://docs.tether.io/mdk/guides/gateway/plugins)
- * serving that route; see the
- * [full-site example](https://github.com/tetherto/mdk/tree/main/examples/full-site/plugins/site)
- * for a working reference.
+ * provider. The bundled `@tetherto/mdk-plugin-auth` ships a `/auth/userinfo`
+ * controller, but mounting it via `extraPluginDirs` is not enough on its
+ * own — see
+ * [the bundled auth plugin](https://github.com/tetherto/mdk/blob/main/backend/core/plugins/README.md#the-bundled-auth-plugin)
+ * for why. Without a working identity layer serving `/auth/userinfo`,
+ * `email` and `roles` stay `undefined`.
  *
  * @category example
  */

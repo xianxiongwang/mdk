@@ -1,5 +1,6 @@
 'use strict'
 
+const dataProxy = require('../lib/site-data')
 const {
   WORKER_TYPES,
   AGGR_FIELDS,
@@ -118,8 +119,8 @@ function calculateTemperatureSummary (log) {
   }
 }
 
-module.exports = async function (req, services) {
-  return getTemperature(services, req)
+module.exports = async function (req) {
+  return getTemperature({ dataProxy }, req)
 }
 
 module.exports.getTemperature = getTemperature

@@ -4,7 +4,7 @@ Sortable data table of historical alerts within a controlled date range, with
 an embedded `DateRangePicker`.
 
 > Sibling component: [`CurrentAlerts`](../current-alerts/USAGE.md). Both
-> render the same `DataTable` columns from `alerts-table-columns.tsx`.
+> render the same `DataTable` columns from [`alerts-table-columns.tsx`](../alerts-table-columns.tsx).
 
 ## Props
 
@@ -33,8 +33,8 @@ an embedded `DateRangePicker`.
 
 ## Data contracts
 
-- `Alert` — `@tetherto/mdk-react-devkit` / `foundation/types/alerts`
-- `AlertLocalFilters` — same package, `foundation/components/alerts/alerts-types`
+- `Alert` — `@tetherto/mdk-react-devkit` / [`foundation/types/alerts`](../../../types/alerts.ts)
+- `AlertLocalFilters` — same package, [`foundation/components/alerts/alerts-types`](../alerts-types.ts)
 
 ## Notes
 

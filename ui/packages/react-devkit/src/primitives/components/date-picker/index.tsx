@@ -168,7 +168,7 @@ export type DateRangePickerProps = {
   modalClassName?: string
 } & Omit<DayPickerProps, 'mode' | 'selected'>
 
-// Default preset items (matching mining-os)
+// Default preset items (matching the reference app)
 const getDefaultPresets = (): PresetItem[] => {
   const today = new Date()
   const addDays = (date: Date, days: number): Date => {

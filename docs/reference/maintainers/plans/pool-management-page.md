@@ -8,7 +8,7 @@
 > [!NOTE]
 > Incompatible from 0.6.0: this plan's tooling references (`apps/mdk-ui-shell`,
 > `templates/mdk-ui-shell/`, `generate:shell`) were removed. The shell is now
-> `examples/mdk-ui-shell-template`; pages are added via `mdk-ui add page`, not regeneration.
+> [`examples/mdk-ui-shell-template`](../../../../examples/mdk-ui-shell-template/README.md); pages are added via `mdk-ui add page`, not regeneration.
 
 ---
 
@@ -16,7 +16,7 @@
 
 Add a fully working **Pool Management** page to the MDK so that a generated `mdk-shell-ui`
 app ships with Pool Management (alongside Dashboard and Alerts), backed by **real
-MiningOS backend calls**, including **write operations through the voting/approval
+reference app backend calls**, including **write operations through the voting/approval
 workflow**. Also make **Alerts an add-able / remove-able page** like any other.
 
 Scope (confirmed with stakeholder):
@@ -35,29 +35,29 @@ Scope (confirmed with stakeholder):
 This is **not greenfield**. The component extraction is largely done; the gaps are
 data-wiring, mutations, page assembly, and CLI/template integration.
 
-### Already in the MDK (`ui/packages/react-devkit`)
+### Already in the MDK ([`ui/packages/react-devkit`](../../../../ui/packages/react-devkit/README.md))
 
-- **`foundation/components/pool-manager/`** — full presentational component tree, with tests:
-  - `dashboard/` — Pool Manager landing (stats blocks, nav, alerts list)
-  - `pools/` — collapse list, `add-pool-modal`, `add-pool-endpoint-modal`, item header/body
-  - `miner-explorer/` — table, columns, toolbar, utils
-  - `sites-overview/` — status cards + `set-pool-configuration`
-  - `site-overview-details/` — container, grid-unit, miner-info-card, header, legend
-  - `assign-pool-modal/`
-  - `hooks/` — `use-pool-configs`, `use-sites-overview-data`, `use-site-overview-details-data`
-- **`foundation/features/pool-manager/`** — feature-level assemblies already scaffolded
+- **[`foundation/components/pool-manager/`](../../../../ui/packages/react-devkit/src/domain/components/pool-manager/index.ts)** — full presentational component tree, with tests:
+  - [`dashboard/`](../../../../ui/packages/react-devkit/src/domain/components/pool-manager/dashboard/USAGE.md) — Pool Manager landing (stats blocks, nav, alerts list)
+  - [`pools/`](../../../../ui/packages/react-devkit/src/domain/components/pool-manager/pools/index.ts) — collapse list, `add-pool-modal`, `add-pool-endpoint-modal`, item header/body
+  - [`miner-explorer/`](../../../../ui/packages/react-devkit/src/domain/components/pool-manager/miner-explorer/index.tsx) — table, columns, toolbar, utils
+  - [`sites-overview/`](../../../../ui/packages/react-devkit/src/domain/components/pool-manager/sites-overview/) — status cards + `set-pool-configuration`
+  - [`site-overview-details/`](../../../../ui/packages/react-devkit/src/domain/components/pool-manager/site-overview-details/) — container, grid-unit, miner-info-card, header, legend
+  - [`assign-pool-modal/`](../../../../ui/packages/react-devkit/src/domain/components/pool-manager/assign-pool-modal/USAGE.md)
+  - [`hooks/`](../../../../ui/packages/react-devkit/src/domain/components/pool-manager/hooks/) — [`use-pool-configs`](../../../../ui/packages/react-devkit/src/domain/components/pool-manager/hooks/use-pool-configs.ts), [`use-sites-overview-data`](../../../../ui/packages/react-devkit/src/domain/components/pool-manager/hooks/use-sites-overview-data.ts), [`use-site-overview-details-data`](../../../../ui/packages/react-devkit/src/domain/components/pool-manager/site-overview-details/use-site-overview-details-data.ts)
+- **[`foundation/features/pool-manager/`](../../../../ui/packages/react-devkit/src/domain/features/pool-manager/index.ts)** — feature-level assemblies already scaffolded
   (`pools`, `sites-overview`, `miner-explorer`, `site-overview-details`) — mirrors the
-  `features/alerts` pattern.
-- **`mining-pools-panel/`** — pool stats table used on the Dashboard.
+  [`features/alerts`](../../../../ui/packages/react-devkit/src/domain/features/alerts/index.ts) pattern.
+- **[`mining-pools-panel/`](../../../../ui/packages/react-devkit/src/domain/components/mining-pools-panel/USAGE.md)** — pool stats table used on the Dashboard.
 
 ### Already in `react-adapter`
 
 - `use-pool-rows`, `use-pool-stats`, `use-site-miner-stats`, `use-site-miner-counts`,
   `use-miner-duplicate-validation`, `use-static-miner-ip-assignment`.
 
-### Already in the CLI (`ui/packages/cli`)
+### Already in the CLI ([`ui/packages/cli`](../../../../ui/packages/cli/README.md))
 
-- `add-page.ts` **and** `remove-page.ts` commands already exist, driven by the
+- [`add-page.ts`](../../../../ui/packages/cli/src/commands/add-page.ts) **and** [`remove-page.ts`](../../../../ui/packages/cli/src/commands/remove-page.ts) commands already exist, driven by the
   `// mdk:routes-end` marker in `templates/mdk-ui-shell/src/routes.ts`.
 
 ### The gaps (what this plan actually delivers)
@@ -78,7 +78,7 @@ data-wiring, mutations, page assembly, and CLI/template integration.
 
 ---
 
-## 3. Backend contract (MiningOS, port 3000)
+## 3. Backend contract (reference app backend, port 3000)
 
 All endpoints are authed: `Authorization: Bearer <token>`.
 
@@ -168,7 +168,10 @@ re-expressed as TanStack mutation hooks that POST to `/auth/actions/voting`.
 - Tests for payload construction + invalidation.
 
 ### WS-D — Wire feature components to hooks
-- Connect `features/pool-manager/{pools,miner-explorer,sites-overview,site-overview-details}`
+- Connect [`features/pool-manager/pools`](../../../../ui/packages/react-devkit/src/domain/features/pool-manager/pools/USAGE.md),
+  [`miner-explorer`](../../../../ui/packages/react-devkit/src/domain/features/pool-manager/miner-explorer/USAGE.md),
+  [`sites-overview`](../../../../ui/packages/react-devkit/src/domain/features/pool-manager/sites-overview/USAGE.md),
+  [`site-overview-details`](../../../../ui/packages/react-devkit/src/domain/features/pool-manager/site-overview-details/USAGE.md)
   and `assign-pool-modal` / `add-pool-modal` / `set-pool-configuration` to the new hooks.
 - Replace placeholder/props-injected data with live hooks; keep leaf components pure.
 - Update/expand existing component tests for the wired behavior.
@@ -198,7 +201,7 @@ re-expressed as TanStack mutation hooks that POST to `/auth/actions/voting`.
   `stores.json` via the generate scripts.
 
 ### WS-I — Real-BE verification & QA
-- Run against the local MiningOS BE (`node worker.js --wtype wrk-node-http --env
+- Run against the local reference app BE (`node worker.js --wtype wrk-node-http --env
   production --port 3000`) with a real token.
 - Smoke each view + each write path (create pool, edit pool, assign miners → confirm a
   pending voting action is created), error/permission states, polling.
@@ -249,5 +252,5 @@ Critical path is A → B/C → D → E.
 8. **Make Pool Manager add-able/removable via CLI** — Ensure `mdk-ui add page PoolManager` / `remove page` scaffold correctly (component resolution, routes marker, nav icon); add CLI tests.
 9. **Make Alerts an add/remove-able page** — Refactor Alerts out of hardcoded router/constants into the ROUTES registry so it can be added/removed via the CLI like any other page, without changing the default app; update tests.
 10. **Registry + blueprint + docs for Pool Manager** — Add registry.json entries and a mdk-ui-shell-pool-manager blueprint; update USAGE docs; regenerate registry/blueprints/hooks/stores manifests.
-11. **Real-BE integration & QA pass** — Verify all views and write paths against the local MiningOS backend with a real token; check polling, error/permission states, and that writes create pending voting actions.
+11. **Real-BE integration & QA pass** — Verify all views and write paths against the local reference app backend with a real token; check polling, error/permission states, and that writes create pending voting actions.
 12. **Spec & UX confirmation for voting flow** *(spike, do first)* — Confirm exact pool actions (single vs batch), post-submit UX, permission degradation, and which endpoint feeds which view; resolve the open questions in §8.

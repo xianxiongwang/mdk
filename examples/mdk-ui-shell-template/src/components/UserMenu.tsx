@@ -1,4 +1,4 @@
-import { useAuth, useTimezone } from '@tetherto/mdk-react-adapter'
+import { useAuth, useMdkAuth, useTimezone } from '@tetherto/mdk-react-adapter'
 import {
   Dialog,
   DialogContent,
@@ -6,7 +6,6 @@ import {
   SignOutIcon,
   UserAvatarIcon,
 } from '@tetherto/mdk-react-devkit'
-import { authStore, getRolesFromAuthToken } from '@tetherto/mdk-ui-foundation'
 import { useMemo, useState } from 'react'
 
 const SUPPORTED_TIMEZONES: string[] = (() => {
@@ -58,13 +57,14 @@ interface UserMenuProps {
 
 export const UserMenu = ({ onSignOut }: UserMenuProps) => {
   const { token } = useAuth()
+  const { getRoles, signOut } = useMdkAuth()
   const { timezone, setTimezone } = useTimezone()
   const [tzDialogOpen, setTzDialogOpen] = useState(false)
 
   const roleLabel = useMemo(() => {
-    const roles = getRolesFromAuthToken(token ?? undefined)
+    const roles = token === null ? [] : (getRoles?.(token) ?? [])
     return formatRoleLabel(roles[0])
-  }, [token])
+  }, [token, getRoles])
 
   return (
     <>
@@ -88,7 +88,9 @@ export const UserMenu = ({ onSignOut }: UserMenuProps) => {
             label: 'Sign Out',
             icon: <SignOutIcon />,
             onSelect: () => {
-              authStore.getState().reset()
+              // The provider owns how a session ends — the template never
+              // touches the store directly.
+              signOut()
               onSignOut()
             },
             danger: true,

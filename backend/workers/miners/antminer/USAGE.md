@@ -63,7 +63,7 @@ amMock.createServer({
 | `delay` | number | `0` | Response delay in ms (for latency testing). |
 | `error` | boolean | `false` | If true, mock returns error responses. |
 
-The mock control agent (`mock-control-agent.js`) lets tests mutate mock state at runtime; it's documented in code and used by the integration 
+The mock control agent ([`mock-control-agent.js`](../../mock/mock-control-agent.js)) lets tests mutate mock state at runtime; it's documented in code and used by the integration 
 tests at [`tests/integration/antminer.test.js`](tests/integration/antminer.test.js).
 
 ## Registering devices
@@ -107,7 +107,7 @@ To register a device with an already-running Worker instead of at boot, send the
 ```js
 const { createMdkClient } = require('@tetherto/mdk/backend/core/client')
 
-const client = createMdkClient({ hrpc: { key: kernel.getPublicKey() } })
+const client = createMdkClient({ kernelKey: kernel.getPublicKey() })
 await client.connect()
 await client.sendWorkerCommand('antminer-rack-1', null, 'registerThing', {
   id: 'AM-002',
@@ -131,7 +131,7 @@ per configured Worker, starts a Kernel and Gateway, and starts each Worker, then
 node examples/backend/miners/antminer/index.js
 ```
 
-It falls back to the committed `config/mdk.config.json.example` when no local `config/mdk.config.json` is present.
+It falls back to the committed [`config/mdk.config.json.example`](../../../../examples/backend/miners/antminer/config/mdk.config.json.example) when no local `config/mdk.config.json` is present.
 This is the Antminer mirror of [`examples/backend/miners/whatsminer/index.js`](../../../../examples/backend/miners/whatsminer/index.js), which uses Whatsminer.
 
 These are the Antminer mirror of [`examples/backend/miners/whatsminer/index.js`](../../../../examples/backend/miners/whatsminer/index.js), which uses Whatsminer.

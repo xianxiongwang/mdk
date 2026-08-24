@@ -17,17 +17,20 @@ const telemetry = await client.callTool({
   name: 'pull_telemetry',
   arguments: { deviceId: 'wm001', query: 'metrics' }
 })
+console.log(JSON.parse(telemetry.content[0].text))
 
 // Inspect what commands a device supports
 const caps = await client.callTool({
   name: 'get_capabilities',
   arguments: { deviceId: 'wm001' }
 })
+console.log(JSON.parse(caps.content[0].text))
 
 // Send a command
 const result = await client.callTool({
   name: 'send_command',
   arguments: { deviceId: 'wm001', command: 'reboot', params: {} }
 })
+console.log(JSON.parse(result.content[0].text))
 
 await client.close()

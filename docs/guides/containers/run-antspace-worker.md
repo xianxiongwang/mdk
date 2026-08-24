@@ -51,7 +51,7 @@ Use [the Antspace README][antspace-readme] to confirm the `model` value for your
 Add this code to the Node.js service or script that runs the MDK Worker in your deployment. The snippet shows the minimum boot call seeding one Antspace container, replace the example address and credentials with your container's values:
 
 ```js
-const { getKernel } = require('@tetherto/mdk')
+const { getKernel } = require('@tetherto/mdk/backend/core/mdk')
 const { startAntspaceWorker } = require('@tetherto/mdk-worker-antspace')
 
 const kernel = await getKernel()
@@ -61,7 +61,7 @@ const worker = await startAntspaceWorker({
   model: 'hk3',
   storeDir: './store/antspace-rack-1',
   seedDevices: [{
-    info: { serialNum: 'HK3-A', container: 'container-A', location: 'site-texas-01.container' },
+    info: { serialNum: 'HK3-A', container: 'container-A', location: 'site-a-01.container' },
     opts: { address: '192.168.1.100', port: 18001 }
   }]
 })
@@ -76,7 +76,7 @@ await kernel.registerWorker(worker.runtime.getPublicKey())
 ```js
 const { createMdkClient } = require('@tetherto/mdk/backend/core/client')
 
-const client = createMdkClient({ hrpc: { key: kernel.getPublicKey() } })
+const client = createMdkClient({ kernelKey: kernel.getPublicKey() })
 await client.connect()
 await client.sendWorkerCommand('antspace-rack-1', null, 'registerThing', {
   id: 'HK3-B',
@@ -96,7 +96,7 @@ For the full `seedDevices` and `registerThing` option reference, the telemetry a
 
 ## Troubleshooting
 
-The development example on this page is `examples/backend/containers/antspace/index.js`. A working run prints the Kernel HRPC key and the registered device ID, then stays running until Ctrl+C.
+The development example on this page is [`examples/backend/containers/antspace/index.js`](../../../examples/backend/containers/antspace/index.js). A working run prints the Kernel HRPC key and the registered device ID, then stays running until Ctrl+C.
 
 If it does not print those values, or if the mock port is already in use, the network and port checks in [miner troubleshooting][miner-troubleshooting] apply here too, the underlying HRPC and DHT requirements are the same across every Worker.
 
@@ -119,8 +119,8 @@ If it does not print those values, or if the mock port is already in use, the ne
 [install-pattern]: ../../../backend/workers/docs/install-pattern.md
 <!-- docs@tether.io: install-pattern → https://github.com/tetherto/mdk/blob/main/backend/workers/docs/install-pattern.md -->
 
-[deployment-topologies]: ../../concepts/deployment-topologies.md
-<!-- docs@tether.io: deployment-topologies → concepts/deployment-topologies -->
+[deployment-topologies]: ../deployment/index.md
+<!-- docs@tether.io: deployment-topologies → guides/deployment -->
 
 [miner-troubleshooting]: ../miners/troubleshooting.md
 <!-- docs@tether.io: miner-troubleshooting → guides/miners/troubleshooting -->

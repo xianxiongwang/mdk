@@ -9,7 +9,8 @@
 const test = require('brittle')
 const path = require('path')
 
-const { registerTools } = require('../../backend/proc/mcp-server')
+const { registerTools, classifyDevice, AXIS, AGENT_META_KEY, TOOL_CONTRACT_VERSION } = require('../../backend/proc/mcp-server')
+const { z } = require('zod')
 const { spawnDescriptor, resolveProcName, COMPONENTS } = require('../../cli/commands/components')
 const { createDispatcher } = require('../../cli/commands')
 const { MCP_PORT } = require('../../backend/site')
@@ -63,6 +64,12 @@ function captureTools (client) {
   }
   registerTools(mockServer, client)
   return tools
+}
+
+function captureConfigs (client) {
+  const configs = {}
+  registerTools({ registerTool (name, config) { configs[name] = config } }, client)
+  return configs
 }
 
 // ---------------------------------------------------------------------------
@@ -204,28 +211,190 @@ test('send_command forwards client errors', async (t) => {
 })
 
 // ---------------------------------------------------------------------------
-// registerTools: all thirteen tools are registered
+// registerTools: the legacy tools plus the agent-facing ones
 // ---------------------------------------------------------------------------
 
-test('registerTools registers exactly thirteen tools', (t) => {
+test('registerTools registers the legacy tools and the agent-facing ones', (t) => {
   const names = []
   const mockServer = { registerTool (name) { names.push(name) } }
   registerTools(mockServer, fakeClient())
   t.alike(names.sort(), [
-    'act_device',
-    'count_devices',
-    'get_capabilities',
-    'get_device',
-    'get_site_overview',
-    'get_status',
-    'get_supported_power_modes',
-    'list_devices',
-    'pull_state',
-    'pull_telemetry',
-    'rank_devices',
-    'send_command',
-    'summarize_site'
+    'act_device', 'count_devices', 'get_capabilities', 'get_device', 'get_site_overview',
+    'get_status', 'get_supported_power_modes', 'list_devices', 'pull_state', 'pull_telemetry',
+    'rank_devices', 'send_command', 'summarize_site'
   ])
+})
+
+test('every tool declares its mutability, and only the two action tools write', (t) => {
+  const configs = captureConfigs(fakeClient())
+
+  const undeclared = Object.keys(configs).filter((name) => typeof configs[name].annotations?.readOnlyHint !== 'boolean')
+  t.alike(undeclared, [], 'every tool declares readOnlyHint, so approval keys off the tool itself')
+
+  const writes = Object.keys(configs).filter((name) => configs[name].annotations.readOnlyHint === false)
+  t.alike(writes.sort(), ['act_device', 'send_command'])
+})
+
+test('only the agent-facing tools carry agent metadata', (t) => {
+  const configs = captureConfigs(fakeClient())
+  const withMeta = Object.keys(configs).filter((name) => configs[name]._meta?.['x-mdk-agent']?.enabled).sort()
+
+  t.alike(withMeta, ['act_device', 'count_devices', 'get_device', 'list_devices', 'rank_devices', 'summarize_site'],
+    'the legacy tools stay available to other consumers but are withheld from the model')
+})
+
+// ---------------------------------------------------------------------------
+// Agent-facing tools: every result carries a summary the model can speak verbatim
+// ---------------------------------------------------------------------------
+
+const mixedFleet = () => fakeClient({
+  getStatus: async () => ({
+    workers: [
+      { workerId: 'antminer-worker', state: 'READY', deviceIds: ['antminer-0', 'antminer-1'] },
+      { workerId: 'container-worker', state: 'DISCOVERED', deviceIds: ['container-1'] }
+    ]
+  })
+})
+
+test('summarize_site rolls up workers and devices, naming what is offline', async (t) => {
+  const tools = captureTools(mixedFleet())
+  const parsed = JSON.parse((await tools.summarize_site({})).content[0].text)
+
+  t.is(parsed.totals.workers.total, 2)
+  t.is(parsed.totals.devices.total, 3)
+  t.is(parsed.totals.devices.offline, 1)
+  t.alike(parsed.totals.devices.byFamily.miner, { total: 2, online: 2 })
+  t.ok(parsed.summary.includes('container-1'), 'the offline device is named in the summary')
+})
+
+test('count_devices counts one family without listing it', async (t) => {
+  const tools = captureTools(mixedFleet())
+  const parsed = JSON.parse((await tools.count_devices({ family: 'miner', state: 'all' })).content[0].text)
+
+  t.is(parsed.count, 2)
+  t.is(parsed.summary, '2 miners.')
+  t.absent(parsed.items, 'counting does not return the rows')
+})
+
+test('count_devices narrows by state', async (t) => {
+  const tools = captureTools(mixedFleet())
+  const parsed = JSON.parse((await tools.count_devices({ family: 'all', state: 'offline' })).content[0].text)
+
+  t.is(parsed.count, 1)
+  t.is(parsed.summary, '1 offline device.', 'a single match reads as one device, since the model speaks this verbatim')
+})
+
+test('list_devices names each match', async (t) => {
+  const tools = captureTools(mixedFleet())
+  const parsed = JSON.parse((await tools.list_devices({ family: 'miner', state: 'all', limit: 50 })).content[0].text)
+
+  t.is(parsed.count, 2)
+  t.is(parsed.total, 2)
+  t.alike(parsed.items.map((d) => d.deviceId), ['antminer-0', 'antminer-1'])
+  t.ok(parsed.summary.includes('antminer-0'))
+  t.absent(parsed.summary.includes('showing'), 'nothing was cut, so nothing is claimed to be')
+})
+
+test('list_devices says so plainly when nothing matches', async (t) => {
+  const tools = captureTools(mixedFleet())
+  const parsed = JSON.parse((await tools.list_devices({ family: 'pool', state: 'all', limit: 50 })).content[0].text)
+
+  t.is(parsed.count, 0)
+  t.is(parsed.summary, 'No pools match.')
+})
+
+test('list_devices caps the rows it names and says the list is a subset', async (t) => {
+  const tools = captureTools(fleetOf(60))
+  const parsed = JSON.parse((await tools.list_devices({ family: 'miner', state: 'all', limit: 3 })).content[0].text)
+
+  t.is(parsed.items.length, 3, 'only the requested rows come back')
+  t.is(parsed.count, 3, 'count is what is shown — the contract ties it to items.length')
+  t.is(parsed.total, 60, 'and the full match count is still reported')
+  t.ok(parsed.summary.includes('3 of 60'), 'the summary states both numbers rather than claiming 60 names')
+  t.absent(parsed.summary.includes('antminer-3'), 'and names only the rows it returned')
+})
+
+test('list_devices default limit answers a whole demo-sized fleet', async (t) => {
+  const configs = captureConfigs(fakeClient())
+  const limit = z.toJSONSchema(z.object(configs.list_devices.inputSchema)).properties.limit
+  t.is(limit.type, 'integer', 'a bounded integer, as the agent tool contract requires')
+  t.is(limit.minimum, 1)
+  t.is(limit.maximum, 50)
+
+  const tools = captureTools(fleetOf(26))
+  const parsed = JSON.parse((await tools.list_devices({ family: 'miner', state: 'all', limit: limit.default })).content[0].text)
+  t.is(parsed.count, 26, 'the 26-device demo still lists whole under the default')
+})
+
+test('get_device routes each attribute to the right client call', async (t) => {
+  const tools = captureTools(mixedFleet())
+
+  const telemetry = JSON.parse((await tools.get_device({ ref: 'antminer-0', attr: 'telemetry' })).content[0].text)
+  t.is(telemetry.value.query, 'metrics', 'telemetry is always pulled as metrics')
+
+  const state = JSON.parse((await tools.get_device({ ref: 'antminer-0', attr: 'state' })).content[0].text)
+  t.is(state.value.state.status, 'mining')
+
+  const caps = JSON.parse((await tools.get_device({ ref: 'antminer-0', attr: 'capabilities' })).content[0].text)
+  t.is(caps.value.commands.length, 2)
+
+  const modes = JSON.parse((await tools.get_device({ ref: 'antminer-0', attr: 'power_modes' })).content[0].text)
+  t.alike(modes.value, ['sleep', 'normal'])
+})
+
+// Every attribute answers under the same key, so the model reads one field rather than
+// learning which key each attribute hides behind.
+test('get_device returns every attribute under ref/attr/value', async (t) => {
+  const tools = captureTools(mixedFleet())
+
+  for (const attr of ['telemetry', 'state', 'capabilities', 'power_modes']) {
+    const parsed = JSON.parse((await tools.get_device({ ref: 'antminer-0', attr })).content[0].text)
+    t.alike([parsed.ref, parsed.attr], ['antminer-0', attr], `${attr} echoes what was asked`)
+    t.not(parsed.value, undefined, `${attr} answers under value`)
+  }
+})
+
+test('rank_devices orders by a metric and reports what did not answer', async (t) => {
+  const client = mixedFleet()
+  client.pullTelemetry = async (deviceId) => {
+    if (deviceId === 'antminer-1') throw new Error('CHANNEL_DESTROYED')
+    return { deviceId, metrics: { power: 3300 } }
+  }
+  const tools = captureTools(client)
+  const parsed = JSON.parse((await tools.rank_devices({ family: 'miner', metric: 'power', order: 'asc', limit: 5 })).content[0].text)
+
+  t.is(parsed.items.length, 1, 'the device whose telemetry failed is skipped, not fatal')
+  t.is(parsed.unavailable, 1)
+  t.ok(parsed.summary.includes('did not report'), 'and the gap is stated rather than hidden')
+})
+
+// The mode enum is the union across families, so a mode valid for one device is offered for all.
+test('act_device refuses a power mode the device does not support', async (t) => {
+  const client = mixedFleet()
+  let dispatched = false
+  client.sendCommand = async (...args) => { dispatched = true; return { status: 'QUEUED', args } }
+  const tools = captureTools(client)
+
+  // antminer accepts sleep|normal only.
+  const parsed = JSON.parse((await tools.act_device({ ref: 'antminer-0', action: 'set_power_mode', mode: 'high' })).content[0].text)
+  t.absent(dispatched, 'nothing reaches the device')
+  t.ok(parsed.summary.includes('does not support'), 'and the operator is told why')
+  t.alike(parsed.supportedPowerModes, ['sleep', 'normal'])
+
+  const ok = JSON.parse((await tools.act_device({ ref: 'antminer-0', action: 'set_power_mode', mode: 'sleep' })).content[0].text)
+  t.ok(dispatched, 'a supported mode still dispatches')
+  t.ok(ok.summary.includes('sleep'))
+})
+
+test('act_device passes the mode only when setting a power mode', async (t) => {
+  const tools = captureTools(mixedFleet())
+
+  const reboot = JSON.parse((await tools.act_device({ ref: 'antminer-0', action: 'reboot', mode: 'normal' })).content[0].text)
+  t.alike(reboot.result.params, {}, 'reboot takes no parameters')
+
+  const mode = JSON.parse((await tools.act_device({ ref: 'antminer-0', action: 'set_power_mode', mode: 'sleep' })).content[0].text)
+  t.alike(mode.result.params, { mode: 'sleep' })
+  t.ok(mode.summary.includes('sleep'))
 })
 
 // ---------------------------------------------------------------------------
@@ -317,4 +486,149 @@ test('MCP_PORT defaults to 3008', (t) => {
   // Only asserting the default value when the env var is not set.
   if (!process.env.MDK_MCP_PORT) t.is(MCP_PORT, 3008)
   else t.pass('MDK_MCP_PORT env var is set; skipping default assertion')
+})
+
+// ---------------------------------------------------------------------------
+// classifyDevice / normStatus / normType (the metadata-mapping helpers)
+// ---------------------------------------------------------------------------
+
+test('classifyDevice maps every miner family, including the whatsminer spelling', (t) => {
+  t.is(classifyDevice('antminer-0'), 'miner')
+  t.is(classifyDevice('avalon-3'), 'miner')
+  t.is(classifyDevice('whatsminer-2'), 'miner') // regression: was mis-spelled "whtsminer" once
+  t.is(classifyDevice('whtsminer-1'), 'miner')
+})
+
+test('classifyDevice maps the non-miner device types', (t) => {
+  t.is(classifyDevice('container-1'), 'container')
+  t.is(classifyDevice('container-antspace'), 'container')
+  t.is(classifyDevice('site-sensor-microbt'), 'sensor')
+  t.is(classifyDevice('site-powermeter'), 'powermeter')
+  t.is(classifyDevice('site-satec-powermeter'), 'powermeter')
+  t.is(classifyDevice('f2pool-worker'), 'pool')
+  t.is(classifyDevice('minerpool-worker'), 'pool')
+})
+
+test('classifyDevice returns other for unknown ids', (t) => {
+  t.is(classifyDevice('gizmo-9'), 'other')
+})
+
+test('classifyDevice prefers the reported device family over id shape', (t) => {
+  t.is(classifyDevice('weird-name-1', 'miner'), 'miner') // family wins where id would be "other"
+  t.is(classifyDevice('x', 'power-meter'), 'powermeter') // contract spelling mapped
+  t.is(classifyDevice('y', 'minerpool'), 'pool')
+  t.is(classifyDevice('antminer-0', 'sensor'), 'sensor') // family overrides an id that looks like a miner
+})
+
+// ---------------------------------------------------------------------------
+// The agent contract: compliance is a silent skip, so it has to be asserted
+// ---------------------------------------------------------------------------
+
+// Converts the zod shapes the way McpServer does, so the descriptors match what a client
+// receives — otherwise the contract is checked against something that never goes on the wire.
+function agentDescriptors (client) {
+  return Object.entries(captureConfigs(client))
+    .filter(([, config]) => config._meta)
+    .map(([name, config]) => ({
+      name,
+      description: config.description,
+      inputSchema: Object.keys(config.inputSchema ?? {}).length
+        ? z.toJSONSchema(z.object(config.inputSchema))
+        : { type: 'object', properties: {} },
+      annotations: config.annotations,
+      _meta: config._meta
+    }))
+}
+
+test('every agent-facing tool satisfies the contract, so none is silently skipped', async (t) => {
+  const { validateTool, admitTools } = await import('../../../../backend/core/agent/src/tools.js')
+  const descriptors = agentDescriptors(fakeClient())
+
+  for (const descriptor of descriptors) {
+    const { ok, errors } = validateTool(descriptor)
+    t.ok(ok, `${descriptor.name}: ${errors.join(' | ')}`)
+  }
+
+  const { admitted } = admitTools(descriptors)
+  t.alike(admitted.map((tool) => tool.name).sort(),
+    ['act_device', 'count_devices', 'get_device', 'list_devices', 'rank_devices', 'summarize_site'],
+    'all six are admitted — a dropped .int() or a zod change would empty this')
+})
+
+test('the vocabularies restated here still match the contract', async (t) => {
+  const contract = await import('../../../../backend/core/agent/src/tools.js')
+
+  // Compare the key sets first: iterating only this file's keys would pass while the contract
+  // grew an axis this copy never restated, which is drift in the direction that matters.
+  t.alike(Object.keys(AXIS).sort(), Object.keys(contract.AXIS).sort(), 'the same axes exist on both sides')
+  for (const axis of Object.keys(contract.AXIS)) {
+    t.alike(AXIS[axis], contract.AXIS[axis], `AXIS.${axis} matches the contract`)
+  }
+  t.is(AGENT_META_KEY, contract.AGENT_META_KEY, 'the metadata key matches')
+  // Drift here is silent and total: this server would declare a version the agent does not
+  // speak, every tool would be skipped as such, and the agent would start cleanly and then
+  // answer nothing about the fleet.
+  t.is(TOOL_CONTRACT_VERSION, contract.TOOL_CONTRACT_VERSION, 'and so does the contract version')
+})
+
+// ---------------------------------------------------------------------------
+// rank_devices reads telemetry in bounded batches
+// ---------------------------------------------------------------------------
+
+function fleetOf (count) {
+  const deviceIds = Array.from({ length: count }, (_, i) => `antminer-${i}`)
+  return fakeClient({
+    getStatus: async () => ({ workers: [{ workerId: 'antminer-worker', state: 'READY', deviceIds }] })
+  })
+}
+
+test('rank_devices reads every device exactly once, whatever the fleet size', async (t) => {
+  for (const size of [0, 1, 20]) {
+    const client = fleetOf(size)
+    const seen = []
+    client.pullTelemetry = async (deviceId) => {
+      seen.push(deviceId)
+      return { deviceId, metrics: { power: 3000 + seen.length } }
+    }
+    const tools = captureTools(client)
+    const parsed = JSON.parse((await tools.rank_devices({ family: 'miner', metric: 'power', order: 'desc', limit: 50 })).content[0].text)
+
+    t.is(seen.length, size, `${size} devices: one read each`)
+    t.is(new Set(seen).size, size, `${size} devices: no device read twice`)
+    t.is(parsed.items.length, size, `${size} devices: all ranked`)
+  }
+})
+
+test('rank_devices honours limit and order across a batch boundary', async (t) => {
+  const client = fleetOf(20)
+  client.pullTelemetry = async (deviceId) => ({ deviceId, metrics: { power: Number(deviceId.split('-')[1]) } })
+  const tools = captureTools(client)
+  const parsed = JSON.parse((await tools.rank_devices({ family: 'miner', metric: 'power', order: 'asc', limit: 3 })).content[0].text)
+
+  t.is(parsed.items.length, 3, 'limit applies after every batch has been read')
+  t.alike(parsed.items.map((d) => d.deviceId), ['antminer-0', 'antminer-1', 'antminer-2'])
+})
+
+// The agent writes its tool calls as JSON by hand, and a small model quotes numbers as often as
+// not. Rejecting "5" is correct and useless: the operator is told their data is unavailable
+// because a digit arrived in quotes. Measured — it collapsed rank_devices from 98% to 45%.
+test('a numeric argument arriving as a string is accepted', (t) => {
+  const configs = captureConfigs(fakeClient())
+  const listLimit = configs.list_devices.inputSchema.limit
+  const rankLimit = configs.rank_devices.inputSchema.limit
+
+  t.is(listLimit.parse('7'), 7, 'list_devices takes a quoted limit')
+  t.is(rankLimit.parse('3'), 3, 'and so does rank_devices')
+  t.is(rankLimit.parse(3), 3, 'a real number still works')
+
+  const rejects = (fn) => {
+    try {
+      fn()
+      return false
+    } catch {
+      return true
+    }
+  }
+  t.ok(rejects(() => rankLimit.parse('99')), 'but the bound still applies')
+  t.ok(rejects(() => rankLimit.parse('lots')), 'and nonsense is still nonsense')
 })

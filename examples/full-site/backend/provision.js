@@ -7,7 +7,7 @@
 // worker-direct (sendWorkerCommand). The device takes effect on worker restart.
 // Progress is reported through an injected callback, keeping CLI concerns out.
 
-const { createMdkClient } = require('../../../backend/core/client')
+const { createRawMdkClient } = require('../../../backend/core/client')
 const { readKernelKey } = require('./inspect')
 const {
   PORTS,
@@ -121,7 +121,7 @@ async function provisionDevice (type, { root, flags = {}, report = () => {} } = 
   const spec = SEED_TYPES[type]
   if (!spec) throw new Error(`ERR_UNKNOWN_SEED_TYPE: ${type || ''} (${SEED_TYPE_LIST})`)
 
-  const kernel = createMdkClient({ hrpc: { key: readKernelKey(root) } })
+  const kernel = createRawMdkClient({ hrpc: { key: readKernelKey(root) } })
   await kernel.connect()
   try {
     const { workers } = await kernel.getStatus()

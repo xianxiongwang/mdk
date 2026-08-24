@@ -1,4 +1,5 @@
-import { type ContainerPoolStat, containerPoolStatsQuery } from '@tetherto/mdk-ui-foundation'
+import type { ContainerPoolStat } from '@tetherto/mdk-ui-foundation'
+import { containerPoolStatsQuery } from '@tetherto/mdk-ui-foundation/presets/mining'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { POOL_MANAGER_POLL_INTERVAL_MS } from './poll-intervals'
@@ -24,12 +25,11 @@ export type UseContainerPoolStatsResult = {
  * `GET /auth/pools/stats/containers`. Feeds the Sites Overview cards.
  *
  * @remarks
- * The `/auth/pools/*` endpoint is illustrative. MDK does not ship built-in
- * endpoints — create your own via a
+ * The `/auth/pools/*` endpoint is illustrative. MDK does not ship a built-in
+ * endpoint for it — create your own via a
  * [Gateway plugin](https://docs.tether.io/mdk/guides/gateway/plugins) matching
- * your Worker/business logic. See the
- * [full-site example](https://github.com/tetherto/mdk/tree/main/examples/full-site/plugins/site)
- * for a working reference.
+ * your Worker/business logic. No reference implementation of `/auth/pools/*`
+ * ships in this repo.
  *
  * @category dashboard
  */
@@ -47,7 +47,10 @@ export const useContainerPoolStats = (
   })
 
   return {
-    data: result.data ?? [],
+    /* `?? []` only covers null/undefined — a backend answering with an object
+     * or an error envelope would pass straight through to callers that `.map`
+     * it. `usePendingActions` already guarded this way. */
+    data: Array.isArray(result.data) ? result.data : [],
     isLoading: result.isLoading,
     error: result.error,
     refetch: () => void result.refetch(),

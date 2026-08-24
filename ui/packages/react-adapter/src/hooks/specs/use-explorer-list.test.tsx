@@ -1,4 +1,5 @@
-import { authStore, EXPLORER_TAB } from '@tetherto/mdk-ui-foundation'
+import { authStore } from '@tetherto/mdk-ui-foundation'
+import { EXPLORER_TAB } from '@tetherto/mdk-ui-foundation/presets/mining'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderHook, waitFor } from '@testing-library/react'
 import type { ReactNode } from 'react'

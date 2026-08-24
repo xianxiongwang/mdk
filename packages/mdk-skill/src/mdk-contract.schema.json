@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$comment": "Derived from backend/core/mdk-worker/mdk-contract.schema.json, corrected against the shipped contracts (all of which the upstream schema rejects — see backend/workers/docs/catalogue.json). Deltas: top-level `devices` optional (device lists are runtime WorkerRuntime opts.devices); telemetry/command entries require `handler` (plugin loader hard-fails without it); telemetry `type` allows `array`/`object`; `health` requires only `supportedStates`. Numeric param min/max is enforced by validate-contract.mjs, not this schema.",
   "title": "MDK Worker Plugin Contract Schema",
-  "description": "Unified programmatic and semantic capabilities contract for an MDK device worker (plugin/mdk-contract.json).",
+  "description": "Unified programmatic and semantic capabilities contract for an MDK device worker (mdk-contract.json at the Worker Plugin package root).",
   "type": "object",
   "required": [
     "metadata",

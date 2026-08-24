@@ -1,5 +1,5 @@
 /**
- * API contracts for the MiningOS Pool Manager endpoints.
+ * API contracts for the reference app Pool Manager endpoints.
  *
  * Reads target `/auth/configs/pool`, `/auth/pools*`, and `/auth/miners`.
  * Writes go through the voting/approval workflow at `/auth/actions/*`.

@@ -1,7 +1,7 @@
 /**
  * Sequential 24-hour-chunk pagination for the historical-alerts log.
  *
- * Ported from Mining OS's `useFetchHistoricalLogsPaginatedData` /
+ * Ported from the reference app's `useFetchHistoricalLogsPaginatedData` /
  * `breakTimeIntoIntervals`, but framework-agnostic: the per-window fetcher is
  * injected, so the React adapter can wrap this in `useQuery` while ui-foundation
  * stays pure TS. The backend `history-log` endpoint is cheaper to query in
@@ -11,7 +11,7 @@
  * @category alerts
  */
 
-import { ONE_DAY_MS } from './alert-queries'
+import { ONE_DAY_MS } from '../constants/time-constants'
 
 /** A single fetch window (ms epoch bounds). */
 export type TimeInterval = {
@@ -22,7 +22,7 @@ export type TimeInterval = {
 /**
  * Split `[start, end]` into consecutive windows of `intervalMs`. The final
  * window is clamped to `end`. Returns an empty array when the range is empty
- * or inverted. Mirrors Mining OS's `breakTimeIntoIntervals`.
+ * or inverted. Mirrors the reference app's `breakTimeIntoIntervals`.
  *
  * @category alerts
  */
@@ -47,7 +47,7 @@ export const breakTimeIntoIntervals = (
 /**
  * Concatenate `next` onto `prev`, replacing any row that shares a `uuid`
  * (later windows win) and appending the rest. Rows without a `uuid` are always
- * appended. Mirrors Mining OS's `updateHistoricalData`.
+ * appended. Mirrors the reference app's `updateHistoricalData`.
  *
  * @category alerts
  */
@@ -75,7 +75,7 @@ export type FetchHistoricalAlertsOptions = {
 /**
  * Fetch a historical-alerts range as successive 24h windows, merging the
  * results by `uuid`. `fetchWindow` is called once per window (oldest →
- * newest); individual window failures are swallowed (matches Mining OS) so one bad
+ * newest); individual window failures are swallowed (matches the reference app) so one bad
  * window doesn't drop the whole range. The loop bails out as soon as `signal`
  * is aborted.
  *

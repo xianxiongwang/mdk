@@ -34,7 +34,7 @@ export const ProfileMenuPage = (): JSX.Element => {
       </DemoBlock>
 
       <DemoBlock
-        title="Mining OS-style structure"
+        title="Reference-app-style structure"
         description="Avatar + email/role on top, divider, Change Timezone with description line, Sign Out with exit icon."
       >
         <ProfileMenu

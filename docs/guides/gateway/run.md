@@ -30,7 +30,7 @@ Most teams embed `startGateway()` in their own Node.js application rather than r
 This is the standard production path.
 
 ```js
-const { getKernel, startGateway } = require('@tetherto/mdk')
+const { getKernel, startGateway } = require('@tetherto/mdk/backend/core/mdk')
 
 const kernel = await getKernel()
 const server = await startGateway({ kernel, port: 3000 })
@@ -59,7 +59,7 @@ see the [key resolution order][gateway-readme].)
 On the host running Kernel, start Kernel and print its public key:
 
 ```js
-const { getKernel } = require('@tetherto/mdk')
+const { getKernel } = require('@tetherto/mdk/backend/core/mdk')
 
 const kernel = await getKernel()
 console.log('Kernel listener key:', kernel.getPublicKey().toString('hex'))
@@ -70,7 +70,7 @@ Share that hex string with the Gateway host.
 #### 2.2 Start the Gateway with `kernelKey`
 
 ```js
-const { startGateway } = require('@tetherto/mdk')
+const { startGateway } = require('@tetherto/mdk/backend/core/mdk')
 
 const server = await startGateway({
   kernelKey: '<kernel-listener-pubkey-hex>',
@@ -122,8 +122,8 @@ npm start
 [terminology]: ../../reference/glossary.md
 <!-- docs@tether.io: terminology → reference/glossary -->
 
-[gateway-concept]: ../../concepts/stack/gateway.md
-<!-- docs@tether.io: gateway-concept → concepts/stack/gateway -->
+[gateway-concept]: ../../../backend/core/gateway/README.md
+<!-- docs@tether.io: gateway-concept → https://github.com/tetherto/mdk/blob/main/backend/core/gateway/README.md -->
 
 [gateway-readme]: ../../../backend/core/gateway/README.md
 <!-- docs@tether.io: gateway-readme → https://github.com/tetherto/mdk/blob/main/backend/core/gateway/README.md -->
@@ -137,8 +137,8 @@ npm start
 [plugins-auth]: plugins.md#auth-and-permissions
 <!-- docs@tether.io: plugins-auth → guides/gateway/plugins#auth-and-permissions -->
 
-[deployment-topologies]: ../../concepts/deployment-topologies.md
-<!-- docs@tether.io: deployment-topologies → concepts/deployment-topologies -->
+[deployment-topologies]: ../deployment/index.md
+<!-- docs@tether.io: deployment-topologies → guides/deployment -->
 
 [mdk-readme]: ../../../backend/core/mdk/README.md
 <!-- docs@tether.io: mdk-readme → https://github.com/tetherto/mdk/blob/main/backend/core/mdk/README.md -->

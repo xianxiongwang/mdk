@@ -9,7 +9,7 @@ document uses the name as a category — there are two concrete components:
 - `HistoricalAlerts` — sortable data table of historical alerts within a
   controlled date range, with an embedded `DateRangePicker`.
 
-Both render a `DataTable` with shared columns from `alerts-table-columns.tsx`.
+Both render a `DataTable` with shared columns from [`alerts-table-columns.tsx`](./alerts-table-columns.tsx).
 
 ## `CurrentAlerts` props
 
@@ -55,9 +55,9 @@ Both render a `DataTable` with shared columns from `alerts-table-columns.tsx`.
 
 ## Data contracts
 
-- `Alert` — `@tetherto/mdk-react-devkit` / `foundation/types/alerts`
-- `AlertLocalFilters` — same package, `domain/alerts/alerts-types`
-- `Device` — `foundation/types/device`
+- `Alert` — `@tetherto/mdk-react-devkit` / [`foundation/types/alerts`](../../types/alerts.ts)
+- `AlertLocalFilters` — same package, [`domain/alerts/alerts-types`](./alerts-types.ts)
+- `Device` — [`foundation/types/device`](../../types/device.ts)
 
 ## Notes
 

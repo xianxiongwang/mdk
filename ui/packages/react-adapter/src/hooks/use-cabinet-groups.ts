@@ -1,4 +1,5 @@
-import { EXPLORER_TAB, type ListThingsDevice } from '@tetherto/mdk-ui-foundation'
+import type { ListThingsDevice } from '@tetherto/mdk-ui-foundation'
+import { EXPLORER_TAB } from '@tetherto/mdk-ui-foundation/presets/mining'
 import { useMemo } from 'react'
 
 import { useExplorerList, type UseExplorerListOptions } from './use-explorer-list'

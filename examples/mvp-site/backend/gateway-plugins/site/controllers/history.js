@@ -11,7 +11,10 @@ const ONE_HOUR_MS = 60 * 60 * 1000
 //                   the scheduler worker's persisted stats series.
 //   site-hashrate — miner tail-logs (snap.stats.hashrate_mhs), summed across
 //                   all miners; MH/s.
-module.exports = async (req, services) => {
+//
+// `ctx` is a test-only seam — see command.js.
+module.exports = async (req, ctx) => {
+  const mdkClient = ctx === undefined ? require('../lib/client') : ctx.mdkClient
   const metric = (req.query && req.query.metric) || 'hashrate'
   if (metric !== 'hashrate' && metric !== 'power' && metric !== 'temperature' && metric !== 'site-hashrate') {
     throw new Error('ERR_UNKNOWN_METRIC')
@@ -22,7 +25,7 @@ module.exports = async (req, services) => {
   const start = Number(req.query && req.query.start) || (end - ONE_HOUR_MS)
   if (start >= end) throw new Error('ERR_INVALID_DATE_RANGE')
 
-  const { byFamily, pools } = await loadSite(services.mdkClient)
+  const { byFamily, pools } = await loadSite(mdkClient)
 
   if (metric === 'power') {
     const siteMeters = (byFamily['power-meter'] || []).filter((t) => t.info && t.info.pos === 'site')
@@ -38,7 +41,7 @@ module.exports = async (req, services) => {
 
     const byTs = new Map()
     await Promise.all(meters.map(async (device) => {
-      const tel = await services.mdkClient.pullTelemetry(device.id, {
+      const tel = await mdkClient.pullTelemetry(device.id, {
         type: 'logs', key: 'thing-5m', tag: device.id, start, end, limit: 5000
       })
       for (const e of ((tel && tel.logs) || [])) {
@@ -74,7 +77,7 @@ module.exports = async (req, services) => {
     const byTs = new Map()
     const counts = new Map()
     await Promise.all(selected.map(async (device) => {
-      const tel = await services.mdkClient.pullTelemetry(device.id, {
+      const tel = await mdkClient.pullTelemetry(device.id, {
         type: 'logs', key: 'thing-5m', tag: device.id, start, end, limit: 5000
       })
       for (const e of ((tel && tel.logs) || [])) {
@@ -117,7 +120,7 @@ module.exports = async (req, services) => {
     const bucketMs = 60000
     const perDevice = new Map()
     await Promise.all(selected.map(async (device) => {
-      const tel = await services.mdkClient.pullTelemetry(device.id, {
+      const tel = await mdkClient.pullTelemetry(device.id, {
         type: 'logs', key: 'thing-5m', tag: device.id, start, end, limit: 5000
       })
       const buckets = new Map()
@@ -160,7 +163,7 @@ module.exports = async (req, services) => {
 
   const byTs = new Map()
   await Promise.all(selectedPools.map(async (pool) => {
-    const tel = await services.mdkClient.pullTelemetry(pool.deviceId, {
+    const tel = await mdkClient.pullTelemetry(pool.deviceId, {
       type: 'ext_data', key: 'stats-history', start, end
     })
     const entries = (tel && tel.extData) || []

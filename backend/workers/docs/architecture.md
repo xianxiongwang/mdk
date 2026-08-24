@@ -2,7 +2,7 @@
 
 A **Worker** is a device protocol adapter: it talks vendor-native I/O (TCP, HTTP, Modbus, …) on one side and the MDK Protocol on the other. Kernel discovers Workers over Hyperswarm and never talks to hardware directly.
 
-Workers do not initiate RPC to Kernel. They join a DHT topic; Kernel finds them and drives all downward requests.
+Workers do not initiate RPC to Kernel. Kernel obtains each Worker's RPC public key through one of three [discovery modes](#discovery-model), then drives all downward requests.
 
 ## Directory layout
 
@@ -50,7 +50,7 @@ boot.js
   ▼
 WorkerRuntime(plugin, { workerId, devices, services, … })
   │  connect() each device → device contexts
-  │  Hyperswarm RPC server + DHT announce
+  │  Hyperswarm RPC server + discovery announce
   ▼
 Kernel discovers Worker → capability.request → caches mdk-contract
   │
@@ -59,10 +59,38 @@ Kernel discovers Worker → capability.request → caches mdk-contract
 handler(ctx) → vendor API → response envelope
 ```
 
-1. **Boot** — `plugin/boot.js` (or env-driven `worker.js` via `WORKER` / `TYPE` / `RACK`) builds infra and starts the runtime.
+1. **Boot** — `plugin/boot.js` (or env-driven [`worker.js`](../../core/mdk/worker.js) via `WORKER` / `TYPE` / `RACK`) builds infra and starts the runtime.
 2. **Connect** — for each provisioned device, `plugin.connect` returns a vendor client. Failures mark that device offline; siblings keep running.
-3. **Announce** — runtime joins the Kernel topic with a stable identity from the store.
+3. **Announce** — the runtime makes its RPC key reachable with a stable identity from the store: joining the Kernel topic in DHT mode, or handing the key over directly in the other two [discovery modes](#discovery-model).
 4. **Serve** — Kernel requests hit contract handlers or infra built-ins (`registerThing`, logs, comments, …). Device-set changes go through provisioning and typically require a Worker restart.
+
+## Discovery model
+
+Kernel obtains each Worker's RPC public key in one of three ways, picked by the deployment topology. Once a Worker is connected the three are indistinguishable: each runs the same identity → capability → Ready sequence, then carries the same MDK Protocol envelopes (`command.request`, `telemetry.pull`, …) over the same Hyperswarm RPC transport. Only how Kernel first learns the key differs.
+
+Each Worker package ships its own boot function that constructs the runtime internally — there is no generic `startWorker(WorkerClass, opts)` entry point, and a v2 package loaded from a directory has no boot function at all. [`deployment-topologies.md`](../../../docs/concepts/deployment-topologies.md) has the diagrams and trade-offs; [`test-a-worker.md`](../../../docs/guides/workers/test-a-worker.md) has a runnable host script for each mode.
+
+### Single-process mode
+
+Kernel and the Worker share a process, so the host registers the runtime's public key directly against the live Kernel instance with `kernel.registerWorker()`. No discovery listener is involved and the Worker reaches `READY` synchronously — `waitForDiscovery()` is not required. `getKernel()` still defaults to `mode: 'dht'` and auto-generates a topic when given none, so pass `discovery: { mode: 'local' }` if Kernel should also skip joining a Hyperswarm topic in the background.
+
+Registering does not couple the Worker's shutdown to Kernel's. The host process that constructed the runtime owns its lifecycle in every mode; push the Worker's `stop()` onto Kernel's `_cleanup` queue if Kernel shutdown should cascade to it.
+
+### Local mode
+
+Kernel and Workers coordinate through a shared directory on one machine — default `<root>/.worker-keys`, resolved the same way on both sides so the two processes agree with no config. No Hyperswarm topic is joined and no outbound internet connection is needed.
+
+Each Worker writes its RPC key there with `publishWorkerKey()`; Kernel watches the directory with `fs.watch` and rescans it every four seconds ([`local-discovery.js`](../../core/mdk/lib/local-discovery.js)). Every key found is offered to the normal discovery listener, which dedupes peers it already knows and drops a key when the connect fails — so the rescan doubles as the retry for a Worker whose RPC server was not yet listening, and as re-discovery after a Kernel restart. Keys persist and are re-read on startup, so Kernel and Workers can start in any order.
+
+A published key is only stable across restarts when the runtime was given a `storeDir` (or `store`) to persist its seeds in. Without one it generates a fresh keypair on every start, and each restart looks like a brand new peer to Kernel.
+
+Every process has to resolve the same filesystem path, which confines this mode to one machine. Workers on separate hosts need microservices mode.
+
+### Microservices mode
+
+Also called DHT mode, and the only mode that spans hosts or networks: Kernel and Worker join the same Hyperswarm topic. Generate a random 32-byte hex topic in whichever process starts first, persist it where the other can read it, and pass the same value to both sides.
+
+Either process may start first. A Worker re-announces on the topic every 30 seconds ([`worker-runtime.js`](../../core/mdk-worker/lib/worker-runtime.js)), so a Kernel that joins later — or after an earlier announce expired — still finds it, though not necessarily straight away. A topic is a rendezvous address, not an authentication secret or a command-authorization token.
 
 ## How it fits MDK
 

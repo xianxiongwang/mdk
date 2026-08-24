@@ -1,12 +1,5 @@
-import {
-  buildContainerWidgetsListParams,
-  buildContainerWidgetsRealtimeTailLogParams,
-  flattenKernelEnvelope,
-  type ListThingsDevice,
-  listThingsQuery,
-  type TailLogEntry,
-  tailLogQuery,
-} from '@tetherto/mdk-ui-foundation'
+import type { ListThingsDevice, TailLogEntry } from '@tetherto/mdk-ui-foundation'
+import { buildContainerWidgetsListParams, buildContainerWidgetsRealtimeTailLogParams, flattenKernelEnvelope, listThingsQuery, tailLogQuery  } from '@tetherto/mdk-ui-foundation/presets/mining'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { headHead } from './list-things-utils'
@@ -44,6 +37,15 @@ export type UseContainerWidgetsResult = {
  * aggregate sample the cards derive their summaries from. Card-shaped
  * payload derivation lives with the widget components; this hook keeps the
  * two feeds polling on their own cadences.
+ *
+ * @remarks
+ * Both feeds are illustrative — MDK does not ship a built-in endpoint for
+ * either, and no built-in plugin mounts `/auth/list-things` or
+ * `/auth/tail-log` over HTTP (the example site plugins serve `/site/history`,
+ * a differently-shaped route, not `/auth/tail-log`). Create your own
+ * [Gateway plugin](https://docs.tether.io/mdk/guides/gateway/plugins) for
+ * each matching your Worker/business logic. No reference implementation of
+ * either route ships in this repo.
  *
  * @category op-centre
  */

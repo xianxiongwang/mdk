@@ -23,26 +23,26 @@ Please follow the private disclosure instructions in [SECURITY.md][security].
 MDK is a monorepo with separate backend and frontend workspaces:
 
 - Backend:
-  - `backend/core/`: Backend services, container modules, and integration/unit tests (npm-based)
-  - `backend/workers/`: Protocol-translator worker packages (miners, miner-pools, power-meter, temperature, containers), per-worker mock servers, and per-worker tests (npm-based)
-- Frontend: `ui/`: Frontend packages, demo app, and shared UI foundation (npm + Turbo-based)
+  - [`backend/core/`](./backend/core/README.md): Backend services, container modules, and integration/unit tests (npm-based)
+  - [`backend/workers/`](./backend/workers/README.md): Protocol-translator worker packages (miners, miner-pools, power-meter, temperature, containers), per-worker mock servers, and per-worker tests (npm-based)
+- Frontend: [`ui/`](./ui/README.md): Frontend packages, demo app, and shared UI foundation (npm + Turbo-based)
 
 Choose the backend or frontend workflow that matches the area you are contributing to.
 
 ### Root configuration must be domain-aware
 
-The repo top level is a fixed set of domains (`ui/`, `backend/`, `docs/`, `examples/`) plus tooling and repo-meta files. 
+The repo top level is a fixed set of domains ([`ui/`](./ui/README.md), `backend/`, [`docs/`](./docs/README.md), `examples/`) plus tooling and repo-meta files. 
 Shared root config (today just `.gitignore`) is read across all of them, so every pattern must be written so it cannot 
 silently match another domain's source:
 
 - **Anchor anything that targets one domain's build or runtime output.** Use `/name/` for the repo root or `domain/**/name/` 
 for a subtree. A bare `status` / `store` / `tmp` / `Checklist*` matches a file or directory of that name *anywhere*, 
 including UI source. That is exactly what caused a prior root ignore regression, where bare `status` / `store` 
-swallowed `ui/packages/ui-foundation/src/store/`.
-- **Keep per-domain ignores in that domain's own `.gitignore`** (`ui/.gitignore`, the per-package backend `.gitignore`s), 
+swallowed [`ui/packages/ui-foundation/src/store/`](./ui/packages/ui-foundation/src/store/index.ts).
+- **Keep per-domain ignores in that domain's own `.gitignore`** ([`ui/.gitignore`](./ui/.gitignore), the per-package backend `.gitignore`s), 
 not the root. Things like `dist`, `.turbo`, and `build` belong to a domain.
-- **Lint/format/type config is domain-owned, not shared at the root.** `ui/` ships its own `eslint.config.mjs` / 
-`tsconfig.base.json` / `.prettierrc`; backend uses `standard`. Do not add a root-level eslint/tsconfig/prettier 
+- **Lint/format/type config is domain-owned, not shared at the root.** [`ui/`](./ui/README.md) ships its own [`eslint.config.mjs`](ui/eslint.config.mjs) / 
+[`tsconfig.base.json`](ui/tsconfig.base.json) / `.prettierrc`; backend uses `standard`. Do not add a root-level eslint/tsconfig/prettier 
 that would apply across domains.
 - **A genuinely shared convention is fine if it applies identically to every domain** - e.g. committing 
 `config/*.json.example` while ignoring the generated `config/*.json`. Note it as shared so the intent is clear.
@@ -101,7 +101,7 @@ git merge --ff-only upstream/main   # fails loudly if main has diverged
 
 ### Backend contribution setup
 
-Use this workflow when contributing to backend code under `backend/core/`.
+Use this workflow when contributing to backend code under [`backend/core/`](./backend/core/README.md).
 
 ```bash
 cd backend/core
@@ -121,7 +121,7 @@ npm test
 
 ### Frontend contribution setup 
 
-Use this workflow when contributing to frontend code under `ui/`.
+Use this workflow when contributing to frontend code under [`ui/`](./ui/README.md).
 
 ```bash
 cd ui

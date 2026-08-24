@@ -51,7 +51,7 @@ describe('useSiteMinerStats', () => {
     })
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
-    expect(result.current.mosTotal).toBe(216)
+    expect(result.current.appTotal).toBe(216)
     expect(result.current.online).toBe(158)
     expect(result.current.error).toBe(1)
     expect(result.current.offline).toBe(57)
@@ -73,6 +73,6 @@ describe('useSiteMinerStats', () => {
       wrapper: wrapper(makeClient()),
     })
     await waitFor(() => expect(result.current.isLoading).toBe(false))
-    expect(result.current).toMatchObject({ mosTotal: 0, online: 0, error: 0, offline: 0 })
+    expect(result.current).toMatchObject({ appTotal: 0, online: 0, error: 0, offline: 0 })
   })
 })

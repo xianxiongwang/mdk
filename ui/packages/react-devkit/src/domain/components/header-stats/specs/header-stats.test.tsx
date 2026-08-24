@@ -1,6 +1,8 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
+import { WEBAPP_SHORT_NAME } from '../../../constants'
+
 import { HeaderConsumptionBox } from '../header-consumption-box'
 import { HeaderEfficiencyBox } from '../header-efficiency-box'
 import { HeaderHashrateBox } from '../header-hashrate-box'
@@ -50,7 +52,7 @@ describe('HeaderHashrateBox', () => {
     render(<HeaderHashrateBox appPhs={12.345} poolPhs={11.111} />)
     expect(screen.getByText('12.345')).toBeInTheDocument()
     expect(screen.getByText('11.111')).toBeInTheDocument()
-    expect(screen.getByText('APP')).toBeInTheDocument()
+    expect(screen.getByText(WEBAPP_SHORT_NAME)).toBeInTheDocument()
     expect(screen.getByText('Pool')).toBeInTheDocument()
     expect(screen.getAllByText('PH/s')).toHaveLength(2)
   })
@@ -88,7 +90,7 @@ describe('HeaderMinersBox', () => {
         poolMismatch={4}
       />,
     )
-    expect(screen.getByText('APP (2,188)')).toBeInTheDocument()
+    expect(screen.getByText(`${WEBAPP_SHORT_NAME} (2,188)`)).toBeInTheDocument()
     expect(screen.getByText('Pool (2,200)')).toBeInTheDocument()
     expect(screen.getAllByText('158')).toHaveLength(2)
     expect(screen.getByText('12')).toBeInTheDocument()
@@ -101,7 +103,7 @@ describe('HeaderMinersBox', () => {
     const { container } = render(<HeaderMinersBox />)
     expect(container.querySelectorAll('.mdk-header-stat-box__success').length).toBeGreaterThan(0)
     expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(6)
-    expect(screen.getByText('APP (—)')).toBeInTheDocument()
+    expect(screen.getByText(`${WEBAPP_SHORT_NAME} (—)`)).toBeInTheDocument()
     expect(screen.getByText('Pool (—)')).toBeInTheDocument()
   })
 

@@ -49,7 +49,7 @@ export default function AlertsPage() {
 
   return (
     <Alerts
-      devices={devices.data as Device[][] | undefined}
+      devices={devices.data as Device[] | undefined}
       isCurrentAlertsLoading={devices.isLoading}
       historicalAlerts={historical.data as Alert[] | undefined}
       isHistoricalAlertsLoading={historical.isLoading}
@@ -62,8 +62,10 @@ export default function AlertsPage() {
 
 ## State / data flow
 
-- `useCurrentAlertDevices()` polls `list-things` (every 20s) and returns the raw
-  `Device[][]` the current-alerts table reads `last.alerts` from. No mock data —
+- `useCurrentAlertDevices()` polls `list-things` (every 20s) and returns a flat
+  `ListThingsDevice[]` the current-alerts table reads `last.alerts` from — unwrapped
+  from the Gateway's per-Kernel envelope, so a rack-sharded deployment doesn't lose
+  every node after the first. No mock data —
   it hits the real backend through `<MdkProvider>`.
 - `useHistoricalAlerts({ start, end })` fetches the historical log in sequential
   24-hour windows, merges them by `uuid`, and shapes the rows for the table.

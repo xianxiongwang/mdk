@@ -152,9 +152,9 @@ describe('applyAlertsLocalFilters', () => {
 })
 
 describe('getAlertsForDevices', () => {
-  it('parses alerts from devices in the head of the data array', () => {
+  it('parses alerts from a flat device list', () => {
     const device = makeDevice()
-    const result = getAlertsForDevices([[device]], {})
+    const result = getAlertsForDevices([device], {})
     expect(result).toHaveLength(1)
     expect(result[0]?.uuid).toBe('alert-uuid-1')
     expect(result[0]?.shortCode).toBe('M-001')
@@ -164,20 +164,20 @@ describe('getAlertsForDevices', () => {
     const device = makeDevice({
       last: { snap: { stats: { status: 'mining' } } } as unknown as DeviceLast,
     })
-    const result = getAlertsForDevices([[device]], {})
+    const result = getAlertsForDevices([device], {})
     expect(result).toEqual([])
   })
 
   it('applies localFilters to results', () => {
     const device = makeDevice()
-    const result = getAlertsForDevices([[device]], { severity: ['high'] })
+    const result = getAlertsForDevices([device], { severity: ['high'] })
     expect(result).toEqual([])
   })
 
   it('passes onAlertClick to actions on parsed entries', () => {
     const onClick = vi.fn()
     const device = makeDevice()
-    const result = getAlertsForDevices([[device]], {}, onClick)
+    const result = getAlertsForDevices([device], {}, onClick)
     expect(result[0]?.actions.onAlertClick).toBe(onClick)
   })
 
@@ -256,7 +256,7 @@ describe('getAlertsThingsQuery', () => {
 describe('getCurrentAlerts', () => {
   it('drops filterTags when an alert id is provided', () => {
     const device = makeDevice()
-    const result = getCurrentAlerts([[device]], {
+    const result = getCurrentAlerts([device], {
       localFilters: {},
       filterTags: ['no-match'],
       id: 'alert-uuid-1',
@@ -280,13 +280,13 @@ describe('getCurrentAlerts', () => {
         alerts: [makeAlert({ uuid: 'a-B' })],
       } as unknown as DeviceLast,
     })
-    const result = getCurrentAlerts([[deviceA, deviceB]], { localFilters: {}, id: 'a-B' })
+    const result = getCurrentAlerts([deviceA, deviceB], { localFilters: {}, id: 'a-B' })
     expect(result.map((r) => r.uuid)).toEqual(['a-B'])
   })
 
   it('applies tag-based filter when no id is provided', () => {
     const device = makeDevice()
-    const result = getCurrentAlerts([[device]], {
+    const result = getCurrentAlerts([device], {
       localFilters: {},
       filterTags: ['M-001'],
     })
@@ -295,7 +295,7 @@ describe('getCurrentAlerts', () => {
 
   it('returns empty array when filterTags do not match any alert', () => {
     const device = makeDevice()
-    const result = getCurrentAlerts([[device]], {
+    const result = getCurrentAlerts([device], {
       localFilters: {},
       filterTags: ['nothing-matches'],
     })
@@ -306,7 +306,7 @@ describe('getCurrentAlerts', () => {
     const device = makeDevice()
     // '10.0.0' is not in the code, position, or alert name — it only matches
     // the derived ip- tag, so the row must say so.
-    const result = getCurrentAlerts([[device]], {
+    const result = getCurrentAlerts([device], {
       localFilters: {},
       filterTags: ['10.0.0'],
     })
@@ -316,7 +316,7 @@ describe('getCurrentAlerts', () => {
 
   it('reports uuid matches in matchedOn', () => {
     const device = makeDevice()
-    const result = getCurrentAlerts([[device]], {
+    const result = getCurrentAlerts([device], {
       localFilters: {},
       filterTags: ['uuid-1'],
     })
@@ -326,7 +326,7 @@ describe('getCurrentAlerts', () => {
 
   it('omits matchedOn when the chip matches a visible column', () => {
     const device = makeDevice()
-    const result = getCurrentAlerts([[device]], {
+    const result = getCurrentAlerts([device], {
       localFilters: {},
       filterTags: ['M-001'],
     })

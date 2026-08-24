@@ -72,5 +72,5 @@ module.exports = SiemensMock.expose(module) // -> { createServer }, and runs the
 
 plus `initial_states/default.js` (its register map). For a `miner`/`container` whose transport
 isn't fixed by the category, also implement `createTransport()` to return the adapter it speaks
-(see `miners/antminer` for HTTP, `miners/whatsminer` for TCP, `containers/bitdeer` for MQTT). A
+(see [`miners/antminer`](../miners/antminer/README.md) for HTTP, [`miners/whatsminer`](../miners/whatsminer/README.md) for TCP, [`containers/bitdeer`](../containers/bitdeer/README.md) for MQTT). A
 brand-new wire protocol only needs one new `transports/<x>.transport.js` adapter.

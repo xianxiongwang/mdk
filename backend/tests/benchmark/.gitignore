@@ -1,0 +1,5 @@
+results/
+.mdk-data/
+node_modules/
+!config/*.json.example
+config/*.json

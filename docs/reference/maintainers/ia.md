@@ -5,7 +5,7 @@
 The monorepo builds on contracts that already ship:
 
 - **Workers** ship [`mdk-contract.json`](../../../backend/workers/miners/whatsminer/plugin/mdk-contract.json) per package, 
-validated against `mdk-contract.schema.json` (upstream today; vendoring into this repo is pending — see [QA gates](#qa-gates)). 
+validated against [`mdk-contract.schema.json`](../../../backend/core/mdk-worker/mdk-contract.schema.json), vendored in this repo. 
 The contract carries metadata, telemetry, commands, health, and errors — programmatic contract + AI reasoning context in one file.
 - **UI** components carry JSDoc tags (`@tier`, `@category`, `@domain`, `@orkCapability`); the registry generator (`ui/<pkg>/scripts/generate-registry.mts`, 
 lands when the UI workspace is populated) and sibling generators emit `dist/registry.json`, 
@@ -41,7 +41,7 @@ ui/<pkg>/src/.../<component>/
 
 | Location | Owns |
 |----------|------|
-| [`docs/`](../../README.md) | Role-based router ([`README.md`](../../README.md)) and end-user-facing SoT content (`concepts/`) |
+| [`docs/`](../../README.md) | Role-based router ([`README.md`](../../README.md)) and end-user-facing SoT content ([`concepts/`](../../concepts/)) |
 | [`docs/reference/maintainers/`](README.md) | Docs maintainer plumbing: this file, [`agent-ready-sdk.md`](agent-ready-sdk.md), [`tag-vocab.yaml`](tag-vocab.yaml), [`single-source-of-truth.md`](single-source-of-truth.md), [`worker-runtime-legacy-services.md`](worker-runtime-legacy-services.md), and the hand-maintained [`integrations/`](integrations/index.md) catalogue (lives here, not at `docs/integrations/`, until [`check:integrations-fresh`](#checkintegrations-fresh) keeps it honest) |
 | [`backend/core/docs/`](../../../backend/core/docs/README.md) | Core workspace conventions (`mdk`, `client`, `kernel`, `gateway`, …) |
 | [`ui/`](../../../ui/README.md) | UI workspace conventions for react-devkit, adapter, ui-foundation, cli |
@@ -66,7 +66,7 @@ Workers declare `metadata.deviceFamily`, and the docs build groups them under th
 [`tag-vocab.yaml`](tag-vocab.yaml) is a **presentation overlay**, not a constraint surface. It does not declare which tags are valid — that authority 
 lives with the engineers who own the schema and JSDoc:
 
-- `metadata.deviceFamily`, `metadata.provider`, `metadata.modelsSupported[]` are constrained (or open-set) by [`mdk-contract.schema.json`](agent-ready-sdk.md).
+- `metadata.deviceFamily`, `metadata.provider`, `metadata.modelsSupported[]` are constrained (or open-set) by [`mdk-contract.schema.json`](../../../backend/core/mdk-worker/mdk-contract.schema.json).
 - `@tier`, `@category`, `@domain`, `@kernelCapability` are constrained by the registry generator that consumes UI JSDoc.
 
 The overlay does two things:
@@ -87,20 +87,21 @@ default is just an entry in `metadata.modelsSupported[]`.
 
 Suggested CI checks that would make the IA self-enforcing. **None are wired today and none are prerequisites for the BE or FE port.** Engineering 
 decides whether to adopt each gate per-team; for any gate not adopted, docs maintainers absorb the upkeep manually (each section below names the 
-fallback). The constraint surface stays where it belongs — `mdk-contract.schema.json` for Workers, the UI registry generator for components — 
+fallback). The constraint surface stays where it belongs — [`mdk-contract.schema.json`](../../../backend/core/mdk-worker/mdk-contract.schema.json) for Workers, the UI registry generator for components — 
 whether or not these gates ever land.
 
 ### `check:contract`
 
-Validates every `backend/workers/**/mdk-contract.json` against `mdk-contract.schema.json`. Would fail the build on malformed contracts 
-(missing required fields, wrong types, unknown enum values defined by the schema). The schema and validator already exist upstream — 
-this gate would run them as part of CI if adopted.
+Validates every `backend/workers/**/mdk-contract.json` against [`mdk-contract.schema.json`](../../../backend/core/mdk-worker/mdk-contract.schema.json). Would fail the build on malformed contracts 
+(missing required fields, wrong types, unknown enum values defined by the schema). The schema and an ajv validator already exist and run today 
+in [`backend/workers/scripts/generate-catalogue.js`](../../../backend/workers/scripts/generate-catalogue.js), but only as a warn-only step, not a build-failing gate — 
+this gate would make that same validation blocking if adopted.
 
 **Why it matters:** today a typo in `metadata.deviceFamily` (e.g. `power-meterr`) ships silently; the docs catalogue then drops that Worker 
 from browse without telling anyone.
 
 **If not adopted:** docs maintainers notice the missing Worker during integration audits and ping the Worker author for a contract fix. The 
-schema validation still runs upstream in `mdk-be`, so contracts that ship cleanly through that path will catch typos there.
+warn-only validation in [`generate-catalogue.js`](../../../backend/workers/scripts/generate-catalogue.js) surfaces the error in its own output, so contracts that ship cleanly through that path will catch typos there.
 
 ### `check:facets-fresh`
 
@@ -137,7 +138,7 @@ missing tags during integration audits and request the JSDoc be added.
 ### `check:port-signals`
 
 Lints `docs/**/*.md` and warns when a non-anchor reference-style link definition has no adjacent `<!-- docs@tether.io: … -->` (or `<!-- mdk-monorepo: … -->`) 
-HTML comment per the vocabulary in [`single-source-of-truth.md`](single-source-of-truth.md). Catches missing routing hints in mdk pre-commit / CI before they reach the 
+HTML comment per the vocabulary in [`single-source-of-truth.md`](single-source-of-truth.md). Catches missing routing hints in mdk-prv pre-commit / CI before they reach the 
 downstream port-sync transforms. Soft warning, not a hard gate — adding a new slug should never block on the docs pipeline being ready.
 
 **Why it matters:** every cross-reference in the user-facing pages needs a port-time disposition (rewrite to upstream, preserve URL, drop on port, 
@@ -149,9 +150,9 @@ Until then, port signals are eyeballed during docs review.
 ### `check:integrations-fresh`
 
 > Implemented. [`backend/workers/scripts/generate-catalogue.js`](../../../backend/workers/scripts/generate-catalogue.js) 
-> (run `npm run generate:catalogue` in `packages/workers`) walks `backend/workers/**/mdk-contract.json`, validates each against the vendored schema 
+> (run `npm run generate:catalogue` in [`backend/workers`](../../../backend/workers/README.md)) walks `backend/workers/**/mdk-contract.json`, validates each against the vendored schema 
 > with ajv, and generates the catalogue at [`backend/workers/docs/supported-hardware.md`](../../../backend/workers/docs/supported-hardware.md) plus 
-> `catalogue.json`. The user-facing entrypoint is [`docs/reference/supported-hardware.md`](../supported-hardware.md). The hand-maintained tables 
+> [`catalogue.json`](../../../backend/workers/docs/catalogue.json). The user-facing entrypoint is [`docs/reference/supported-hardware.md`](../supported-hardware.md). The hand-maintained tables 
 > under [`integrations/hardware/`](integrations/hardware/index.md) are now thin pointers to the generated catalogue. Validation is warn-only 
 > (it does not block); wiring it as a blocking CI gate is still engineering's call.
 
@@ -166,28 +167,28 @@ so this would be a build failure.
 
 **Why it matters:** today the integration index pages are hand-maintained. A new Whatsminer model added to `mdk-contract.json` ships without 
 appearing in the catalogue; a deleted Worker silently leaves an orphan row. This gate would make the drift loud. The folder lives under 
-`docs/maintainers/integrations/` (not `docs/integrations/`) precisely because it is still plumbing — until this gate lands, the tables are 
+[`docs/reference/maintainers/integrations/`](integrations/index.md) (not `docs/integrations/`) precisely because it is still plumbing — until this gate lands, the tables are 
 not safe enough to be user-facing. Each index page carries an invisible `<!-- mdk-monorepo: hand-maintained ... -->` reminder at the top so 
 a maintainer editing the file sees it inline. The eventual end state replaces these tables with a build step that generates them from 
 `dist/index.json` (see [Derived vocabulary](#derived-vocabulary)); the gate is the bridge.
 
 **If not adopted:** docs maintainers walk the workers tree on each integration audit and update the catalogue tables manually. The tables 
-stay under `maintainers/` and never graduate to user-facing `docs/integrations/`.
+stay under [`maintainers/`](./README.md) and never graduate to user-facing `docs/integrations/`.
 
 ### `check:plugin-reference-fresh`
 
 > Partially implemented. [`docs/scripts/generate-plugin-reference.js`](../../scripts/generate-plugin-reference.js) 
-> (run `npm run generate:plugin-reference` in `backend/core/plugins`) reads each default plugin's `mdk-plugin.json` and regenerates the 
+> (run `npm run generate:plugin-reference` in [`backend/core/plugins`](../../../backend/core/plugins/README.md)) reads each default plugin's `mdk-plugin.json` and regenerates the 
 > route tables in [`backend/core/plugins/README.md`](../../../backend/core/plugins/README.md). The generator exists; the CI gate does not.
 
 Freshness gate for the generated default-plugin route tables. Would run `npm run generate:plugin-reference` in CI and fail on a non-empty 
-`git diff` in `backend/core/plugins/README.md` — the same regen-and-diff pattern as `check:integrations-fresh`. It would catch one kind of drift:
+`git diff` in [`backend/core/plugins/README.md`](../../../backend/core/plugins/README.md) — the same regen-and-diff pattern as `check:integrations-fresh`. It would catch one kind of drift:
 
 1. **Tables stale after a manifest change** — a route added, removed, or re-described in a default plugin's `mdk-plugin.json` is not reflected 
 in the generated tables.
 
 **Why it matters:** the default-plugin route tables are the published API surface for the Gateway's built-in endpoints. A table that lags the 
-manifest documents routes that no longer exist or omits ones that do. Only the default plugins in `backend/core/plugins/` are covered; plugins 
+manifest documents routes that no longer exist or omits ones that do. Only the default plugins in [`backend/core/plugins/`](../../../backend/core/plugins/README.md) are covered; plugins 
 mounted via `extraPluginDirs` are external and document their own routes.
 
 **If not adopted:** docs maintainers re-run `npm run generate:plugin-reference` and commit the output whenever a default plugin's routes change.
@@ -247,7 +248,7 @@ quietly grow back into a parallel taxonomy.
 ### The problem with hand-curated vocab
 
 A docs-authored allow-list — "these are the valid `metadata.provider` values" — inverts authority. Engineers ship `mdk-contract.json` and 
-JSDoc; those are the facts. A YAML in `docs/` declaring what's "allowed" makes docs the gatekeeper: a new vendor lands cleanly in the schema, 
+JSDoc; those are the facts. A YAML in [`docs/`](../../README.md) declaring what's "allowed" makes docs the gatekeeper: a new vendor lands cleanly in the schema, 
 the contract validates, but the docs CI yells until somebody updates a parallel file in another folder. That is exactly the parallel process 
 this IA is designed to avoid.
 
@@ -255,7 +256,7 @@ this IA is designed to avoid.
 
 | Vocabulary axis | Real source of truth | What docs should do |
 |-----------------|----------------------|---------------------|
-| `device-families` | `mdk-contract.schema.json` enum (engineer-owned, breaking change to extend) | Read the schema. |
+| `device-families` | [`mdk-contract.schema.json`](../../../backend/core/mdk-worker/mdk-contract.schema.json) enum (engineer-owned, breaking change to extend) | Read the schema. |
 | `providers`, `modelsSupported[]` | Open-set fields observed in shipping `mdk-contract.json` files | Scan and aggregate. |
 | `tiers`, `categories`, `domains`, `kernel-capabilities` | UI registry generator (already validates JSDoc) | Read `dist/registry.json`. |
 | `integration-kinds` | Pure docs concept (no contract or JSDoc field) | Author here. |

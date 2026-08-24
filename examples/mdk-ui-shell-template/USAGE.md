@@ -45,7 +45,7 @@ The template imports from three MDK packages and three only:
 
 **The template owns**: route configuration, app shell layout (sidebar /
 topbar), the SignIn / Home / NotFound pages, env-var reading. Pages added via
-`mdk-ui add page` land in `src/pages/` and follow the same rules.
+`mdk-ui add page` land in [`src/pages/`](./src/pages/) and follow the same rules.
 
 **The template does NOT own**: HTTP calls, auth flow logic, data-shape
 transformations, chart components, store state. Anything in those
@@ -60,10 +60,10 @@ when you wire a new API-backed page, then delete it**:
 
 | File | Layer | Responsibility |
 | ---- | ----- | -------------- |
-| `packages/ui-foundation/src/query/{factories,pool-factories}.ts` | Foundation | `siteQuery` / `userInfoQuery` / `featureConfigQuery` — own the endpoint URL + fetch. |
-| `packages/react-adapter/src/hooks/use-system-info.ts` | Adapter | `useSystemInfo` binds those factories with TanStack Query and returns a shaped `SystemInfo` payload. |
-| `src/pages/SystemInfo.tsx` | Page (template) | Thin glue — reads the hook, hands its output to the component. No `fetch`, no shaping. |
-| `src/components/SystemInfoPanel.tsx` | Component (template) | Props in, markup out. |
+| [`packages/ui-foundation/src/presets/mining/factories.ts`](../../ui/packages/ui-foundation/src/presets/mining/factories.ts) / [`pool-factories.ts`](../../ui/packages/ui-foundation/src/presets/mining/pool-factories.ts) | Foundation | `siteQuery` / `userInfoQuery` / `featureConfigQuery` — own the endpoint URL + fetch. |
+| [`packages/react-adapter/src/hooks/use-system-info.ts`](../../ui/packages/react-adapter/src/hooks/use-system-info.ts) | Adapter | `useSystemInfo` binds those factories with TanStack Query and returns a shaped `SystemInfo` payload. |
+| [`src/pages/SystemInfo.tsx`](./src/pages/SystemInfo.tsx) | Page (template) | Thin glue — reads the hook, hands its output to the component. No `fetch`, no shaping. |
+| [`src/components/SystemInfoPanel.tsx`](./src/components/SystemInfoPanel.tsx) | Component (template) | Props in, markup out. |
 
 The rule it demonstrates: **data flows one direction and each layer has a
 single job.** The page never calls `fetch`, never shapes data, never touches a
@@ -134,27 +134,27 @@ To add a second OAuth provider (e.g. Microsoft):
 | Call `fetch('/auth/...')` from a component             | Use one of the data hooks; add a new one if missing.         |
 | Define a Zustand store inside the template             | Use `authStore` / `devicesStore` / etc. from `ui-foundation`.      |
 | Import `@tanstack/react-query` directly                | Use the re-exports from `@tetherto/mdk-react-adapter`.       |
-| Hard-code a base URL                                   | Read from `import.meta.env.VITE_*` via `src/constants/env`.  |
-| Transform a chart response inline in `Dashboard.tsx`   | Put the transform in the hook's `select`; if reusable, in `ui-foundation/utils`. |
+| Hard-code a base URL                                   | Read from `import.meta.env.VITE_*` via [`src/constants/env`](./src/constants/env.ts).  |
+| Transform a chart response inline in [`Dashboard.tsx`](./_managed/pages/Dashboard.tsx)   | Put the transform in the hook's `select`; if reusable, in [`ui-foundation/utils`](../../ui/packages/ui-foundation/src/utils/index.ts). |
 | Import Ant Design / MUI / Bootstrap                    | Use `@tetherto/mdk-react-devkit` primitives + foundation.    |
-| Add a route directly to `router.tsx`                   | Use `mdk-ui add page` — it appends to `routes.ts`.           |
+| Add a route directly to [`router.tsx`](./src/router.tsx)                   | Use `mdk-ui add page` — it appends to [`routes.ts`](./src/routes.ts).           |
 
 ## Extending: add a new chart card
 
 (Assumes a chart page exists — e.g. after `mdk-ui add page Dashboard`.)
 
 1. Pick / add a chart component in
-   `packages/react-devkit/src/domain/components/dashboard/`.
+   [`packages/react-devkit/src/domain/components/dashboard/`](../../ui/packages/react-devkit/src/domain/components/dashboard/index.ts).
 2. Add a data hook in
    `packages/react-adapter/src/hooks/use-<thing>-chart-data.ts`. The hook
    uses `tailLogQuery(client, { ... })` with the right `aggrFields` and a
    `select` projection that returns the chart-ready shape.
-3. In your page (e.g. `pages/Dashboard.tsx`), call the hook and pass its
+3. In your page (e.g. [`pages/Dashboard.tsx`](./_managed/pages/Dashboard.tsx)), call the hook and pass its
    `data` straight to the chart component. **No transformation between the
    two.**
 
 If your transform looks like "more than two lines or used by ≥ 2 hooks",
-lift it into `packages/ui-foundation/src/utils/` as a pure function.
+lift it into [`packages/ui-foundation/src/utils/`](../../ui/packages/ui-foundation/src/utils/index.ts) as a pure function.
 
 ## Blueprint reference
 

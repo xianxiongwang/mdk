@@ -1,10 +1,8 @@
 'use strict'
 
-module.exports = async function hashrate (req, services) {
-  const { mdkClient } = services
+const mdkClient = require('../lib/client')
 
-  if (!mdkClient) throw new Error('ERR_KERNEL_CLIENT_NOT_CONNECTED')
-
+module.exports = async function hashrate (req) {
   const workersRes = await mdkClient.listWorkers()
   const workers = (workersRes && workersRes.workers) || []
   const ready = workers.filter(w => w.state === 'READY')

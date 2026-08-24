@@ -18,8 +18,11 @@ const deriveTanksMock = vi.fn()
 const findMatchingMock = vi.fn()
 const alarmStateMock = vi.fn()
 
-vi.mock("@tetherto/mdk-ui-foundation", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@tetherto/mdk-ui-foundation")>()
+/* These derivations are part of the mining dialect, so the hook imports them
+ * from the preset subpath — the mock has to target the same module. */
+vi.mock("@tetherto/mdk-ui-foundation/presets/mining", async (importOriginal) => {
+  const actual
+    = await importOriginal<typeof import("@tetherto/mdk-ui-foundation/presets/mining")>()
   return {
     ...actual,
     deriveContainerActivity: (...args: unknown[]) => deriveActivityMock(...args),

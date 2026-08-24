@@ -39,8 +39,9 @@ function isBackendPkgInstalled (pkg) {
   if (fs.existsSync(path.join(pkgDir, 'node_modules'))) return true
   try {
     const { name } = require(path.join(pkgDir, 'package.json'))
-    const linked = require.resolve(path.join(name, 'package.json'), { paths: [REPO_ROOT] })
-    return fs.realpathSync(linked) === fs.realpathSync(path.join(pkgDir, 'package.json'))
+    const linkPath = path.join(REPO_ROOT, 'node_modules', ...name.split('/'))
+    if (!fs.existsSync(linkPath)) return false
+    return fs.realpathSync(linkPath) === fs.realpathSync(pkgDir)
   } catch {
     return false
   }

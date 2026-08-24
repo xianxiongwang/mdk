@@ -78,7 +78,7 @@ export type UseExplorerDataResult = {
  * only reads snapshot fields for display filtering.
  *
  * Search, status-filter and (in `DeviceExplorer`) column sort are all
- * **client-side**, over a tag-filtered, capped fetch — this mirrors MOS/the reference app.
+ * **client-side**, over a tag-filtered, capped fetch — this mirrors the reference app.
  * Fine for containers/cabinets; for very large miner fleets this fetches the
  * cap and filters in the browser (no server paging). Push status into the
  * foundation query + wire `limit`/`offset` if that ceiling is ever hit.

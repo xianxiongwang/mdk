@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from "react"
 
 import { useContainerSnapshots, useDevices } from "@tetherto/mdk-react-adapter"
-import { deriveSelectedSockets } from "@tetherto/mdk-ui-foundation"
+import { deriveSelectedSockets } from "@tetherto/mdk-ui-foundation/presets/mining"
 
 import { DEVICE_EXPLORER_DEVICE_TYPE } from "../../components/device-explorer/types"
 import type { DeviceExplorerDeviceData, DeviceExplorerDeviceType } from "../../components/device-explorer/types"

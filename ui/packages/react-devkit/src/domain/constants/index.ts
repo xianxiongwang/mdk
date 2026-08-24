@@ -1,7 +1,6 @@
+export { WEBAPP_DISPLAY_NAME, WEBAPP_NAME, WEBAPP_SHORT_NAME } from '@tetherto/mdk-ui-foundation'
+
 export const POOL_NAME = 'Pool'
-export const WEBAPP_NAME = 'Appl.'
-export const WEBAPP_SHORT_NAME = 'APP'
-export const WEBAPP_DISPLAY_NAME = 'Application'
 
 export const DATE_RANGE = {
   M1: '1m',

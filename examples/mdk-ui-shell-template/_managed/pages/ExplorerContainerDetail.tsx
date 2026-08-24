@@ -20,7 +20,8 @@ import {
   ContainerDetailPlaceholder,
   useExplorerThingDetail,
 } from '@tetherto/mdk-react-devkit'
-import { CONTAINER_TAB_LABEL, getSupportedContainerTabs } from '@tetherto/mdk-ui-foundation'
+import { CONTAINER_TAB_LABEL } from '@tetherto/mdk-ui-foundation'
+import { getSupportedContainerTabs } from '@tetherto/mdk-ui-foundation/presets/mining'
 import { useEffect, useMemo } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router'
 

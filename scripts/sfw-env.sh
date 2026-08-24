@@ -1,4 +1,4 @@
-# Socket Firewall (SFW) allowlist for mdk's local tooling.
+# Socket Firewall (SFW) allowlist for mdk-prv's local tooling.
 #
 # If your shell wraps npm/npx through `sfw` (a local security proxy — see the
 # `command -v sfw` block most shell profiles add), it blocks any outbound host not
@@ -25,10 +25,13 @@
 #   www.f2pool.com               F2Pool worker docs (backend/workers/minerpools/f2pool)
 #   ocean.xyz                    Ocean pool worker docs (backend/workers/minerpools/ocean)
 #   telemetry.vercel.com         Vercel telemetry endpoint (reached by linkinator or related tooling)
+#   turborepo.dev                hit by the turbo CLI itself (not a linkinator target)
+#   nodejs.org                   Node.js docs/download links referenced in the repo's Markdown
+#   git-scm.com                  Git docs referenced in the repo's Markdown
 #
 # Source this file from your shell profile rather than duplicating the policy there:
-#   [ -f "/absolute/path/to/mdk/scripts/sfw-env.sh" ] && source "/absolute/path/to/mdk/scripts/sfw-env.sh"
+#   [ -f "/absolute/path/to/mdk-prv/scripts/sfw-env.sh" ] && source "/absolute/path/to/mdk-prv/scripts/sfw-env.sh"
 
 # Merge additively: if another repo's sfw-env.sh already set SFW_CUSTOM_REGISTRIES
 # in this shell, keep its entries rather than clobbering them.
-export SFW_CUSTOM_REGISTRIES="${SFW_CUSTOM_REGISTRIES:+$SFW_CUSTOM_REGISTRIES,}bypass:localhost,bypass:img.shields.io,bypass:mdk.tether.io,bypass:docs.mdk.tether.io,bypass:discord.com,bypass:www.radix-ui.com,bypass:react-hook-form.com,bypass:www.conventionalcommits.org,bypass:semver.org,bypass:www.f2pool.com,bypass:ocean.xyz,bypass:telemetry.vercel.com"
+export SFW_CUSTOM_REGISTRIES="${SFW_CUSTOM_REGISTRIES:+$SFW_CUSTOM_REGISTRIES,}bypass:localhost,bypass:img.shields.io,bypass:mdk.tether.io,bypass:docs.mdk.tether.io,bypass:discord.com,bypass:www.radix-ui.com,bypass:react-hook-form.com,bypass:www.conventionalcommits.org,bypass:semver.org,bypass:www.f2pool.com,bypass:ocean.xyz,bypass:telemetry.vercel.com,bypass:turborepo.dev,bypass:nodejs.org,bypass:git-scm.com"

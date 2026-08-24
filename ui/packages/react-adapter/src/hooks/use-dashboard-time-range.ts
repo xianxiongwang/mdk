@@ -1,4 +1,4 @@
-import { getTimelineOptions, type TimelineOption } from '@tetherto/mdk-ui-foundation'
+import { getTimelineOptions, type TimelineOption } from '@tetherto/mdk-ui-foundation/presets/mining'
 import { useCallback, useMemo, useState } from 'react'
 
 export type DashboardTimeRange = {

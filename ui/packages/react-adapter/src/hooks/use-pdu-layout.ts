@@ -1,4 +1,5 @@
-import { type PduLayoutItem, pduLayoutQuery } from '@tetherto/mdk-ui-foundation'
+import type { PduLayoutItem } from '@tetherto/mdk-ui-foundation'
+import { pduLayoutQuery } from '@tetherto/mdk-ui-foundation/presets/mining'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { useAuthToken } from './use-auth-token'
@@ -32,12 +33,11 @@ export type UsePduLayoutResult = {
  * power/current comes from the thing's `pdu_data`, not this endpoint.
  *
  * @remarks
- * The `/auth/pdu-layout` endpoint is illustrative. MDK does not ship built-in
- * endpoints — create your own via a
+ * The `/auth/pdu-layout` endpoint is illustrative. MDK does not ship a built-in
+ * endpoint for it — create your own via a
  * [Gateway plugin](https://docs.tether.io/mdk/guides/gateway/plugins) matching
- * your Worker/business logic. See the
- * [full-site example](https://github.com/tetherto/mdk/tree/main/examples/full-site/plugins/site)
- * for a working reference.
+ * your Worker/business logic. No reference implementation of `/auth/pdu-layout`
+ * ships in this repo.
  *
  * @category op-centre
  */

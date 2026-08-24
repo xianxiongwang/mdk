@@ -5,12 +5,8 @@
  * detection, and post-write cache invalidation so the four hooks stay aligned.
  */
 
-import {
-  AUTH_LEVELS,
-  AUTH_PERMISSIONS,
-  type PendingSubmissionAction,
-  type VotingActionPayload,
-} from '@tetherto/mdk-ui-foundation'
+import { AUTH_LEVELS, AUTH_PERMISSIONS, type PendingSubmissionAction, type VotingActionPayload } from '@tetherto/mdk-ui-foundation'
+import { ACTION_WRITE_INVALIDATE_PREFIXES, LIVE_ACTIONS_REFETCH_KEY } from '@tetherto/mdk-ui-foundation/presets/mining'
 import type { QueryClient } from '@tanstack/react-query'
 
 /** Capability required to submit / vote / cancel actions. */
@@ -31,7 +27,7 @@ const PERMISSION_ERROR_MSG = 'This user role is not authorized to submit this ac
  * its targets as `tags` (device ids / container tags); unless it opts out with
  * `overrideQuery: false` (pool assignment stages an explicit `query`), the
  * query is built from those tags as `{ tags: { $in: tags } }`. This mirrors
- * the MOS submit path — device actions stage `tags` with no `query`, and
+ * the reference app's submit path — device actions stage `tags` with no `query`, and
  * without this conversion they would POST no `query` and be rejected with a
  * 400.
  */
@@ -68,24 +64,14 @@ export const extractSubmitError = (data: unknown): string | null => {
 }
 
 /**
- * Query-key prefixes refreshed after any action write (submit / vote / cancel).
- * A write can change pool configs, miner assignments, the aggregated pools, and
- * the actions queue, so all four are invalidated together for consistency.
- */
-const ACTION_WRITE_INVALIDATE_PREFIXES = [
-  ['auth', 'configs', 'pool'],
-  ['auth', 'miners'],
-  ['auth', 'pools'],
-  ['auth', 'actions'],
-] as const
-
-/** Live-actions key — refetched (not just invalidated) so new cards appear at once. */
-const LIVE_ACTIONS_KEY = ['auth', 'actions', 'live'] as const
-
-/**
  * Invalidate every cache a successful action write can affect, then force an
  * immediate refetch of the live-actions feed so the new card shows up without
  * waiting for the passive poll.
+ *
+ * Both key lists come from `@tetherto/mdk-ui-foundation`, declared beside the
+ * mutations that cause the invalidation — query keys are the data layer's
+ * business, and the copies that used to live here would have silently stopped
+ * matching if an endpoint's key shape changed.
  */
 export const invalidateAfterActionWrite = async (queryClient: QueryClient): Promise<void> => {
   await Promise.all(
@@ -93,5 +79,5 @@ export const invalidateAfterActionWrite = async (queryClient: QueryClient): Prom
       queryClient.invalidateQueries({ queryKey: [...queryKey] }),
     ),
   )
-  await queryClient.refetchQueries({ queryKey: [...LIVE_ACTIONS_KEY] })
+  await queryClient.refetchQueries({ queryKey: [...LIVE_ACTIONS_REFETCH_KEY] })
 }

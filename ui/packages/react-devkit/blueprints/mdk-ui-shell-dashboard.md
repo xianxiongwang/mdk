@@ -31,7 +31,7 @@ demoRoute: /dashboard
 Pick this blueprint when the user wants a *complete*, sign-in-gated,
 single-site operator dashboard against the Gateway backend — the
 smallest runnable demonstration of MDK end-to-end. The output is a
-~70-line `Dashboard.tsx` with one hook per chart and no inline data
+~70-line [`Dashboard.tsx`](../../../../examples/mdk-ui-shell-template/_managed/pages/Dashboard.tsx) with one hook per chart and no inline data
 transformations.
 
 Scaffold this app directly with:
@@ -43,7 +43,7 @@ mdk-ui create my-dashboard --template mdk-ui-shell
 ## Local setup (backend + frontend)
 
 The dashboard talks to `@tetherto/mdk-gateway`, which ships in the MDK repo at
-`backend/core/gateway`, over the Vite dev proxy. Both sides must be running for
+[`backend/core/gateway`](../../../../backend/core/gateway/README.md), over the Vite dev proxy. Both sides must be running for
 sign-in to succeed.
 
 ```bash
@@ -68,7 +68,7 @@ npm run dev                        # http://localhost:3030
 The full walkthrough — Google Cloud client creation, the identity plugin the
 sign-in flow needs, the Vite proxy routes, and common errors — lives in
 [`docs/AGENT_FIRST.md`](../../../docs/AGENT_FIRST.md).
-The scaffolded app's own `README.md` carries the same TL;DR.
+The scaffolded app's own [`README.md`](./README.md) carries the same TL;DR.
 
 ## Page composition
 
@@ -117,16 +117,18 @@ export default function Dashboard() {
 
 ## State / data flow
 
-- Wrap the app once in `<MdkProvider apiBaseUrl={import.meta.env.VITE_API_BASE_URL}>`.
-- All requests use `Authorization: Bearer <token>`. The token lives in
-  `authStore` (`@tetherto/mdk-ui-foundation`). `useAuthToken` writes it after the
-  Google OAuth callback; `useTokenPolling` refreshes it every 250 s and
-  clears it on a 401 / 500.
+- Wrap the app once in
+  `<MdkProvider apiBaseUrl={import.meta.env.VITE_MDK_API_URL} auth={gatewayRedirectAuth({ oauthBaseUrl })}>`.
+- The `AuthProvider` owns the whole session: `gatewayRedirectAuth` captures the
+  `?authToken=` the Gateway redirects back with, stores it in `authStore`
+  (`@tetherto/mdk-ui-foundation`), and refreshes it every 250 s. Requests carry
+  `Authorization: Bearer <token>`. `useTokenPolling` schedules the refresh; the
+  provider decides what counts as the session ending (401 or 500 here).
 - Each chart hook is one `useQuery` against `/auth/tail-log` with the
   appropriate `aggrFields`. The `select` projection unwraps the nested
   array — components never see raw HTTP shapes.
 - `useActiveIncidents` polls `/auth/list-things?query={"last.alerts":{"$ne":null}}`
-  every 20 s (matches Mining OS production cadence).
+  every 20 s (matches production polling cadence).
 - The whole authenticated tree sits inside `<RequireAuth fallback={<Navigate to="/signin" />}>`,
   so adding a new route is automatically auth-gated.
 

@@ -1,10 +1,5 @@
-import {
-  getRolesFromAuthToken,
-  type LiveAction,
-  liveActionsQuery,
-  type LiveActionsResponse,
-  USER_ROLE,
-} from '@tetherto/mdk-ui-foundation'
+import { getRolesFromAuthToken, type LiveAction, type LiveActionsResponse, USER_ROLE } from '@tetherto/mdk-ui-foundation'
+import { liveActionsQuery } from '@tetherto/mdk-ui-foundation/presets/mining'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo } from 'react'
 
@@ -66,15 +61,15 @@ export type LiveActionsData = {
  * `othersVoting` behind the `actions:w` permission.
  *
  * @remarks
- * **Prerequisite:** `/auth/actions` has no default Gateway provider; bring
- * your own [Gateway plugin](https://docs.tether.io/mdk/guides/gateway/plugins)
- * serving the voting/approval queue shape this hook expects (see the
+ * **Prerequisite:** `/auth/actions` has no default Gateway provider and no
+ * reference implementation ships in this repo; bring your own
+ * [Gateway plugin](https://docs.tether.io/mdk/guides/gateway/plugins) serving
+ * the voting/approval queue shape this hook expects (see the
  * [write-actions guide](https://docs.tether.io/mdk/guides/gateway/write-actions)).
  * This hook also calls `useCurrentUserEmail()` internally, which depends on
- * `/auth/userinfo` (also no default provider) to partition `[mine, others]`;
- * without it, every action is treated as "mine". See the
- * [full-site example](https://github.com/tetherto/mdk/tree/main/examples/full-site/plugins/site)
- * for a working reference covering both routes.
+ * `/auth/userinfo` to partition `[mine, others]` — see that hook's own
+ * `@remarks` for its real, shipped-but-unwired plugin; without it, every
+ * action is treated as "mine".
  *
  * @category dashboard
  */

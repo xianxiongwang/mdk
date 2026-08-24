@@ -1,7 +1,9 @@
-import { type TailLogEntry, tailLogQuery } from '@tetherto/mdk-ui-foundation'
+import type { TailLogEntry } from '@tetherto/mdk-ui-foundation'
+import { tailLogQuery } from '@tetherto/mdk-ui-foundation/presets/mining'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useAuthToken } from './use-auth-token'
 
-/* Container nominal capacity changes slowly — Mining OS pulls it from the
+/* Container nominal capacity changes slowly — the reference app pulls it from the
  * 5-minute tail-log aggregate, not the realtime stream. */
 const STAT_KEY = 'stat-5m'
 const CONTAINER_AGGR_FIELDS = JSON.stringify({
@@ -22,6 +24,8 @@ export type SiteContainerCapacity = {
 }
 
 export type UseSiteContainerCapacityOptions = {
+  /** Disable the query. Defaults to running whenever an auth token is present. */
+  enabled?: boolean
   /** Polling interval in ms. Defaults to 5min. Pass 0 to disable. */
   refetchInterval?: number
 }
@@ -32,12 +36,19 @@ export type UseSiteContainerCapacityOptions = {
  * Used as the "denominator" of the `<HeaderMinersBox />` row: e.g. the
  * `2,188` in `158 / 2,188`.
  *
+ * @remarks
+ * The `/auth/tail-log` endpoint is illustrative. MDK does not ship a built-in
+ * endpoint for it — create your own via a
+ * [Gateway plugin](https://docs.tether.io/mdk/guides/gateway/plugins) matching
+ * your Worker/business logic.
+ *
  * @category dashboard
  */
 export const useSiteContainerCapacity = (
   options: UseSiteContainerCapacityOptions = {},
 ): SiteContainerCapacity => {
   const queryClient = useQueryClient()
+  const token = useAuthToken()
   const factory = tailLogQuery(queryClient, {
     key: STAT_KEY,
     type: 'container',
@@ -48,6 +59,7 @@ export const useSiteContainerCapacity = (
 
   const { data, isLoading } = useQuery({
     ...factory,
+    enabled: options.enabled ?? !!token,
     refetchInterval: options.refetchInterval ?? 300_000,
   })
 

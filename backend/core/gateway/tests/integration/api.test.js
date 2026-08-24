@@ -36,7 +36,6 @@ test('Api', { timeout: 90000 }, async (main) => {
       debug: 0,
       site,
       featureConfig,
-      kernels: { 'cluster-1': { rpcPublicKey: '' } },
       cacheTiming: {}
     }
     fs.writeFileSync(`./${baseDir}/config/common.json`, JSON.stringify(commonConf))
@@ -56,8 +55,6 @@ test('Api', { timeout: 90000 }, async (main) => {
     })
 
     await worker.start()
-    // stub the RPC layer the telemetry plugin's dataProxy talks to
-    worker.worker.net_r0.jRequest = () => Promise.resolve({})
   }
 
   const getJson = async (url) => {
@@ -110,10 +107,10 @@ test('Api', { timeout: 90000 }, async (main) => {
     }
   })
 
-  await main.test('Api: telemetry plugin route via stubbed RPC', async (t) => {
+  await main.test('Api: telemetry history route without a kernel answers the zero shape', async (t) => {
     const api = `${gatewayBaseUrl}/auth/metrics/hashrate?start=1700000000000&end=1700086400000`
     const { body } = await getJson(api)
-    t.alike(body.log, [], 'should return empty log for stubbed RPC data')
+    t.alike(body.log, [], 'no kernel: empty log, not an error')
     t.is(body.summary.totalHashrateMhs, 0, 'should return zero total hashrate')
   })
 })

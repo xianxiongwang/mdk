@@ -55,23 +55,23 @@ test('createMcpServer - serves tools from a single plugin dir', async (t) => {
       name: '@test/mcp-plugin-echo',
       version: '1.0.0',
       tools: [
-        { id: 'echo', handler: './tools/echo.js', description: 'echoes the mdkClient marker' }
+        { id: 'echo', handler: './tools/echo.js', description: 'echoes the ambient config' }
       ]
     },
     'tools/echo.js': [
       '\'use strict\'',
+      'const { config } = require(\'@tetherto/mdk-mcp/plugin\')',
       'module.exports = {',
       '  schema: {},',
-      '  handler: async (args, services) => ({',
-      '    content: [{ type: \'text\', text: JSON.stringify({ sawClient: services.mdkClient === \'the-client\' }) }]',
+      '  handler: async (args) => ({',
+      '    content: [{ type: \'text\', text: JSON.stringify({ kernelKey: config.kernelKey, frozen: Object.isFrozen(config) }) }]',
       '  })',
       '}'
     ].join('\n')
   })
 
   const port = nextPort++
-  const client = 'the-client'
-  const httpServer = await createMcpServer(path.join(FIXTURES_DIR, 'root'), port, client, [dir])
+  const httpServer = await createMcpServer(path.join(FIXTURES_DIR, 'root'), port, { kernelKey: 'the-key' }, [dir])
   t.teardown(() => new Promise((resolve) => httpServer.close(resolve)))
 
   const mcpClient = await connectClient(port)
@@ -80,11 +80,12 @@ test('createMcpServer - serves tools from a single plugin dir', async (t) => {
   const { tools } = await mcpClient.listTools()
   t.is(tools.length, 1, 'should list one tool')
   t.is(tools[0].name, 'echo', 'should have the tool id as name')
-  t.is(tools[0].description, 'echoes the mdkClient marker', 'should have the tool description')
+  t.is(tools[0].description, 'echoes the ambient config', 'should have the tool description')
 
   const result = await mcpClient.callTool({ name: 'echo', arguments: {} })
   const payload = JSON.parse(result.content[0].text)
-  t.ok(payload.sawClient, 'handler should receive the mdkClient passed to createMcpServer')
+  t.is(payload.kernelKey, 'the-key', 'handler should read the config passed to createMcpServer')
+  t.is(payload.frozen, true, 'config should arrive frozen')
   t.pass()
 })
 
@@ -221,10 +222,8 @@ test('createMcpServer - transport failure is logged and responds 500', async (t)
   t.pass()
 })
 
-test('createMcpServer - SIGINT/SIGTERM handler closes the client and http server, then exits', async (t) => {
+test('createMcpServer - SIGINT/SIGTERM handler closes the http server, then exits', async (t) => {
   const port = nextPort++
-  let clientClosed = false
-  const client = { close: async () => { clientClosed = true } }
 
   const originalOnce = process.once
   const handlers = {}
@@ -235,7 +234,7 @@ test('createMcpServer - SIGINT/SIGTERM handler closes the client and http server
 
   let httpServer
   try {
-    httpServer = await createMcpServer(path.join(FIXTURES_DIR, 'root'), port, client, [])
+    httpServer = await createMcpServer(path.join(FIXTURES_DIR, 'root'), port, {}, [])
   } finally {
     process.once = originalOnce
   }
@@ -249,10 +248,105 @@ test('createMcpServer - SIGINT/SIGTERM handler closes the client and http server
   t.teardown(() => { process.exit = originalExit })
 
   const closed = new Promise((resolve) => httpServer.once('close', resolve))
-  await handlers.SIGINT()
+  handlers.SIGINT()
   await closed
 
-  t.ok(clientClosed, 'shutdown should close the mdk client')
   t.is(exitCode, 0, 'shutdown should exit 0 once the http server has closed')
+  t.pass()
+})
+
+test('createMcpServer - agent metadata reaches the client under _meta', async (t) => {
+  const dir = path.join(FIXTURES_DIR, 'agent-meta')
+  const agent = {
+    enabled: true,
+    answers: 'how many devices match a family and state',
+    useWhen: ['how many miners are online', 'number of offline containers'],
+    notFor: ['listing them'],
+    returns: 'a count with a one-line summary',
+    minCapability: 'small'
+  }
+  writeFixture(dir, {
+    'mcp-plugin.json': {
+      name: '@test/mcp-plugin-agent-meta',
+      version: '1.0.0',
+      tools: [{
+        id: 'count_devices',
+        handler: './tools/count.js',
+        description: 'counts devices',
+        annotations: { readOnlyHint: true },
+        agent
+      }]
+    },
+    'tools/count.js': '\'use strict\'\nmodule.exports = { schema: {}, handler: async () => ({ content: [{ type: \'text\', text: \'1\' }] }) }'
+  })
+
+  const port = nextPort++
+  const httpServer = await createMcpServer(path.join(FIXTURES_DIR, 'root'), port, {}, [dir])
+  t.teardown(() => new Promise((resolve) => httpServer.close(resolve)))
+
+  const mcpClient = await connectClient(port)
+  t.teardown(() => mcpClient.close())
+
+  const { tools } = await mcpClient.listTools()
+  t.alike(tools[0]._meta['x-mdk-agent'], agent, 'the whole agent block should survive the round trip')
+  t.is(tools[0].annotations.readOnlyHint, true, 'declared MCP hints should survive too')
+  t.pass()
+})
+
+test('createMcpServer - a tool without agent metadata is unchanged', async (t) => {
+  const dir = path.join(FIXTURES_DIR, 'no-agent-meta')
+  writeFixture(dir, {
+    'mcp-plugin.json': {
+      name: '@test/mcp-plugin-plain',
+      version: '1.0.0',
+      tools: [{ id: 'plain', handler: './tools/plain.js', description: 'no metadata' }]
+    },
+    'tools/plain.js': '\'use strict\'\nmodule.exports = { schema: {}, handler: async () => ({ content: [{ type: \'text\', text: \'ok\' }] }) }'
+  })
+
+  const port = nextPort++
+  const httpServer = await createMcpServer(path.join(FIXTURES_DIR, 'root'), port, {}, [dir])
+  t.teardown(() => new Promise((resolve) => httpServer.close(resolve)))
+
+  const mcpClient = await connectClient(port)
+  t.teardown(() => mcpClient.close())
+
+  const { tools } = await mcpClient.listTools()
+  t.is(tools[0].name, 'plain', 'should still serve the tool')
+  t.is(tools[0]._meta, undefined, 'should not add an empty _meta')
+  t.is(tools[0].annotations, undefined, 'should not add empty annotations')
+
+  const result = await mcpClient.callTool({ name: 'plain', arguments: {} })
+  t.is(result.content[0].text, 'ok', 'should still dispatch to the handler')
+  t.pass()
+})
+
+test('createMcpServer - metadata put in annotations does NOT reach the client', async (t) => {
+  // Why the contract lives in _meta. If this ever stops holding, annotations becomes viable too.
+  const dir = path.join(FIXTURES_DIR, 'meta-in-annotations')
+  writeFixture(dir, {
+    'mcp-plugin.json': {
+      name: '@test/mcp-plugin-wrong-carrier',
+      version: '1.0.0',
+      tools: [{
+        id: 'wrong_carrier',
+        handler: './tools/w.js',
+        description: 'declares its contract in the wrong field',
+        annotations: { readOnlyHint: true, 'x-mdk-agent': { enabled: true } }
+      }]
+    },
+    'tools/w.js': '\'use strict\'\nmodule.exports = { schema: {}, handler: async () => ({ content: [{ type: \'text\', text: \'ok\' }] }) }'
+  })
+
+  const port = nextPort++
+  const httpServer = await createMcpServer(path.join(FIXTURES_DIR, 'root'), port, {}, [dir])
+  t.teardown(() => new Promise((resolve) => httpServer.close(resolve)))
+
+  const mcpClient = await connectClient(port)
+  t.teardown(() => mcpClient.close())
+
+  const { tools } = await mcpClient.listTools()
+  t.is(tools[0].annotations['x-mdk-agent'], undefined, 'the SDK strips it — this is the bug _meta avoids')
+  t.is(tools[0].annotations.readOnlyHint, true, 'while the declared hint beside it survives')
   t.pass()
 })

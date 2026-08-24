@@ -11,7 +11,7 @@
 
 import { authStore } from '../store/auth-store'
 import { MdkFetchError } from '../types/api-mining.types'
-import type { Fetcher } from './factories'
+import type { Fetcher } from './runtime'
 
 const TOKEN_GETTER_DEFAULT = (): string | null => authStore.getState().token
 

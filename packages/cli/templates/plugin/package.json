@@ -1,0 +1,14 @@
+{
+  "name": "__PLUGIN_NAME__",
+  "version": "0.7.0",
+  "private": true,
+  "description": "MDK Gateway Plugin (manifest + controllers). Loaded by the Gateway via `mdk run gateway` — it serves HTTP endpoints that aggregate worker telemetry over the MDK protocol.",
+  "keywords": [
+    "mdk",
+    "mdk-plugin"
+  ],
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=24"
+  }
+}

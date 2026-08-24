@@ -1,5 +1,7 @@
 'use strict'
 
-module.exports = async function featureConfig (req, services) {
-  return services.conf.featureConfig
+const { config } = require('@tetherto/mdk-gateway/plugin')
+
+module.exports = async function featureConfig (req) {
+  return config.featureConfig
 }

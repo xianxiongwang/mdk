@@ -96,8 +96,15 @@ async function mapPool (pool, mdkClient) {
 
 // Live site snapshot — all containers with linked miners, site power from the
 // powermeter, sensors, and pools — all sourced via mdkClient over the RPC listener.
-module.exports = async function overview (req, services) {
-  const { byFamily, pools } = await loadSite(services.mdkClient, { status: true })
+//
+// `ctx` is a test-only seam: a real gateway route call always passes just
+// `req`, so this falls through to the plugin's own ambient client
+// (lib/client.js, lazily required so this file stays requirable outside a
+// plugin load — see @tetherto/mdk-gateway/plugin). Tests pass `{ mdkClient }`
+// directly instead of loading the plugin.
+module.exports = async function overview (req, ctx) {
+  const mdkClient = ctx === undefined ? require('../lib/client') : ctx.mdkClient
+  const { byFamily, pools } = await loadSite(mdkClient, { status: true })
 
   const minerThings = byFamily.miner || []
   const containerThings = byFamily.container || []
@@ -176,7 +183,7 @@ module.exports = async function overview (req, services) {
   const sitePower = aggregateSiteMeters(siteMeters)
   const powermeters = siteMeters.map(mapPowermeter).sort((a, b) => a.label.localeCompare(b.label))
 
-  const poolData = (await Promise.all(pools.map((p) => mapPool(p, services.mdkClient))))
+  const poolData = (await Promise.all(pools.map((p) => mapPool(p, mdkClient))))
     .filter(Boolean)
     .sort((a, b) => a.poolType.localeCompare(b.poolType))
 

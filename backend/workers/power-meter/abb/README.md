@@ -31,7 +31,7 @@ const worker = await startAbbWorker({
   model: 'b23',
   storeDir: './store/abb-rack-1',
   seedDevices: [{
-    info: { serialNum: 'ABB-A', container: 'container-A', location: 'site-texas-01.container' },
+    info: { serialNum: 'ABB-A', container: 'container-A', location: 'site-a-01.container' },
     opts: {
       address: '192.168.1.150',
       port: 502,          // Modbus TCP default port

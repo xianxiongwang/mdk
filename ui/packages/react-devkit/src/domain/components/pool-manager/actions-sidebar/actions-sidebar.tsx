@@ -243,7 +243,7 @@ const DraftsSection = ({
 // ---------------------------------------------------------------------------
 
 /**
- * Full-height side panel for the MiningOS voting/approval workflow.
+ * Full-height side panel for the reference app voting/approval workflow.
  *
  * Three sections (only rendered when non-empty):
  * - **Draft** — locally-staged actions not yet sent to the server.

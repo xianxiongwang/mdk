@@ -3,6 +3,20 @@
 A minimal, single-container mining site demo: Kernel, Gateway, Whatsminer
 worker, Ocean pool worker, SATEC powermeter worker, and the MDK React UI.
 
+## What you get
+
+- **Kernel + Gateway** — the orchestration layer and its HTTP API, on `:3000`
+- **Whatsminer worker** — mock miners, seeded from `config/devices.json`
+- **Ocean pool worker** — mock pool stats on a fast demo-paced tick
+- **SATEC powermeter worker** — mock power readings, scaled to the seeded miner count
+- **MDK React UI** — Dashboard, Containers, Monitoring, Pools, and Control pages, served
+  from the Gateway
+- **Two MCP surfaces** — the Gateway auto-exposes its own routes as tools, and a second,
+  hand-authored tool set ([`backend/mcp-plugins/site`](./backend/mcp-plugins/site/)) with agent-contract metadata and curated
+  granularity the auto-exported routes can't provide. Both listed in
+  [`.mcp.json.example`](./.mcp.json.example).
+- **Independent processes** — every component above runs as its own PM2-supervised OS process
+
 ## Prerequisites
 
 - Node.js >= 24
@@ -19,69 +33,14 @@ npm run setup:config
 # installs backend/core, backend/workers, this example + its UI
 ```
 
-## Seed devices
-
-`config/devices.json` is gitignored (local/per-dev config). It is an object
-keyed by device type — `miners` feed the Whatsminer worker, `powermeters` the
-SATEC worker. Copy `config/devices.json.example` and adjust:
-
-```json
-{
-  "miners": [
-    {"info": { "serialNum": "WM-001", "container": "rack-1" }, "opts": { "address": "127.0.0.1", "port": null, "password": "admin" }},
-    {"info": { "serialNum": "WM-002", "container": "rack-1" }, "opts": { "address": "127.0.0.1", "port": null, "password": "admin" }}
-  ],
-  "powermeters": [
-    {"info": { "serialNum": "SATEC-001", "pos": "site" }, "opts": { "address": "127.0.0.1", "port": null, "unitId": 1 }}
-  ]
-}
-```
-
-Leave `opts.port` as `null` — each device is assigned its own mock port
-automatically (miners from `mocks.portBase`, `14031` by default; powermeters
-from `satec.mocks.portBase`, `15020` by default, in `config/site.deploy.json`).
-
-To register **real devices**, set each entry's `opts.address`/`opts.port` to
-the device's LAN address — Whatsminer API port (usually `4028`) for miners,
-Modbus TCP address/port/`unitId` for SATEC PM180 meters. Keep `info.pos`
-`"site"` on powermeters you want aggregated into the site power figures.
-
-## Pool config (Ocean)
-
-The Ocean pool is not a LAN device — its config lives in
-`config/site.deploy.json` under `ocean`:
-
-- `ocean.pool.apiUrl` — the pool REST API. Defaults to the local mock
-  (`http://127.0.0.1:8010`). To go live, point it at the real Ocean API and
-  remove the `mocks-ocean` role from `pm2.roles`.
-- `ocean.pool.accounts` — the pool account username(s) to track. Replace
-  `sample-ocean-account` with your account(s) to go live.
-- `ocean.worker.tickMs` — demo pacer interval; stats refresh this often.
-
-## SATEC config
-
-`config/site.deploy.json` under `satec`:
-
-- `satec.worker.thing` — snap collection/persist cadence (demo-fast, 5s).
-- `satec.mocks.portBase` / `satec.mocks.powerW` — Modbus mock ports and the
-  power figure the mock reports. Going live, remove the `mocks-satec` role
-  from `pm2.roles` and point the `powermeters` entries in
-  `config/devices.json` at the real meters.
-
-## Run
-
-The components — device mocks (`mocks`, `mocks-ocean`, `mocks-satec`), Kernel,
-workers (`worker` = Whatsminer, `worker-ocean`, `worker-satec`), Gateway, and
-MCP — run as independent, PM2-supervised OS processes. Their topology (ports,
-discovery mode, plugin/static dirs, and the roles PM2 should run) is defined
-in `config/site.deploy.json`.
+## Start the site
 
 ```bash
 npm start
 ```
 
-`start.js` generates `deploy/ecosystem.config.js` from
-`config/site.deploy.json`, starts the PM2 apps, then exits — PM2 itself keeps
+[`start.js`](./start.js) generates a local `deploy/ecosystem.config.js` (not committed) from
+[`config/site.deploy.json`](./config/site.deploy.json.example), starts the PM2 apps, then exits — PM2 itself keeps
 the processes running in the background.
 
 ```bash
@@ -90,7 +49,8 @@ pm2 logs
 ```
 
 Once `pm2 list` shows all apps `online`, open `http://localhost:3000/`.
-Stop with:
+
+## Stop the site
 
 ```bash
 npm run stop:pm2
@@ -119,15 +79,68 @@ Rebuild the static bundle the Gateway serves with:
 npm run build:ui
 ```
 
-## Resetting state
+## Configure devices
+
+### Seed devices
+
+`config/devices.json` is gitignored (local/per-dev config). It is an object
+keyed by device type — `miners` feed the Whatsminer worker, `powermeters` the
+SATEC worker. Copy [`config/devices.json.example`](./config/devices.json.example) and adjust:
+
+```json
+{
+  "miners": [
+    {"info": { "serialNum": "WM-001", "container": "rack-1" }, "opts": { "address": "127.0.0.1", "port": null, "password": "admin" }},
+    {"info": { "serialNum": "WM-002", "container": "rack-1" }, "opts": { "address": "127.0.0.1", "port": null, "password": "admin" }}
+  ],
+  "powermeters": [
+    {"info": { "serialNum": "SATEC-001", "pos": "site" }, "opts": { "address": "127.0.0.1", "port": null, "unitId": 1 }}
+  ]
+}
+```
+
+Leave `opts.port` as `null` — each device is assigned its own mock port
+automatically (miners from `mocks.portBase`, `14031` by default; powermeters
+from `satec.mocks.portBase`, `15020` by default, in `config/site.deploy.json`).
+
+To register **real devices**, set each entry's `opts.address`/`opts.port` to
+the device's LAN address — Whatsminer API port (usually `4028`) for miners,
+Modbus TCP address/port/`unitId` for SATEC PM180 meters. Keep `info.pos`
+`"site"` on powermeters you want aggregated into the site power figures.
+
+### Pool config (Ocean)
+
+The Ocean pool is not a LAN device — its config lives in
+`config/site.deploy.json` under `ocean`:
+
+- `ocean.pool.apiUrl` — the pool REST API. Defaults to the local mock
+  (`http://127.0.0.1:8010`). To go live, point it at the real Ocean API and
+  remove the `mocks-ocean` role from `pm2.roles`.
+- `ocean.pool.accounts` — the pool account username(s) to track. Replace
+  `sample-ocean-account` with your account(s) to go live.
+- `ocean.worker.tickMs` — demo pacer interval; stats refresh this often.
+
+### SATEC config
+
+`config/site.deploy.json` under `satec`:
+
+- `satec.worker.thing` — snap collection/persist cadence (demo-fast, 5s).
+- `satec.mocks.portBase` — Modbus mock ports. By default the reported power
+  scales with the number of miners seeded in `config/devices.json` (split
+  evenly across however many `powermeters` entries you configure); set
+  `satec.mocks.powerW` to override with a fixed figure instead. Going live,
+  remove the `mocks-satec` role from `pm2.roles` and point the `powermeters`
+  entries in `config/devices.json` at the real meters.
+
+## Reset state
 
 Seed devices are only registered **once**, when a worker's store is
-empty. If you change `config/devices.json` (miners or powermeters) after the
+empty. If you change [`config/devices.json`](./config/devices.json.example) (miners or powermeters) after the
 first run, clear state before restarting:
 
 ```bash
 npm run stop:pm2
-rm -rf examples/mvp-site/.site-data
+rm -rf .site-data
 ```
 
 ## Troubleshooting
@@ -140,7 +153,8 @@ rm -rf examples/mvp-site/.site-data
 Error: Invalid device file, was moved unsafely
 ```
 
-**Cause**: The `.site-data` directory contains RocksDB files with embedded path metadata from a previous location. This happens when the repo is moved, copied, cloned to a new location, or when switching between multiple clones of the same repo.
+**Cause**: The `.site-data` directory contains RocksDB files with embedded path metadata from a previous location. This happens when the repo is 
+moved, copied, cloned to a new location, or when switching between multiple clones of the same repo.
 
 **Fix**: Remove the persisted state directory:
 
@@ -163,7 +177,8 @@ lsof -nP -iTCP:8010   # Ocean mock
 lsof -nP -iTCP:15020  # SATEC mock
 ```
 
-Miner mock ports start at `14031`. If another example (e.g., `examples/full-site`) or a previous run left processes running, stop them first or edit `config/site.deploy.json` to use different ports.
+Miner mock ports start at `14031`. If another example (e.g., [`examples/full-site`](../full-site/README.md)) or a previous run left processes
+running, stop them first or edit [`config/site.deploy.json`](./config/site.deploy.json.example) to use different ports.
 
 **Fix**: Stop stale PM2 processes:
 

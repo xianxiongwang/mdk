@@ -27,10 +27,11 @@ const DEFAULT_SORTING: DataTableSortingState = [
 
 export type CurrentAlertsProps = {
   /**
-   * Raw devices (with last.alerts) used to derive current alerts from.
+   * Devices carrying alerts (`last.alerts`), as a flat list. Unwrapping any
+   * backend envelope is the data layer's job, not this component's.
    * Shape mirrors the API response from the source app.
    */
-  devices?: Device[][]
+  devices?: Device[]
   isLoading?: boolean
 
   /**
@@ -127,7 +128,7 @@ export const CurrentAlerts = ({
 
   const alerts = useMemo<AlertTableRecord[]>(
     () =>
-      getCurrentAlerts((devices ?? []) as Device[][], {
+      getCurrentAlerts(devices ?? [], {
         filterTags,
         localFilters,
         onAlertClick: (id, uuid) => onAlertClick?.(id, uuid),

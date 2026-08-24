@@ -5,19 +5,21 @@ const { build } = require('../kernel/lib/protocol/envelope')
 const { ACTIONS, MESSAGE_TYPES } = require('../kernel/lib/protocol/actions')
 
 /**
- * createMdkClient
+ * createRawMdkClient
  *
- * Factory for an MDK protocol client. Opens a persistent connection to a Kernel
- * listener and exposes typed request helpers for every Gateway → Kernel action
- * defined in the MDK protocol. Transport is the RPC listener (HRPC) over
- * Hyperswarm: `opts.hrpc = { key }`.
+ * Low-level factory for an MDK protocol client. Opens a persistent connection
+ * to a Kernel listener and exposes typed request helpers for every
+ * Gateway → Kernel action defined in the MDK protocol. Transport is the RPC
+ * listener (HRPC) over Hyperswarm: `opts.hrpc = { key }`. The caller owns the
+ * lifecycle: call connect() before the first request. Most consumers want
+ * createMdkClient instead, which connects itself.
  *
  * @param {object} opts
  * @param {object} [opts.hrpc]     - HRPC transport opts ({ key, seed?, bootstrap?, dht?, rpc? })
  * @param {object} [opts.transport] - Pre-built transport ({ connect, close, request }); test seam
  * @returns {object} Client with connect/close and action methods
  */
-function createMdkClient (opts) {
+function createRawMdkClient (opts) {
   const transport = _createTransport(opts)
 
   function request (action, payload, deviceId) {
@@ -152,6 +154,23 @@ function createMdkClient (opts) {
       }
     },
 
+    // Worker-scoped telemetry pull (logs, logs_multi, list, stats, ext_data —
+    // the worker-infra queries that aggregate over a worker's own store rather
+    // than one device). Same key-resolve/short-lived-client shape as
+    // sendWorkerCommand; resolves with the bare telemetry payload.
+    async pullWorkerTelemetry (workerId, query, { hrpc = {} } = {}) {
+      const key = await client.getWorkerKey(workerId)
+      if (!key) throw new Error('ERR_MDK_WORKER_KEY_UNKNOWN')
+      const wc = createWorkerClient(key, hrpc)
+      await wc.connect()
+      try {
+        const res = await wc.pullTelemetry(null, query)
+        return res && res.payload !== undefined ? res.payload : res
+      } finally {
+        await wc.close()
+      }
+    },
+
     terminateWorker (workerId) {
       return request(ACTIONS.WORKER_TERMINATE, { workerId })
     },
@@ -191,7 +210,76 @@ function createMdkClient (opts) {
 // A client bound directly to a worker by its RPC public key — same surface as
 // the Kernel client, for ops the worker adapter handles directly.
 function createWorkerClient (rpcKey, hrpcOpts = {}) {
-  return createMdkClient({ hrpc: { key: rpcKey, ...hrpcOpts } })
+  return createRawMdkClient({ hrpc: { key: rpcKey, ...hrpcOpts } })
+}
+
+/**
+ * createMdkClient
+ *
+ * The client most consumers want: instantiate once from an ambient plugin
+ * config ({ kernelKey, kernelBootstrap }) and call action methods directly —
+ * `mdkClient.listWorkers()` — like any connection-pooling DB client. The
+ * first call connects (memoized); a failed connect resets the memo so the
+ * next request retries. A host booted without a reachable Kernel keeps its
+ * routes up and fails per request with `opts.errorCode`
+ * (default ERR_MDK_CLIENT_UNAVAILABLE).
+ *
+ * connect() is optional (explicit warm-up); close() tears the connection
+ * down and lets a later call reconnect.
+ *
+ * @param {object} config - Ambient plugin config; reads kernelKey/kernelBootstrap
+ * @param {object} [opts]
+ * @param {string} [opts.errorCode]  - ERR_ code for missing key / failed connect
+ * @param {object} [opts.transport]  - Pre-built transport; test seam
+ * @returns {object} Auto-connecting client with the raw client's surface
+ */
+function createMdkClient (config = {}, opts = {}) {
+  const errCode = opts.errorCode || 'ERR_MDK_CLIENT_UNAVAILABLE'
+  const raw = opts.transport
+    ? createRawMdkClient({ transport: opts.transport })
+    : config.kernelKey
+      ? createRawMdkClient({
+        hrpc: {
+          key: config.kernelKey,
+          ...(config.kernelBootstrap ? { bootstrap: config.kernelBootstrap } : {})
+        }
+      })
+      : null
+
+  let connecting = null
+
+  const ensure = (connectOpts) => {
+    if (!raw) return Promise.reject(new Error(errCode))
+    if (!connecting) {
+      connecting = raw.connect(connectOpts).then(() => raw, (err) => {
+        connecting = null
+        throw new Error(`${errCode}: ${err.message}`)
+      })
+    }
+    return connecting
+  }
+
+  // Every method access resolves against the connected raw client, so the
+  // connection is established exactly once, on first use — `then` must stay
+  // undefined or awaiting the client itself would treat it as a thenable.
+  return new Proxy({}, {
+    get (_target, prop) {
+      if (typeof prop !== 'string' || prop === 'then') return undefined
+      if (prop === 'connect') return (connectOpts) => ensure(connectOpts).then(() => undefined)
+      if (prop === 'close') {
+        return async () => {
+          if (!raw || !connecting) return
+          connecting = null
+          await raw.close()
+        }
+      }
+      return async (...args) => {
+        const client = await ensure()
+        if (typeof client[prop] !== 'function') throw new Error(`ERR_MDK_CLIENT_NO_SUCH_METHOD: ${prop}`)
+        return client[prop](...args)
+      }
+    }
+  })
 }
 
 function _createTransport (opts) {
@@ -213,4 +301,4 @@ function _withTimeout (promise, ms, errCode) {
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timer))
 }
 
-module.exports = { createMdkClient, createWorkerClient }
+module.exports = { createMdkClient, createRawMdkClient, createWorkerClient }

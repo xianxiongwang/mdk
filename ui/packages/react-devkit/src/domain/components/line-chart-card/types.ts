@@ -7,7 +7,11 @@ export type LineChartCardDataset = {
   label?: string
   /** Line color */
   borderColor: string
-  /** Data points */
+  /**
+   * Data points. `x` is a Unix timestamp in **milliseconds** — `LineChart`
+   * divides it by 1000 to derive the lightweight-charts `UTCTimestamp`.
+   * `y` is `null` to render a gap.
+   */
   data: Array<{ x: number; y: number | null }>
   /** Whether this dataset is visible */
   visible?: boolean

@@ -61,6 +61,22 @@ export default antfu(
     },
   },
   {
+    /**
+     * Nested *shipped* source has to use relative imports.
+     *
+     * The `@/` alias only exists in each package's `tsconfig` paths and vitest
+     * resolver — `tsc` does not rewrite it, so an alias in a file that ends up in
+     * `dist/` is emitted verbatim and every consumer fails to resolve it. The
+     * rule above is safe for tests and for the flat directories it was written
+     * against; it is wrong for source nested two or more levels deep.
+     */
+    files: ['packages/ui-foundation/src/presets/**'],
+    ignores: ['packages/ui-foundation/src/presets/**/specs/**'],
+    rules: {
+      'ts/no-restricted-imports': 'off',
+    },
+  },
+  {
     rules: {
       'ts/no-redeclare': 'off',
       'ts/explicit-function-return-type': 'off',

@@ -7,7 +7,7 @@ export const formatBtcRevenue = (value: number | undefined): string => {
 }
 
 /**
- * Display PH/s when ≥ 1, otherwise TH/s. Matches the Mining OS mining-pools
+ * Display PH/s when ≥ 1, otherwise TH/s. Matches the reference app mining-pools
  * table which switches units row-by-row so partial-PH lines stay readable.
  */
 export const formatHashrate = (phs: number | undefined): string => {

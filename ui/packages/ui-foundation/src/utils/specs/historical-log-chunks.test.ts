@@ -5,7 +5,7 @@ import {
   mergeAlertsByUuid,
   type TimeInterval,
 } from '../historical-log-chunks'
-import { ONE_DAY_MS } from '../alert-queries'
+import { ONE_DAY_MS } from '@/constants/time-constants'
 
 describe('breakTimeIntoIntervals', () => {
   it('splits a 3-day range into three 24h windows clamped to end', () => {

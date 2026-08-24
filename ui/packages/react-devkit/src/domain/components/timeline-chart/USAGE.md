@@ -24,6 +24,6 @@ legend. Supports streaming updates via `newData`.
 
 ## Data contracts
 
-`TimelineChartData` lives in `timeline-chart.types.ts`. Each dataset has a
+`TimelineChartData` lives in [`timeline-chart.types.ts`](./timeline-chart.types.ts). Each dataset has a
 `label` plus a list of `{ x: [startMs, endMs], y, mode }` items where `mode`
 maps to a category color in the legend.

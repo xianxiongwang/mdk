@@ -35,7 +35,7 @@ const worker = await startWhatsminerWorker({
       serialNum: 'WM56S-001',
       container: 'container-A',
       pos: 'A1',
-      location: 'site-texas-01.container'
+      location: 'site-a-01.container'
     },
     opts: {
       address: '192.168.1.10',
@@ -123,7 +123,7 @@ Plus the standard device management commands: `registerThing`, `updateThing`, `f
 
 The package ships a mock TCP server that simulates the Whatsminer API v2 protocol. Examples bind it to `14028`
 rather than the real v2 default (`4028`) so it doesn't collide with the Avalon mock, which binds its own real
-default (`4028`); `examples/full-site` runs both simultaneously. Pick any free port for standalone use.
+default (`4028`); [`examples/full-site`](../../../../examples/full-site/README.md) runs both simultaneously. Pick any free port for standalone use.
 
 ```js
 const wmMock = require('@tetherto/mdk-worker-whatsminer/mock/server')

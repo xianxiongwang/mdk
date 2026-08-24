@@ -33,19 +33,19 @@ node examples/backend/sensors/seneca/index.js     # from the repo root
 ```
 
 You'll see the registered device id and `Press Ctrl+C to stop`. To customise the port, serial or
-Modbus register, edit the constants at the top of `index.js`.
+Modbus register, edit the constants at the top of [`index.js`](./index.js).
 
 ## Inspect over HRPC with `hp-rpc-cli`
 
-`index.js` prints the Kernel key, device ID, and a ready-to-paste telemetry command. The shared
+[`index.js`](./index.js) prints the Kernel key, device ID, and a ready-to-paste telemetry command. The shared
 [`hp-rpc-cli` inspection guide](../../inspect-over-hrpc.md) covers Worker listing, telemetry pulls,
 other actions, and troubleshooting.
 
 ## How it works
 
-`index.js`:
+[`index.js`](./index.js):
 
-1. Starts the mock Seneca sensor (`backend/workers/temperature/seneca/mock/server`).
+1. Starts the mock Seneca sensor ([`backend/workers/temperature/seneca/mock/server.js`](../../../../backend/workers/temperature/seneca/mock/server.js)).
 2. Brings up a Kernel (HRPC only) pinned to its own store root (`$TMPDIR/mdk-site-seneca/kernel/`).
 3. `startSenecaWorker({ workerId, storeDir, seedDevices })`, then `kernel.registerWorker(worker.runtime.getPublicKey())`.
 4. Prints an `hp-rpc-cli` command and stays running until `Ctrl+C`, which tears down the Worker and
@@ -58,7 +58,6 @@ other actions, and troubleshooting.
 ```
 examples/backend/sensors/seneca/
 ├── README.md
-├── package.json
 ├── index.js                      # Kernel + Seneca Worker + mock + registration
 └── .gitignore
 ```
@@ -74,7 +73,7 @@ $TMPDIR/mdk-site-seneca/kernel/      # Kernel Corestore
 | Issue | Fix |
 |---|---|
 | `Cannot find module ...` | Run `npm run setup:workers` from the repo root. |
-| `EADDRINUSE :::5050` | A previous run is still bound. `Ctrl+C` it, or change `PORT` in `index.js`. |
+| `EADDRINUSE :::5050` | A previous run is still bound. `Ctrl+C` it, or change `PORT` in [`index.js`](./index.js). |
 | `Corruption: ... MANIFEST-*` | Stale store from a `kill -9`. Delete `$TMPDIR/mdk-site-seneca/` and retry. |
 
 ## Related

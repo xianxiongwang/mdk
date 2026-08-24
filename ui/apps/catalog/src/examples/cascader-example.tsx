@@ -6,47 +6,47 @@ import { useState } from 'react'
 import type { JSX } from 'react'
 
 export const CascaderExample = (): JSX.Element => {
-  const [singleValue, setSingleValue] = useState<CascaderValue>(['china', 'beijing'])
+  const [singleValue, setSingleValue] = useState<CascaderValue>(['site-a', 'container-a1'])
 
   const locationOptions: CascaderOption[] = [
     {
-      value: 'china',
-      label: 'China',
+      value: 'site-a',
+      label: 'Site A',
       children: [
-        { value: 'beijing', label: 'Beijing' },
-        { value: 'shanghai', label: 'Shanghai' },
-        { value: 'guangzhou', label: 'Guangzhou' },
-        { value: 'shenzhen', label: 'Shenzhen' },
+        { value: 'container-a1', label: 'Container A1' },
+        { value: 'container-a2', label: 'Container A2' },
+        { value: 'container-a3', label: 'Container A3' },
+        { value: 'container-a4', label: 'Container A4' },
       ],
     },
     {
-      value: 'usa',
-      label: 'United States',
+      value: 'site-b',
+      label: 'Site B',
       children: [
-        { value: 'newyork', label: 'New York' },
-        { value: 'california', label: 'California' },
-        { value: 'texas', label: 'Texas' },
-        { value: 'florida', label: 'Florida' },
+        { value: 'container-b1', label: 'Container B1' },
+        { value: 'container-b2', label: 'Container B2' },
+        { value: 'container-b3', label: 'Container B3' },
+        { value: 'container-b4', label: 'Container B4' },
       ],
     },
     {
-      value: 'uk',
-      label: 'United Kingdom',
+      value: 'site-c',
+      label: 'Site C',
       children: [
-        { value: 'london', label: 'London' },
-        { value: 'manchester', label: 'Manchester' },
-        { value: 'birmingham', label: 'Birmingham' },
-        { value: 'liverpool', label: 'Liverpool' },
+        { value: 'container-c1', label: 'Container C1' },
+        { value: 'container-c2', label: 'Container C2' },
+        { value: 'container-c3', label: 'Container C3' },
+        { value: 'container-c4', label: 'Container C4' },
       ],
     },
     {
-      value: 'germany',
-      label: 'Germany',
+      value: 'site-d',
+      label: 'Site D',
       children: [
-        { value: 'berlin', label: 'Berlin' },
-        { value: 'munich', label: 'Munich' },
-        { value: 'hamburg', label: 'Hamburg' },
-        { value: 'frankfurt', label: 'Frankfurt' },
+        { value: 'container-d1', label: 'Container D1' },
+        { value: 'container-d2', label: 'Container D2' },
+        { value: 'container-d3', label: 'Container D3' },
+        { value: 'container-d4', label: 'Container D4' },
       ],
     },
   ]
@@ -159,7 +159,7 @@ export const CascaderExample = (): JSX.Element => {
   ]
 
   const [emptyValue, setEmptyValue] = useState<CascaderValue[]>([])
-  const [disabledValue] = useState<CascaderValue>(['china', 'beijing'])
+  const [disabledValue] = useState<CascaderValue>(['site-a', 'container-a1'])
 
   return (
     <section className="demo-section">
@@ -174,8 +174,8 @@ export const CascaderExample = (): JSX.Element => {
             <span>Single</span>
           </div>
           <p>
-            Basic single selection with radio buttons. Select a country from the left panel, then
-            choose a city from the right panel. The selected value is stored as a path array.
+            Basic single selection with radio buttons. Select a site from the left panel, then
+            choose a container from the right panel. The selected value is stored as a path array.
           </p>
 
           <div style={{ width: '30%' }}>

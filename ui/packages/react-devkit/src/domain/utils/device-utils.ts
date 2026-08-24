@@ -8,17 +8,7 @@ import {
   UNIT_LABELS,
   UNITS,
 } from '@primitives'
-import {
-  appendContainerToTag,
-  appendIdToTag,
-  appendIdToTags,
-  isAntminer,
-  isAvalon,
-  isContainer,
-  isMiner,
-  isWhatsminer,
-  removeContainerPrefix,
-} from '@tetherto/mdk-ui-foundation'
+import { appendContainerToTag, appendIdToTag, appendIdToTags, isAntminer, isAvalon, isContainer, isMiner, isWhatsminer, removeContainerPrefix } from '@tetherto/mdk-ui-foundation/presets/mining'
 import _capitalize from 'lodash/capitalize'
 import _find from 'lodash/find'
 import _get from 'lodash/get'

@@ -30,9 +30,9 @@ Pick this blueprint when the user wants the canonical Pool Manager view
 from a mining operator UI — the dashboard landing with pool stats,
 a collapsible pool list with add/edit flows, a miner assignment
 explorer, and a sites-overview grid — all wired to the real
-MiningOS backend and supporting multi-operator approval workflows.
+reference app backend and supporting multi-operator approval workflows.
 
-The blueprint recreates the behaviour of the `the reference app` Pool Manager
+The blueprint recreates the behaviour of the reference app Pool Manager
 using only MDK components and hooks. The single `<PoolManager>` feature
 composes all four sub-views and owns the internal routing; the page only
 supplies data, URL state, and navigation callbacks.
@@ -130,7 +130,7 @@ export default function PoolManagerPage() {
   pool summary) and the recent-alerts feed for the landing dashboard.
 - All writes go through the **voting/approval workflow** — modals enqueue a
   draft in `actionsStore` via `setAddPendingSubmissionAction`. The `ActionsSidebar`
-  (mounted globally in `App.tsx`) shows the draft, lets the user submit it, and
+  (mounted globally in [`App.tsx`](../../../../examples/mdk-ui-shell-template/src/App.tsx)) shows the draft, lets the user submit it, and
   polls `GET /auth/actions` every 5 s to track the action through
   `voting → ready → executing → done`.
 - `useSubmitSingleAction` / `useSubmitPendingActions` POST to
@@ -177,7 +177,7 @@ The write path mirrors the reference app's approval flow:
 - **Wire Site Detail data** — pass `onSiteSelect` to capture the opened unit id,
   then feed `siteDetailDataOptions` (e.g. the miners assigned to that container)
   and `isSiteDetailLoading` so Site Detail shows live data instead of a static
-  shell. See `examples/mdk-ui-shell-template/_managed/pages/PoolManager.tsx`.
+  shell. See [`examples/mdk-ui-shell-template/_managed/pages/PoolManager.tsx`](../../../../examples/mdk-ui-shell-template/_managed/pages/PoolManager.tsx).
 - **Read-only operators** — the `ActionsSidebar` does not gate its buttons on
   client-side permission flags; authorization is enforced by the API. The write
   hooks (`useSubmitPendingActions`, `useVoteOnAction`, `useCancelAction`) still

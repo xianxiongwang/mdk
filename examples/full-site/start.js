@@ -35,7 +35,7 @@ const MINER_COUNT = minerCountFromArgv(DEFAULT_MINER_COUNT)
 
 checkDeps({ ui: !NO_UI })
 
-const { startGateway } = require('../../backend/core/mdk')
+const { startGateway, onShutdown, shutdown } = require('../../backend/core/mdk')
 const { startMocks } = require('./mocks')
 
 function _closeMock (handle) {
@@ -115,6 +115,16 @@ async function main () {
   kernel._cleanup.push(async () => {
     for (const h of workerMocks) _closeMock(h)
     mocks.close()
+  })
+
+  // Gateway first (stop accepting new requests), then kernel — draining
+  // _cleanup (every worker, UI, MCP server, mocks, in that order) before
+  // closing the corestore, so nothing mid-flight (a worker's periodic poll,
+  // a DB write) has a resource it depends on close out from under it.
+  onShutdown(async () => {
+    console.log('\n  stopping…')
+    await shutdown(gateway)
+    await shutdown(kernel)
   })
 
   return { kernel, gateway, ui, mcpServer }

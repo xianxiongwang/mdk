@@ -13,7 +13,7 @@ export const AverageDowntimeChartPage = (): JSX.Element => (
   <section className="demo-section">
     <h2 className="demo-section__title">Average Downtime Chart</h2>
     <p className="demo-section__description">
-      Stacked bar chart of curtailment vs operational downtime rates (%), matching the mining OS
+      Stacked bar chart of curtailment vs operational downtime rates (%), matching the reference app
       energy revenue panel.
     </p>
     <div className="demo-section__charts demo-section__charts--1-col">

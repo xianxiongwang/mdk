@@ -51,7 +51,7 @@ await kernel.registerWorker(runtime.getPublicKey())
 This is what every example under [`examples/backend/README.md`](../../../examples/backend/README.md) does. The per-package `USAGE.md` documents which 
 boot function a given Worker exports, its `model` values, and the `opts` it needs.
 
-### Standalone via `worker.js`
+### Standalone via [`worker.js`](../../core/mdk/worker.js)
 
 The core SDK ships [`backend/core/mdk/worker.js`](../../core/mdk/worker.js): a shared process entry compatible with pm2, Docker, or `node worker.js` 
 directly. It is driven by environment variables, not CLI flags — [`utils/service-bootstrap.js`](../../core/mdk/utils/service-bootstrap.js) reads `SERVICE` 
@@ -97,10 +97,10 @@ The example files are checked in; the copied actives are gitignored, leaving roo
 
 | Worker | USAGE.md | examples | manifest entry |
 | --- | --- | --- | --- |
-| `miners/antminer` | [USAGE.md](../miners/antminer/USAGE.md) | [repo example](../../../examples/backend/miners/antminer/README.md) | [workers-manifest.yaml](workers-manifest.yaml) |
-| `miners/whatsminer` | [USAGE.md](../miners/whatsminer/USAGE.md) | [repo example](../../../examples/backend/miners/whatsminer/index.js) | [workers-manifest.yaml](workers-manifest.yaml) |
-| `miners/avalon` | [USAGE.md](../miners/avalon/USAGE.md) | [repo example](../../../examples/backend/miners/avalon/README.md)| [workers-manifest.yaml](workers-manifest.yaml) |
-| containers, minerpools, power-meter, temperature | _Phase 3+_ | varies under `examples/backend/` | _Phase 3+_ |
+| [`miners/antminer`](../miners/antminer/README.md) | [USAGE.md](../miners/antminer/USAGE.md) | [repo example](../../../examples/backend/miners/antminer/README.md) | [workers-manifest.yaml](workers-manifest.yaml) |
+| [`miners/whatsminer`](../miners/whatsminer/README.md) | [USAGE.md](../miners/whatsminer/USAGE.md) | [repo example](../../../examples/backend/miners/whatsminer/index.js) | [workers-manifest.yaml](workers-manifest.yaml) |
+| [`miners/avalon`](../miners/avalon/README.md) | [USAGE.md](../miners/avalon/USAGE.md) | [repo example](../../../examples/backend/miners/avalon/README.md)| [workers-manifest.yaml](workers-manifest.yaml) |
+| containers, minerpools, power-meter, temperature | _Phase 3+_ | varies under [`examples/backend/`](../../../examples/backend/README.md) | _Phase 3+_ |
 
 The full model coverage for every Worker (all families) is generated from the contracts: see [`docs/supported-hardware.md`](supported-hardware.md).
 

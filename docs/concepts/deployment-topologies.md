@@ -1,7 +1,6 @@
 ---
 title: Deployment topologies
 description: How to run MDK as a single process, as local same-machine services, or as distributed microservices — the footprint vs. isolation trade-off
-docs@tether_slug: concepts/deployment-topologies
 ---
 
 This page explains the three supported deployment shapes and when to pick each.
@@ -54,7 +53,7 @@ flowchart LR
 
 *Solid arrow: active connection initiated by the source. Dashed arrow — Kernel-initiated discovery.*
 
-Each service runs as its own OS process on the same machine. Kernel discovers Workers via a shared directory — no DHT configuration needed. The [full-site example][full-site-local-discovery] runs in local mode by default.
+Each service runs as its own OS process on the same machine. Kernel discovers Workers via a shared directory — no DHT configuration needed. The [supervised-services site guide][multi-how-to] demonstrates this as its default mode.
 
 ### Microservices
 
@@ -68,7 +67,7 @@ flowchart LR
 
 *Solid arrow: active connection initiated by the source. Dashed arrow — Kernel-initiated discovery.*
 
-Each service runs as its own OS process or container, potentially on separate hosts, supervised by pm2 or Docker and connected via DHT. This is the shape behind the [microservices site guide][multi-how-to].
+Each service runs as its own OS process or container, potentially on separate hosts, supervised by pm2 or Docker and connected via DHT. The same guide's example switches to this shape by setting its `discovery` config field to `"dht"`.
 
 ## The trade-off
 
@@ -90,14 +89,14 @@ Pick **microservices** when:
 - Workers run on separate hosts from Kernel or the Gateway
 - You are orchestrating many Workers across one or more hosts
 
-## Where `worker.js` fits
+## Where [`worker.js`][worker-entry] fits
 
-The microservices shape is built on [`backend/core/mdk/worker.js`][worker-entry], a shared process entry compatible with pm2, Docker, or a direct `node worker.js`. It is driven by environment variables (`SERVICE`, and for a Worker `WORKER`/`TYPE`/`RACK`) rather than CLI flags. One `worker.js` runs per service, and the supervisor (pm2 or Docker) owns its lifecycle and resource limits. The [standalone `worker.js` install pattern][install-pattern] defines the per-Worker mechanics.
+The microservices shape is built on [`backend/core/mdk/worker.js`][worker-entry], a shared process entry compatible with pm2, Docker, or a direct `node worker.js`. It is driven by environment variables (`SERVICE`, and for a Worker `WORKER`/`TYPE`/`RACK`) rather than CLI flags. One [`worker.js`][worker-entry] runs per service, and the supervisor (pm2 or Docker) owns its lifecycle and resource limits. The [standalone `worker.js` install pattern][install-pattern] defines the per-Worker mechanics.
 
 The single-process and local shapes both call the programmatic APIs directly: `getKernel()` and `startGateway()` from [`@tetherto/mdk`][mdk-readme],
 and each Worker's own boot function (there is no single generic `startWorker`). Local mode passes `discovery: { mode: 'local' }` to `getKernel()` and
-publishes each Worker's RPC key to the same shared directory with `publishWorkerKey()`. The [local Worker discovery][worker-discovery-local] page has
-the configuration options.
+publishes each Worker's RPC key to the same shared directory with `publishWorkerKey()`. The [local Worker discovery][worker-discovery-local] section
+covers how both sides resolve that directory and how Kernel picks up keys as they appear.
 
 ## Relationship to scaling
 
@@ -107,7 +106,7 @@ Topology is orthogonal to scale. [Logical scaling][scaling] is about *how many* 
 
 - Run a self-contained local site: [Single-process site][single-how-to]
 - Run [same-machine services without DHT][worker-discovery-local]
-- Run [supervised services on one or more hosts][multi-how-to]
+- Run [a multi-Worker site as supervised services, from one machine up to a cross-host deployment][multi-how-to]
 - Register [one miner before packaging a whole site][miner-how-to]
 
 ## Links
@@ -115,14 +114,14 @@ Topology is orthogonal to scale. [Logical scaling][scaling] is about *how many* 
 [architecture]: architecture.md
 <!-- docs@tether.io: architecture → concepts/architecture -->
 
-[architecture-workers]: architecture.md#workers
+[architecture-workers]: architecture.md#the-three-tiers
 <!-- docs@tether.io: architecture-workers → concepts/architecture#workers -->
 
-[gateway-kernel-connection]: stack/gateway.md#kernel-connection
-<!-- docs@tether.io: gateway-kernel-connection → concepts/stack/gateway#kernel-connection -->
+[gateway-kernel-connection]: ../../backend/core/gateway/README.md#kernel-connection
+<!-- docs@tether.io: gateway-kernel-connection → https://github.com/tetherto/mdk/blob/main/backend/core/gateway/README.md#kernel-connection -->
 
-[scaling]: architecture.md#scaling
-<!-- docs@tether.io: scaling → concepts/architecture#scaling -->
+[scaling]: scalability.md
+<!-- docs@tether.io: scaling → concepts/scalability -->
 
 [worker-entry]: ../../backend/core/mdk/worker.js
 <!-- docs@tether.io: worker-entry → https://github.com/tetherto/mdk/blob/main/backend/core/mdk/worker.js -->
@@ -136,17 +135,14 @@ Topology is orthogonal to scale. [Logical scaling][scaling] is about *how many* 
 [single-how-to]: ../guides/deployment/run-single-process-site.md
 <!-- docs@tether.io: single-how-to → guides/deployment/run-single-process-site -->
 
-[multi-how-to]: ../guides/deployment/run-microservices-site.md
-<!-- docs@tether.io: multi-how-to → guides/deployment/run-microservices-site -->
+[multi-how-to]: ../guides/deployment/run-all-workers-site.md
+<!-- docs@tether.io: multi-how-to → guides/deployment/run-all-workers-site -->
 
 [miner-how-to]: ../guides/miners/index.md
 <!-- docs@tether.io: miner-how-to → guides/miners -->
 
-[worker-discovery-local]: stack/workers.md#local-mode
-<!-- docs@tether.io: worker-discovery-local → concepts/stack/workers#local-mode -->
-
-[full-site-local-discovery]: ../../examples/full-site/README.md#how-out-of-process-workers-find-the-kernel
-<!-- docs@tether.io: full-site-local-discovery → https://github.com/tetherto/mdk/blob/main/examples/full-site/README.md#how-out-of-process-workers-find-the-kernel -->
+[worker-discovery-local]: ../../backend/workers/docs/architecture.md#local-mode
+<!-- docs@tether.io: worker-discovery-local → https://github.com/tetherto/mdk/blob/main/backend/workers/docs/architecture.md#local-mode -->
 
 [glossary]: ../reference/glossary.md
 <!-- docs@tether.io: glossary → reference/glossary -->

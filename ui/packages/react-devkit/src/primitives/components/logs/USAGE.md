@@ -82,5 +82,5 @@ import { LogsCard } from "@tetherto/mdk-react-devkit"
 
 ## Notes
 
-- `LOG_TYPES` constants (`'Incidents'`, `'Activity'`) are exported from `constants.tsx`.
+- `LOG_TYPES` constants (`'Incidents'`, `'Activity'`) are exported from [`constants.tsx`](./constants.tsx).
 - Severity colors map `'Critical'` → red, `'High'` → high-severity style, `'Medium'` → medium-severity style.

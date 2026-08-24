@@ -1,11 +1,5 @@
-import {
-  buildHistoricalAlertsParams,
-  fetchHistoricalAlertsInChunks,
-  type HistoricalAlert,
-  historyLogQuery,
-  mapHistoryLogToAlerts,
-  queryKeys,
-} from '@tetherto/mdk-ui-foundation'
+import { fetchHistoricalAlertsInChunks, type HistoricalAlert } from '@tetherto/mdk-ui-foundation'
+import { buildHistoricalAlertsParams, historyLogQuery, mapHistoryLogToAlerts, queryKeys  } from '@tetherto/mdk-ui-foundation/presets/mining'
 import { useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query'
 
 export type UseHistoricalAlertsOptions = {
@@ -44,6 +38,14 @@ const headIfNested = (response: unknown): HistoricalAlert[] => {
  *
  * Wide ranges fan out into many requests — cap the window upstream (the shell
  * page defaults to 14 days).
+ *
+ * @remarks
+ * The `/auth/history-log` endpoint is illustrative. The underlying `alerts` /
+ * `info` history log is a real, shipped Kernel-side service
+ * (`LogHistoryService`), but no default Gateway plugin exposes it as
+ * `/auth/history-log` over HTTP — create your own
+ * [Gateway plugin](https://docs.tether.io/mdk/guides/gateway/plugins) that
+ * calls it. No reference implementation ships in this repo.
  *
  * @category alerts
  */

@@ -21,8 +21,15 @@ const validatePools = (pools) => {
 
 // setupPools via mdkClient → Kernel → miner. Body pools win; otherwise the
 // site default from site.deploy.json worker.pools is applied.
-module.exports = async (req, services) => {
-  if (!services.mdkClient) throw new Error('ERR_MDK_CLIENT_UNAVAILABLE')
+//
+// `ctx` is a test-only seam: a real gateway route call always passes just
+// `req`, so this falls through to the plugin's own ambient client
+// (lib/client.js, lazily required so this file stays requirable outside a
+// plugin load — see @tetherto/mdk-gateway/plugin). Tests pass `{ mdkClient }`
+// directly instead of loading the plugin.
+module.exports = async (req, ctx) => {
+  const mdkClient = ctx === undefined ? require('../lib/client') : ctx.mdkClient
+  if (!mdkClient) throw new Error('ERR_MDK_CLIENT_UNAVAILABLE')
 
   const deviceId = req.params && req.params.deviceId
   if (!deviceId) throw new Error('ERR_DEVICE_ID_REQUIRED')
@@ -33,7 +40,7 @@ module.exports = async (req, services) => {
   const params = { pools }
   if (req.body && req.body.appendId === false) params.appendId = false
 
-  const result = await services.mdkClient.sendCommand(deviceId, 'setupPools', params)
+  const result = await mdkClient.sendCommand(deviceId, 'setupPools', params)
 
   return {
     deviceId,

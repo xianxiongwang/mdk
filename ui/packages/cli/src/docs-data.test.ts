@@ -137,7 +137,7 @@ const queryHelpers = (): CoreQueryHelper[] => [
   {
     name: 'zetaQuery',
     // absolute import path injected by the TS type printer — must be sanitised
-    signature: '(p: import("/abs/mdk-prv/ui/packages/ui-foundation/src/types").Foo) => Query',
+    signature: '(p: import("/abs/mdk/ui/packages/ui-foundation/src/types").Foo) => Query',
     description: 'zeta query helper',
     category: 'devices',
     file: 'src/queries/zeta.ts',
@@ -274,7 +274,7 @@ describe('buildDataset — adapter hooks + core stores', () => {
     const zeta = build().queryHelpers.find((q) => q.name === 'zetaQuery')!
     expect(zeta.signature).toBe('(p: Foo) => Query')
     expect(zeta.signature).not.toContain('import(')
-    expect(zeta.signature).not.toContain('mdk-prv')
+    expect(zeta.signature).not.toContain('mdk')
   })
 
   it('serialises stores + query helpers into stores.json', () => {

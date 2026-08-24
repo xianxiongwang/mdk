@@ -3,7 +3,7 @@
 A small, self-contained **Ocean** minerpool example you can clone and run with **no real hardware,
 no Ocean.xyz account, and no network access**. It starts a mock Ocean API, drives the `OCEAN_POOL`
 Worker against it, and prints a live pool snapshot (hashrate, Workers, balance, transactions,
-blocks). It then stays running so `verify.js` can re-query the same mock.
+blocks). It then stays running so [`verify.js`](./verify.js) can re-query the same mock.
 
 ## Why this one is standalone (no Kernel / gateway)
 
@@ -54,12 +54,12 @@ flowchart LR
   Verify[verify.js] -->|own OCEAN_POOL| Mock
 ```
 
-`index.js` owns the mock; `verify.js` is a second process that spins up its own `OCEAN_POOL` against
+[`index.js`](./index.js) owns the mock; [`verify.js`](./verify.js) is a second process that spins up its own `OCEAN_POOL` against
 the same mock. No Kernel, no gateway, no DHT.
 
 ## Quickstart
 
-Clone-and-run — no config copy needed (falls back to `config/mdk.config.json.example`):
+Clone-and-run — no config copy needed (falls back to [`config/mdk.config.json.example`](./config/mdk.config.json.example)):
 
 ```bash
 node examples/backend/minerpools/ocean/index.js     # from the repo root
@@ -76,7 +76,7 @@ cp config/mdk.config.json.example config/mdk.config.json
 
 ## Verifying it works
 
-With `index.js` running in one terminal, run the check in another:
+With [`index.js`](./index.js) running in one terminal, run the check in another:
 
 ```bash
 node verify.js        # or: npm run verify
@@ -99,7 +99,7 @@ OK — Ocean pool Worker is fetching live data from the mock API.
 
 ## Configuration reference
 
-`config/mdk.config.json` (copied from the `.example`):
+[`config/mdk.config.json`](./config/mdk.config.json.example) (copied from the `.example`):
 
 | Field | Description |
 |---|---|
@@ -109,9 +109,9 @@ OK — Ocean pool Worker is fetching live data from the mock API.
 
 ## How it works
 
-`index.js`:
+[`index.js`](./index.js):
 
-1. Starts the mock Ocean API (`backend/workers/minerpools/ocean/mock/server`).
+1. Starts the mock Ocean API ([`backend/workers/minerpools/ocean/mock/server.js`](../../../../backend/workers/minerpools/ocean/mock/server.js)).
 2. Constructs `new OCEAN_POOL({ ocean: { accounts, apiUrl } }, { rack, storeDir, root })` and `init()`s it.
 3. Pulls data: `fetchWorkers` → `fetchStats` → `fetchTransactions` → `fetchBlocks` (stored in a local Hyperbee).
 4. Reads it back: `getWrkExtData({ key: 'stats' | 'transactions' | 'blocks' })` and `getWorkers()`.
@@ -124,7 +124,6 @@ OK — Ocean pool Worker is fetching live data from the mock API.
 ```
 examples/backend/minerpools/ocean/
 ├── README.md
-├── package.json
 ├── index.js                      # mock + OCEAN_POOL + fetch/print, stays running
 ├── verify.js                     # fresh OCEAN_POOL against the running mock
 ├── config/
@@ -146,7 +145,7 @@ $TMPDIR/mdk-site-ocean/store/     # the pool's Hyperbee store
 | Issue | Fix |
 |---|---|
 | `Cannot find module ...` | Run `npm run setup:workers` from the repo root. |
-| `verify.js` errors with `ECONNREFUSED` | Start `index.js` first — it owns the mock the verifier queries. |
+| [`verify.js`](./verify.js) errors with `ECONNREFUSED` | Start [`index.js`](./index.js) first — it owns the mock the verifier queries. |
 | `EADDRINUSE :::5040` | A previous run is still bound. `Ctrl+C` it, or change `mock.port`. |
 | All metrics `n/a`/`0` | The mock randomises data; re-run. If persistent, confirm the mock is reachable at `mock.host:mock.port`. |
 

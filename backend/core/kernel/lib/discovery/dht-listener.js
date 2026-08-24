@@ -143,7 +143,7 @@ class DHTListener {
    * Register a worker by its RPC public key, bypassing swarm key-exchange.
    *
    * The swarm topic only exists to deliver a worker's RPC key to the Kernel; the
-   * registration itself (identity → capability → Ready) runs over HRPC against
+   * registration itself (identity → capability → READY) runs over HRPC against
    * that key. When the key is already known by other means — e.g. the in-process
    * registerWorker() path, or same-machine local discovery where workers publish
    * their key directly — callers hand it in here. Idempotent: a key already

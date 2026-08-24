@@ -25,7 +25,7 @@ state.
 | `getRowId`                | `(row, index, parent?) => string`         | No       | index   | Stable row ID source                     |
 | `onRowClick`              | `(rowData: I) => void`                    | No       | —       | Makes rows interactive (see note below)  |
 
-See `data-table.tsx` for the full list (16 props).
+See [`data-table.tsx`](./data-table.tsx) for the full list (16 props).
 
 > [!NOTE]
 > Setting `onRowClick` makes every body row `role="button"`, focusable, and keyboard-activatable

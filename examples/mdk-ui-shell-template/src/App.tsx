@@ -4,6 +4,7 @@ import { useMemo } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router'
 
 import { UserMenu } from './components/UserMenu'
+import { AUTH_BYPASS } from './constants/env'
 import { getNavIcon } from './constants/navigation'
 import { ROUTE_PATHS } from './constants/routes'
 import { ROUTES } from './routes'
@@ -19,8 +20,10 @@ export const App = () => {
   const location = useLocation()
 
   // Keeps the session token fresh; clears it on a 401 / 500 and bounces back
-  // to /signin via `onSessionEnded`.
+  // to /signin via `onSessionEnded`. Disabled under AUTH_BYPASS so the stub
+  // session is never torn down against a missing OAuth backend.
   useTokenPolling({
+    enabled: AUTH_BYPASS ? false : undefined,
     onSessionEnded: () => {
       void navigate(ROUTE_PATHS.SIGN_IN, { replace: true })
     },

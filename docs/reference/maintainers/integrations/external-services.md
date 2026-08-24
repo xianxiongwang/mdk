@@ -6,7 +6,7 @@ Future Workers that pull data from third-party services — not hardware, not po
 
 | Service | Description | Worker package |
 |---------|-------------|----------------|
-| Bitcoin Mempool | Real-time network data, mempool stats, fee estimates | `backend/workers/` (TBD) |
-| OpenWeather | Weather data for outdoor container operations | `backend/workers/` (TBD) |
+| Bitcoin Mempool | Real-time network data, mempool stats, fee estimates | [`backend/workers/`](../../../../backend/workers/README.md) (TBD) |
+| OpenWeather | Weather data for outdoor container operations | [`backend/workers/`](../../../../backend/workers/README.md) (TBD) |
 
 No Worker has shipped yet — this page is a placeholder until the first external-service Worker arrives.

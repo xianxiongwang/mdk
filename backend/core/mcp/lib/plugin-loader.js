@@ -1,6 +1,10 @@
 'use strict'
 
 const path = require('path')
+// Deep import: @tetherto/mdk-worker's index.js would pull the whole worker
+// runtime (hyperswarm) into the MCP server for a loader that only needs
+// fs/path/module.
+const { createModuleContext } = require('@tetherto/mdk-worker/lib/module-context')
 
 function _validateManifest (manifest, pluginDir) {
   if (!manifest || typeof manifest !== 'object') {
@@ -32,6 +36,14 @@ function _validateManifest (manifest, pluginDir) {
       throw new Error(`ERR_PLUGIN_MANIFEST_INVALID: ${pluginDir}: tool "${tool.id}" missing required field "description"`)
     }
 
+    for (const field of ['annotations', 'agent']) {
+      const value = tool[field]
+      if (value === undefined) continue
+      if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+        throw new Error(`ERR_PLUGIN_MANIFEST_INVALID: ${pluginDir}: tool "${tool.id}" field "${field}" must be an object`)
+      }
+    }
+
     if (seenIds.has(tool.id)) {
       throw new Error(`ERR_PLUGIN_TOOL_DUPLICATE_ID: ${pluginDir}: duplicate tool id "${tool.id}"`)
     }
@@ -39,7 +51,7 @@ function _validateManifest (manifest, pluginDir) {
   }
 }
 
-function loadPlugin (pluginDir) {
+function loadPlugin (pluginDir, context) {
   const manifestPath = path.join(pluginDir, 'mcp-plugin.json')
 
   let manifest
@@ -54,13 +66,22 @@ function loadPlugin (pluginDir) {
 
   _validateManifest(manifest, pluginDir)
 
+  // One private module registry per plugin: tool files and everything they
+  // require in-package (their lib/client.js, say) load fresh for this plugin,
+  // and '@tetherto/mdk-mcp/plugin' resolves to its own frozen context.
+  const moduleContext = createModuleContext({
+    dir: pluginDir,
+    ambient: context ? { '@tetherto/mdk-mcp/plugin': context } : {},
+    label: `[mdk-mcp-plugin:${manifest.name}]`
+  })
+
   const tools = manifest.tools.map(tool => {
     const [handlerFile, namedExport] = tool.handler.split('#')
     const handlerPath = path.resolve(pluginDir, handlerFile)
 
     let mod
     try {
-      mod = require(handlerPath)
+      mod = moduleContext.load(handlerPath)
     } catch (err) {
       if (err.code === 'MODULE_NOT_FOUND') {
         throw new Error(`ERR_PLUGIN_HANDLER_NOT_FOUND: ${pluginDir}: tool "${tool.id}" handler "${tool.handler}"`)
@@ -79,6 +100,8 @@ function loadPlugin (pluginDir) {
       id: tool.id,
       description: tool.description,
       schema: resolved.schema || {},
+      annotations: tool.annotations,
+      agent: tool.agent,
       _handler: handler
     }
   })

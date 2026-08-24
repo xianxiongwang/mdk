@@ -109,6 +109,8 @@ export { useMinerDevices } from './use-miner-devices'
 export { useMinerDuplicateValidation } from './use-miner-duplicate-validation'
 export type { UseMinersOptions, UseMinersResult } from './use-miners'
 export { useMiners } from './use-miners'
+export type { NominalConfig } from './use-nominal-config'
+export { useNominalConfig } from './use-nominal-config'
 export type { PaginationArgs, PaginationState, UsePaginationReturn } from './use-pagination'
 export { usePagination } from './use-pagination'
 export type {

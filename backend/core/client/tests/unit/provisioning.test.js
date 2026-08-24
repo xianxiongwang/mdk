@@ -3,12 +3,12 @@
 // getWorkerKey + createWorkerClient + sendWorkerCommand — hermetic, no network.
 // The Kernel client uses the { transport } seam to serve WORKER_LIST (so getStatus
 // surfaces a worker rpcKey). The worker-bound client goes through the real
-// createWorkerClient -> createMdkClient -> HRPCClient path, with an injected
+// createWorkerClient -> createRawMdkClient -> HRPCClient path, with an injected
 // `rpc` (HRPCClient honors opts.rpc and then never builds a DHT), so we capture
 // the exact envelope the worker would receive.
 
 const test = require('brittle')
-const { createMdkClient, createWorkerClient } = require('../../index')
+const { createRawMdkClient, createWorkerClient } = require('../../index')
 const { serialize, deserialize } = require('../../../kernel/lib/protocol/envelope')
 const { ACTIONS } = require('../../../kernel/lib/protocol/actions')
 
@@ -36,13 +36,13 @@ function fakeWorkerRpc (reply = { payload: { status: 'QUEUED', commandId: 'cmd-1
 }
 
 test('getWorkerKey - returns the worker rpcKey from the Kernel registry', async (t) => {
-  const kernel = createMdkClient({ transport: orkTransport([{ workerId: 'miner-worker', state: 'READY', healthState: 'HEALTHY', deviceIds: ['m0'], rpcKey: WORKER_KEY }]) })
+  const kernel = createRawMdkClient({ transport: orkTransport([{ workerId: 'miner-worker', state: 'READY', healthState: 'HEALTHY', deviceIds: ['m0'], rpcKey: WORKER_KEY }]) })
   await kernel.connect()
   t.is(await kernel.getWorkerKey('miner-worker'), WORKER_KEY)
 })
 
 test('getWorkerKey - returns null for an unregistered worker', async (t) => {
-  const kernel = createMdkClient({ transport: orkTransport([{ workerId: 'miner-worker', state: 'READY', deviceIds: [], rpcKey: WORKER_KEY }]) })
+  const kernel = createRawMdkClient({ transport: orkTransport([{ workerId: 'miner-worker', state: 'READY', deviceIds: [], rpcKey: WORKER_KEY }]) })
   await kernel.connect()
   t.is(await kernel.getWorkerKey('ghost-worker'), null)
 })
@@ -59,7 +59,7 @@ test('createWorkerClient - builds a connectable client over the injected rpc', a
 })
 
 test('sendWorkerCommand - resolves the key then sends COMMAND_REQUEST worker-direct', async (t) => {
-  const kernel = createMdkClient({ transport: orkTransport([{ workerId: 'miner-worker', state: 'READY', deviceIds: [], rpcKey: WORKER_KEY }]) })
+  const kernel = createRawMdkClient({ transport: orkTransport([{ workerId: 'miner-worker', state: 'READY', deviceIds: [], rpcKey: WORKER_KEY }]) })
   await kernel.connect()
   const rpc = fakeWorkerRpc()
 
@@ -77,10 +77,37 @@ test('sendWorkerCommand - resolves the key then sends COMMAND_REQUEST worker-dir
 })
 
 test('sendWorkerCommand - throws ERR_MDK_WORKER_KEY_UNKNOWN for an unregistered worker', async (t) => {
-  const kernel = createMdkClient({ transport: orkTransport([]) })
+  const kernel = createRawMdkClient({ transport: orkTransport([]) })
   await kernel.connect()
   const rpc = fakeWorkerRpc()
 
   await t.exception(() => kernel.sendWorkerCommand('ghost', 'd0', 'registerThing', {}, { hrpc: { rpc } }), /ERR_MDK_WORKER_KEY_UNKNOWN/)
+  t.is(rpc.requests.length, 0, 'no worker request attempted when the key is unknown')
+})
+
+test('pullWorkerTelemetry - resolves the key, sends TELEMETRY_PULL worker-direct, unwraps the payload', async (t) => {
+  const kernel = createRawMdkClient({ transport: orkTransport([{ workerId: 'miner-worker', state: 'READY', deviceIds: [], rpcKey: WORKER_KEY }]) })
+  await kernel.connect()
+  const rows = [{ ts: 1700000000000, hashrate_sum: 42 }]
+  const rpc = fakeWorkerRpc({ payload: { logs: rows, timestamp: 1700000000001 } })
+
+  const query = { type: 'logs', key: 'stat-1D', tag: 't-miner', start: 1, end: 2, fields: { hashrate_sum: 1 } }
+  const res = await kernel.pullWorkerTelemetry('miner-worker', query, { hrpc: { rpc } })
+
+  t.is(rpc.requests.length, 1, 'exactly one worker request')
+  const sent = rpc.requests[0]
+  t.is(sent.key, WORKER_KEY, 'sent to the resolved worker key')
+  t.is(sent.envelope.action, ACTIONS.TELEMETRY_PULL, 'TELEMETRY_PULL action')
+  t.is(sent.envelope.deviceId, null, 'worker-scoped: no device routing')
+  t.alike(sent.envelope.payload.query, query, 'query carried verbatim')
+  t.alike(res.logs, rows, 'resolves with the bare telemetry payload')
+})
+
+test('pullWorkerTelemetry - throws ERR_MDK_WORKER_KEY_UNKNOWN for an unregistered worker', async (t) => {
+  const kernel = createRawMdkClient({ transport: orkTransport([]) })
+  await kernel.connect()
+  const rpc = fakeWorkerRpc()
+
+  await t.exception(() => kernel.pullWorkerTelemetry('ghost', { type: 'logs' }, { hrpc: { rpc } }), /ERR_MDK_WORKER_KEY_UNKNOWN/)
   t.is(rpc.requests.length, 0, 'no worker request attempted when the key is unknown')
 })

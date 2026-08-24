@@ -9,12 +9,12 @@ Copy this into the PR or release ticket for each release.
 ### Prepare (private repo)
 
 - [ ] Create release branch: `release/<version>`
-- [ ] Update `"version"` in every `package.json` across `ui/`, `backend/core/`, `backend/workers/`, and `examples/`
-- [ ] Update any pinned `^semver` `@tetherto/*` references in `ui/packages/` to match the new version
-- [ ] Run installs in all three domains to refresh lockfiles: `ui/`, `backend/core/`, `backend/workers/`
-- [ ] Confirm no unexpected changes in `package-lock.json` files
-- [ ] Update `README.md` — version badge and any inline version references
-- [ ] Add entry for `v<version>` in `CHANGELOG.md`
+- [ ] Update `"version"` in every `package.json` across [`ui/`](./ui/README.md), [`backend/core/`](./backend/core/README.md), [`backend/workers/`](./backend/workers/README.md), and `examples/`
+- [ ] Update any pinned `^semver` `@tetherto/*` references in [`ui/packages/`](./ui/packages/) to match the new version
+- [ ] Run installs in all three domains to refresh lockfiles: [`ui/`](./ui/README.md), [`backend/core/`](./backend/core/README.md), [`backend/workers/`](./backend/workers/README.md)
+- [ ] Confirm no unexpected changes in [`package-lock.json`](./package-lock.json) files
+- [ ] Update [`README.md`](./README.md) — version badge and any inline version references
+- [ ] Add entry for `v<version>` in [`CHANGELOG.md`](./CHANGELOG.md)
 - [ ] Add release notes file at `docs/reference/release-notes/<version>-release.md`
 - [ ] Run tests — pass
 - [ ] Run build — pass
@@ -23,7 +23,7 @@ Copy this into the PR or release ticket for each release.
 ### Promote
 
 - [ ] Promote the verified commit to the public repo (`mdk`)
-- [ ] Spot-check a `package.json` version to confirm the commit arrived intact
+- [ ] Spot-check a [`package.json`](./package.json) version to confirm the commit arrived intact
 
 ### Verify and tag (public repo)
 

@@ -26,7 +26,9 @@ vi.mock('@primitives', () => ({
   ),
 }))
 
-vi.mock('@tetherto/mdk-ui-foundation', () => ({
+/* `getTimelineOptions` is part of the mining dialect, so the component imports
+ * it from the preset subpath — the mock has to target the same module. */
+vi.mock('@tetherto/mdk-ui-foundation/presets/mining', () => ({
   getTimelineOptions: vi.fn(() => [
     { value: '5m', label: '5 minutes' },
     { value: '15m', label: '15 minutes' },

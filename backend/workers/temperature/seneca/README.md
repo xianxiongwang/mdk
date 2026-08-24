@@ -28,7 +28,7 @@ const worker = await startSenecaWorker({
       serialNum: 'SEN-A',
       container: 'container-A',
       pos: 'lv_1',                 // sensor position label
-      location: 'site-texas-01.container'
+      location: 'site-a-01.container'
     },
     opts: {
       address: '192.168.1.200',

@@ -52,5 +52,5 @@ type TimelineItemData = {
 ## Notes
 
 - Category: `feedback` | Domain: `mining-operations` | Capability: `incident-alerts` | Tier: `agent-ready`
-- Severity colour is driven by `status` via `ALERT_COLOR_MAP` (defined in `alarm-row-constants.tsx`).
+- Severity colour is driven by `status` via `ALERT_COLOR_MAP` (defined in [`alarm-row-constants.tsx`](./alarm-row/alarm-row-constants.tsx)).
 - `AlarmContents` renders a plain `ReactNode` fallback when `alarmsData` is not an array.

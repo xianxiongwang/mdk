@@ -1,6 +1,6 @@
 {
   "name": "@tetherto/mdk-worker-schneider",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "PowerMeter Schneider",
   "keywords": [
     "tether"
@@ -31,7 +31,7 @@
     "yargs": "17.7.2"
   },
   "overrides": {
-    "serialport": "npm:noop@1.0.0",
-    "brace-expansion": "5.0.9"
+    "brace-expansion": "5.0.9",
+    "serialport": "npm:noop@1.0.0"
   }
 }

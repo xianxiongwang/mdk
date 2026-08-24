@@ -1,4 +1,4 @@
-import { siteQuery } from '@tetherto/mdk-ui-foundation'
+import { siteQuery } from '@tetherto/mdk-ui-foundation/presets/mining'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { useAuthToken } from './use-auth-token'
@@ -21,12 +21,9 @@ export type UseSiteResult = {
  * deployment config — fetched once per session, no polling.
  *
  * @remarks
- * The `/auth/site` endpoint is illustrative. MDK does not ship built-in
- * endpoints — create your own via a
- * [Gateway plugin](https://docs.tether.io/mdk/guides/gateway/plugins) matching
- * your Worker/business logic. See the
- * [full-site example](https://github.com/tetherto/mdk/tree/main/examples/full-site/plugins/site)
- * for a working reference.
+ * `/auth/site` is served by the default `site-monitor` Gateway plugin
+ * ([`backend/core/plugins/site-monitor`](https://github.com/tetherto/mdk/tree/main/backend/core/plugins/site-monitor))
+ * — no custom plugin needed.
  *
  * @category op-centre
  */

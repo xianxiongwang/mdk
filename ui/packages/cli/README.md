@@ -31,7 +31,7 @@ Once installed, `npx mdk-ui --help` lists every supported subcommand.
 | `mdk-ui suggest <free text>` | Keyword-overlap scorer across components, hooks, blueprints, adapter hooks **and** stores. Returns five ranked groups: `components`, `hooks`, `blueprints`, `adapterHooks`, `stores`. |
 | `mdk-ui hooks [--category store\|utility\|permission\|ui\|external] [--format json\|table]` | Print the React hooks manifest from `@tetherto/mdk-react-adapter` (`dist/hooks.json`). |
 | `mdk-ui stores [--category auth\|devices\|notifications\|timezone\|actions] [--format json\|table]` | Print the Zustand stores + TanStack Query helpers manifest from `@tetherto/mdk-ui-foundation` (`dist/stores.json`). |
-| `mdk-ui --json-help` | Dump the CLI's own command surface as `dist/cli-manifest.json` (args, options, subcommands). |
+| `mdk-ui --json-help` | Dump the CLI's own command surface as [`dist/cli-manifest.json`](./dist/cli-manifest.json) (args, options, subcommands). |
 
 ### Reading a component
 
@@ -130,10 +130,10 @@ via subpath exports:
 | `dist/blueprints.json` | `@tetherto/mdk-react-devkit/blueprints.json` | `mdk-ui blueprints` |
 | `dist/hooks.json` | `@tetherto/mdk-react-adapter/hooks.json` | `mdk-ui hooks` |
 | `dist/stores.json` | `@tetherto/mdk-ui-foundation/stores.json` | `mdk-ui stores` |
-| `dist/cli-manifest.json` | `@tetherto/mdk-ui-cli/cli-manifest.json` | `mdk-ui --json-help` |
+| [`dist/cli-manifest.json`](./dist/cli-manifest.json) | `@tetherto/mdk-ui-cli/cli-manifest.json` | `mdk-ui --json-help` |
 
 ## V1 gap
 
 The `check` command currently only catches **typecheck** errors. Render-time
 validation (mount the file in jsdom, assert it doesn't throw) is a planned V2
-extension — see `src/commands/check.ts`.
+extension — see [`src/commands/check.ts`](./src/commands/check.ts).

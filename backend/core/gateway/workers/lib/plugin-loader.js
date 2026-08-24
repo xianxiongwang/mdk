@@ -1,6 +1,9 @@
 'use strict'
 
 const path = require('path')
+// Deep import: index.js would pull the whole worker runtime (hyperswarm) into
+// the gateway process for a loader that only needs fs/path/module.
+const { createModuleContext } = require('@tetherto/mdk-worker/lib/module-context')
 
 const VALID_METHODS = new Set(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'])
 
@@ -92,7 +95,7 @@ function _validateManifest (manifest, pluginDir) {
   }
 }
 
-function loadPlugin (pluginDir) {
+function loadPlugin (pluginDir, context) {
   const manifestPath = path.join(pluginDir, 'mdk-plugin.json')
 
   let manifest
@@ -107,6 +110,15 @@ function loadPlugin (pluginDir) {
 
   _validateManifest(manifest, pluginDir)
 
+  // One private module registry per plugin: handler files and everything they
+  // require in-package (their lib/client.js, say) load fresh for this plugin,
+  // and '@tetherto/mdk-gateway/plugin' resolves to its own frozen context.
+  const moduleContext = createModuleContext({
+    dir: pluginDir,
+    ambient: context ? { '@tetherto/mdk-gateway/plugin': context } : {},
+    label: `[mdk-gateway-plugin:${manifest.name}]`
+  })
+
   const routes = manifest.routes.map(route => {
     const resolved = _resolveHttpFields(route)
 
@@ -114,7 +126,7 @@ function loadPlugin (pluginDir) {
     const handlerPath = path.resolve(pluginDir, handlerFile)
     let mod
     try {
-      mod = require(handlerPath)
+      mod = moduleContext.load(handlerPath)
     } catch (err) {
       if (err.code === 'MODULE_NOT_FOUND') {
         throw new Error(`ERR_PLUGIN_HANDLER_NOT_FOUND: ${pluginDir}: route "${resolved.id}" handler "${resolved.handler}"`)

@@ -6,13 +6,17 @@ const { REGISTRY_STATES } = require('./states')
 /**
  * Worker Registry
  *
- * Maps deviceId → worker HRPC channel and stores declared capabilities.
+ * Two flat in-memory indexes, not a chained lookup:
+ *   _deviceIndex: deviceId → { workerId, channel, capabilities }
+ *   _workerIndex: workerId → { state, deviceIds, channel, rpcKey, ... }
  * Used by the Command Dispatcher to route commands to the correct worker.
  *
- * State machine per worker:
- *   Unregistered → Discovered → IdentitySaved → Ready → Terminated
+ * State machine per worker (see ./states.js):
+ *   UNREGISTERED → DISCOVERED → IDENTITY_SAVED → READY → TERMINATED
  *
- * Recovery: Rebuilt from Hyperbee on restart; detects failed reconnects.
+ * Recovery: Rebuilt from Hyperbee on restart; detects failed reconnects. Only
+ * { workerId, deviceIds, rpcKey, registeredAt } is persisted, so recover()
+ * synthesises state DISCOVERED and channel null.
  */
 class WorkerRegistry {
   constructor (opts) {

@@ -182,7 +182,7 @@ action, or poll the action list with `usePendingActions()` / `useLiveActions()` 
 
 ## Create an actions plugin
 
-To enable approval-gated writes, create a plugin that exposes HTTP routes for the write-action workflow. Each route should call the corresponding `services.mdkClient` method.
+To enable approval-gated writes, create a plugin that exposes HTTP routes for the write-action workflow. Each route should call the corresponding method on the plugin's own `mdkClient` (built from `require('@tetherto/mdk-gateway/plugin')`, [as any Gateway plugin does][plugins]).
 
 > [!NOTE]
 > The paths shown below (`/auth/actions*`) are illustrative examples. You may use any path structure that fits your plugin's routing pattern.
@@ -216,11 +216,9 @@ backend/plugins/actions/
 'use strict'
 
 const { validateToken } = require('../lib/my-identity-layer')
+const mdkClient = require('../lib/client')
 
-module.exports = async function pushAction (req, services) {
-  const { mdkClient } = services
-  if (!mdkClient) throw new Error('ERR_KERNEL_CLIENT_NOT_CONNECTED')
-
+module.exports = async function pushAction (req) {
   // Identity comes from your own layer: nothing populates req._info
   const { email: voter, permissions: authPerms } = validateToken(req.headers.authorization)
 
@@ -233,6 +231,8 @@ module.exports = async function pushAction (req, services) {
   })
 }
 ```
+
+[`lib/client.js`][plugins] builds the client once for the whole plugin, per the pattern in the plugin authoring guide.
 
 ### Manifest example (mdk-plugin.json)
 
@@ -279,7 +279,7 @@ module.exports = async function pushAction (req, services) {
 ### Mount the plugin
 
 ```javascript
-const { startGateway } = require('@tetherto/mdk')
+const { startGateway } = require('@tetherto/mdk/backend/core/mdk')
 const path = require('path')
 
 await startGateway({
@@ -303,7 +303,7 @@ For complete mdk-client method signatures and protocol details, see the [mdk-cli
 ## Links
 
 [approval-gated-writes]: ../../concepts/control-plane.md#approval-gated-writes
-<!-- docs@tether.io: approval-gated-writes → concepts/control-plane#approval-gated-writes -->
+<!-- docs@tether.io: approval-gated-writes → https://github.com/tetherto/mdk/blob/main/backend/core/kernel/README.md#actionmanager -->
 
 [plugins-auth]: plugins.md#auth-and-permissions
 <!-- docs@tether.io: plugins-auth → guides/gateway/plugins#auth-and-permissions -->

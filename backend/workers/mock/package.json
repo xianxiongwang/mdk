@@ -1,6 +1,6 @@
 {
   "name": "@tetherto/mdk-worker-mock",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "description": "Generic mock framework for MDK device workers (BaseMock + transport adapters)",
   "keywords": [

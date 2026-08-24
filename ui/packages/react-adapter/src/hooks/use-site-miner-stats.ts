@@ -1,5 +1,7 @@
-import { type TailLogEntry, tailLogQuery } from '@tetherto/mdk-ui-foundation'
+import type { TailLogEntry } from '@tetherto/mdk-ui-foundation'
+import { tailLogQuery } from '@tetherto/mdk-ui-foundation/presets/mining'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useAuthToken } from './use-auth-token'
 
 /** Realtime stat key for the last-minute aggregate row. */
 const STAT_KEY = 'stat-rtd'
@@ -30,9 +32,9 @@ export type AlertsCounts = {
 export type SiteMinerStats = {
   /**
    * Count of miners that reported hashrate in the last minute — the
-   * "(216)" in the `MOS (216)` header label.
+   * "(216)" in the `APP (216)` header label.
    */
-  mosTotal: number
+  appTotal: number
   /** Miners online or with only minor errors (green column). */
   online: number
   /** Miners with major errors / not mining (amber column). */
@@ -48,6 +50,8 @@ export type SiteMinerStats = {
 }
 
 export type UseSiteMinerStatsOptions = {
+  /** Disable the query. Defaults to running whenever an auth token is present. */
+  enabled?: boolean
   /** Polling interval in ms. Defaults to 30s. Pass 0 to disable. */
   refetchInterval?: number
 }
@@ -58,10 +62,17 @@ export type UseSiteMinerStatsOptions = {
  * projects four aggregate counts. Values reflect what is reporting right now,
  * not the full inventory — offline miners are excluded from the last-minute window.
  *
+ * @remarks
+ * The `/auth/tail-log` endpoint is illustrative. MDK does not ship a built-in
+ * endpoint for it — create your own via a
+ * [Gateway plugin](https://docs.tether.io/mdk/guides/gateway/plugins) matching
+ * your Worker/business logic.
+ *
  * @category dashboard
  */
 export const useSiteMinerStats = (options: UseSiteMinerStatsOptions = {}): SiteMinerStats => {
   const queryClient = useQueryClient()
+  const token = useAuthToken()
   const factory = tailLogQuery(queryClient, {
     key: STAT_KEY,
     type: 'miner',
@@ -72,13 +83,14 @@ export const useSiteMinerStats = (options: UseSiteMinerStatsOptions = {}): SiteM
 
   const { data, isLoading } = useQuery({
     ...factory,
+    enabled: options.enabled ?? !!token,
     refetchInterval: options.refetchInterval ?? 30_000,
   })
 
   const entry = headOrUndefined(data)
   const alertsAggr = (entry?.alerts_aggr ?? {}) as Record<string, unknown>
   return {
-    mosTotal: num(entry?.hashrate_mhs_1m_cnt_aggr),
+    appTotal: num(entry?.hashrate_mhs_1m_cnt_aggr),
     online: num(entry?.online_or_minor_error_miners_amount_aggr),
     error: num(entry?.not_mining_miners_amount_aggr),
     offline: num(entry?.offline_or_sleeping_miners_amount_aggr),

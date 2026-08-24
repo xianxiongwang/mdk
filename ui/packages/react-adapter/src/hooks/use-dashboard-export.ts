@@ -1,19 +1,9 @@
-import {
-  buildHashrateTailLogParams,
-  buildMinerpoolStatsHistoryExtDataParams,
-  buildSiteConsumptionTailLogParams,
-  type DashboardQueryRange,
-  type ExtDataParams,
-  type HashRateLogEntry,
-  type IncidentRow,
-  type MinerpoolExtDataEntry,
-  type MinerpoolStatsHistoryEntry,
-  type PoolMinerStats,
-  queryKeys,
-  type TailLogEntry,
-} from '@tetherto/mdk-ui-foundation'
+import type { ExtDataParams, HashRateLogEntry, MinerpoolExtDataEntry, MinerpoolStatsHistoryEntry, PoolMinerStats, TailLogEntry } from '@tetherto/mdk-ui-foundation'
+import { queryKeys } from '@tetherto/mdk-ui-foundation/presets/mining'
+import { buildHashrateTailLogParams, buildMinerpoolStatsHistoryExtDataParams, buildSiteConsumptionTailLogParams, type DashboardQueryRange, type IncidentRow } from '@tetherto/mdk-ui-foundation/presets/mining'
 import { useQueryClient } from '@tanstack/react-query'
 import { useCallback } from 'react'
+import { headOrEmpty } from './list-things-utils'
 
 export type ExportFormat = 'csv' | 'json'
 
@@ -37,12 +27,6 @@ const POOL_STATS_PARAMS: ExtDataParams = {
 export type UseDashboardExportOptions = DashboardQueryRange & {
   /** Optional override for filename prefix (defaults to `mdk-dashboard`). */
   filenamePrefix?: string
-}
-
-const headOrEmpty = <T>(value: T[][] | undefined | null): T[] => {
-  if (!Array.isArray(value)) return []
-  const first = value[0]
-  return Array.isArray(first) ? (first as T[]) : []
 }
 
 const csvCell = (value: unknown): string => {

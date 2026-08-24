@@ -34,7 +34,7 @@ primitive, drop down to `SitesOverviewStatusCardList`.
 
 - `ProcessedContainerUnit` — produced by the
   `useSitesOverviewData` hook in
-  `foundation/components/pool-manager/hooks/use-sites-overview-data`.
+  [`foundation/components/pool-manager/hooks/use-sites-overview-data`](../../../components/pool-manager/hooks/use-sites-overview-data.ts).
 - `PoolConfigData` — exported from `@tetherto/mdk-react-devkit`.
 
 ## Notes

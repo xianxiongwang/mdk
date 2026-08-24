@@ -31,20 +31,20 @@ node examples/backend/powermeters/schneider/index.js     # from the repo root
 ```
 
 You'll see the registered device id and `Press Ctrl+C to stop`. To customise the port, serial or
-model, edit the constants at the top of `index.js` — the Worker also exports `SCHNEIDER_P3U30`
+model, edit the constants at the top of [`index.js`](./index.js) — the Worker also exports `SCHNEIDER_P3U30`
 (mock `type: 'p3u30'`).
 
 ## Inspect over HRPC with `hp-rpc-cli`
 
-`index.js` prints the Kernel key, device ID, and a ready-to-paste telemetry command. The shared
+[`index.js`](./index.js) prints the Kernel key, device ID, and a ready-to-paste telemetry command. The shared
 [`hp-rpc-cli` inspection guide](../../inspect-over-hrpc.md) covers Worker listing, telemetry pulls,
 other actions, and troubleshooting.
 
 ## How it works
 
-`index.js`:
+[`index.js`](./index.js):
 
-1. Starts the mock Schneider meter (`backend/workers/power-meter/schneider/mock/server`).
+1. Starts the mock Schneider meter ([`backend/workers/power-meter/schneider/mock/server.js`](../../../../backend/workers/power-meter/schneider/mock/server.js)).
 2. Brings up a Kernel (HRPC only) pinned to its own store root (`$TMPDIR/mdk-site-schneider/kernel/`).
 3. `startSchneiderWorker({ workerId, storeDir, seedDevices })`, then `kernel.registerWorker(worker.runtime.getPublicKey())`.
 4. Prints an `hp-rpc-cli` command and stays running until `Ctrl+C`, which tears down the Worker and
@@ -57,7 +57,6 @@ other actions, and troubleshooting.
 ```
 examples/backend/powermeters/schneider/
 ├── README.md
-├── package.json
 ├── index.js                      # Kernel + Schneider Worker + mock + registration
 └── .gitignore
 ```
@@ -73,7 +72,7 @@ $TMPDIR/mdk-site-schneider/kernel/    # Kernel Corestore
 | Issue | Fix |
 |---|---|
 | `Cannot find module ...` | Run `npm run setup:workers` from the repo root. |
-| `EADDRINUSE :::5062` | A previous run is still bound. `Ctrl+C` it, or change `PORT` in `index.js`. |
+| `EADDRINUSE :::5062` | A previous run is still bound. `Ctrl+C` it, or change `PORT` in [`index.js`](./index.js). |
 | `Corruption: ... MANIFEST-*` | Stale store from a `kill -9`. Delete `$TMPDIR/mdk-site-schneider/` and retry. |
 
 ## Related

@@ -5,7 +5,7 @@ import { subDays } from 'date-fns/subDays'
 import type { EnergyReportDateRange } from './energy-report.constants'
 import { DEFAULT_SITE_RANGE_DAYS } from './energy-report.constants'
 
-/** Last N full days ending yesterday (matches Mining OS Energy report default). */
+/** Last N full days ending yesterday (matches the reference app Energy report default). */
 export const getEnergyReportDefaultDateRange = (): EnergyReportDateRange => {
   const yesterday = subDays(new Date(), 1)
 
