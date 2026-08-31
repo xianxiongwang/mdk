@@ -39,6 +39,7 @@ Every row is derived from a worker's `mdk-contract.json` (`metadata.provider`, `
 |-------|----------|--------|----------------|------|
 | F2Pool | f2pool | F2POOL-BTC | [`backend/workers/minerpools/f2pool`](../minerpools/f2pool/README.md) | — |
 | Ocean | ocean | OCEAN-BTC | [`backend/workers/minerpools/ocean`](../minerpools/ocean/README.md) | — |
+| SpiderPool | spiderpool | SPIDERPOOL-BTC | [`backend/workers/minerpools/spiderpool`](../minerpools/spiderpool/README.md) | — |
 
 ## Contract conformance
 
