@@ -32,6 +32,7 @@ Also under [`backend/core/`](../../../../../../backend/core/README.md): [`plugin
 | `@tetherto/mdk-worker-bitdeer` | [`backend/workers/containers/bitdeer`](../../../../../../backend/workers/containers/bitdeer/README.md) | MQTT |
 | `@tetherto/mdk-worker-f2pool` | [`backend/workers/minerpools/f2pool`](../../../../../../backend/workers/minerpools/f2pool/README.md) | Pool HTTP API |
 | `@tetherto/mdk-worker-ocean` | [`backend/workers/minerpools/ocean`](../../../../../../backend/workers/minerpools/ocean/README.md) | Pool HTTP API |
+| `@tetherto/mdk-worker-spiderpool` | [`backend/workers/minerpools/spiderpool`](../../../../../../backend/workers/minerpools/spiderpool/README.md) | Pool HTTP API |
 | `@tetherto/mdk-worker-demo` | [`backend/workers/samples/demo-worker`](../../../../../../backend/workers/samples/demo-worker/) | HTTP JSON (canonical minimal sample) |
 | `@tetherto/mdk-worker-mock` | [`backend/workers/mock`](../../../../../../backend/workers/mock/README.md) | Shared device-mock framework (BaseMock, category mocks, transports) |
 
